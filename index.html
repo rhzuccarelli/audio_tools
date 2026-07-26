@@ -1316,6 +1316,93 @@ header {
 .mc-export-name:hover { border-color: var(--ink); }
 .mc-export-name:focus { outline: none; border-color: var(--ink); }
 
+/* ---- Disc-based position navigation (replaces linear progress bars) ---- */
+.mc-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mc-deck {
+  width: 392px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--rule);
+  padding: 24px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.mc-deck-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mc-disc {
+  width: min(240px, 100%);
+  aspect-ratio: 1;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.mc-disc:active { cursor: grabbing; }
+.mc-disc svg { width: 100%; height: 100%; display: block; }
+
+.mc-deck-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.mc-deck-time {
+  font-size: 30px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.mc-deck-state,
+.mc-deck-hint {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+.mc-track-disc {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  margin: 0 4px 0 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.mc-track-disc:active { cursor: grabbing; }
+.mc-track-disc svg { width: 100%; height: 100%; display: block; }
+.mc-track.is-muted .mc-track-disc { opacity: 0.45; }
+
+.mc-transport-hint {
+  flex: 1;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
 /* ========== MOBILE/NARROW ========== */
 @media (max-width: 800px) {
   .app { grid-template-columns: 1fr; grid-template-rows: 280px 1fr; }
@@ -1460,15 +1547,27 @@ header {
       </div>
     </div>
 
-    <div class="mc-tracks" id="mc-tracks"></div>
+    <div class="mc-body">
+      <div class="mc-deck">
+        <div class="mc-deck-head">
+          <span>Output File</span>
+          <span id="mc-deck-chans">2 ch interleaved</span>
+        </div>
+        <div class="mc-disc" id="mc-master-disc" title="Drag to scrub the exported mix"></div>
+        <div class="mc-deck-readout">
+          <div class="mc-deck-time" id="mc-deck-time">0:00</div>
+          <div class="mc-deck-state" id="mc-deck-state">Stopped · Full mix</div>
+        </div>
+        <div class="mc-deck-hint">Drag the disc to scrub · release to play from there</div>
+      </div>
+      <div class="mc-tracks" id="mc-tracks"></div>
+    </div>
 
     <div class="transport">
       <button id="mc-play-btn" class="transport-btn" disabled title="Play / Pause mix">▶</button>
       <button id="mc-stop-btn" class="transport-btn" title="Stop">■</button>
       <div class="transport-time" id="mc-transport-time">0:00 / 0:00</div>
-      <div class="transport-progress" id="mc-transport-progress">
-        <div class="transport-progress-bar" id="mc-transport-progress-bar"></div>
-      </div>
+      <div class="mc-transport-hint">Scrub any disc to seek — pair discs share the master playhead</div>
       <input id="mc-export-name" class="mc-export-name" type="text" value="multichannel_mix.wav" spellcheck="false" title="Export filename">
       <button id="mc-export-btn" class="btn btn-primary" disabled>Export Multi-Channel WAV</button>
     </div>
@@ -2610,7 +2709,93 @@ const mcState = {
   rafId: null,
   totalDuration: 0,
   uploadTarget: null,    // track index awaiting a file from #mc-track-input
+  cursor: 0,             // playhead position (seconds) shown on the discs while stopped
 };
+
+// ---------- Disc position navigation ----------
+// One large disc for the exported output file, one small disc per stereo
+// pair. Both are scrubbable: dragging rotates the playhead, releasing seeks.
+const MC_ARC_MASTER = 2 * Math.PI * 46;
+const MC_ARC_TRACK  = 2 * Math.PI * 44;
+
+function mcDiscSVG(kind) {
+  const master = kind === 'master';
+  const r      = master ? 46 : 44;
+  const arcW   = master ? 3 : 5;
+  const hub    = master ? 15 : 12;
+  const hair   = master ? 0.4 : 0.8;
+  const needleW = master ? 0.6 : 1.4;
+  const needleTop = master ? 2.5 : 8;
+  const grooves = (master ? [41, 37, 33, 29, 25, 21] : [38, 30])
+    .map(g => `<circle cx="50" cy="50" r="${g}"></circle>`).join('');
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="${master ? 49.5 : 49}" fill="var(--paper)" stroke="var(--rule)" stroke-width="${hair}"></circle>
+    <g stroke="var(--hairline)" stroke-width="${master ? 0.3 : 0.7}" fill="none">${grooves}</g>
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--panel-fill)" stroke-width="${arcW}"></circle>
+    <circle class="mc-disc-arc" cx="50" cy="50" r="${r}" fill="none" stroke="var(--ink)" stroke-width="${arcW}"
+            stroke-dasharray="0 ${(master ? MC_ARC_MASTER : MC_ARC_TRACK).toFixed(2)}" transform="rotate(-90 50 50)"></circle>
+    <line class="mc-disc-needle" x1="50" y1="50" x2="50" y2="${needleTop}" stroke="var(--ink)" stroke-width="${needleW}" transform="rotate(0 50 50)"></line>
+    <circle cx="50" cy="50" r="${hub}" fill="var(--paper)" stroke="var(--rule)" stroke-width="${hair}"></circle>
+    <circle class="mc-disc-spindle" cx="50" cy="50" r="${master ? 1.6 : 3}" fill="var(--ink)"></circle>
+  </svg>`;
+}
+
+function mcSetDisc(el, pos, duration, circumference) {
+  if (!el) return;
+  const p = duration > 0 ? Math.max(0, Math.min(1, pos / duration)) : 0;
+  const arc = el.querySelector('.mc-disc-arc');
+  const needle = el.querySelector('.mc-disc-needle');
+  if (arc) arc.setAttribute('stroke-dasharray', `${(p * circumference).toFixed(2)} ${circumference.toFixed(2)}`);
+  if (needle) needle.setAttribute('transform', `rotate(${(p * 360).toFixed(2)} 50 50)`);
+}
+
+// Paint every disc + readout for a given playhead position.
+function mcRenderPositions(pos) {
+  const total = mcState.totalDuration;
+  mcSetDisc($('#mc-master-disc'), pos, total, MC_ARC_MASTER);
+  const timeEl = $('#mc-deck-time');
+  if (timeEl) timeEl.textContent = fmtTime(pos);
+  const stateEl = $('#mc-deck-state');
+  if (stateEl) {
+    const solo = mcState.playingIndex;
+    stateEl.textContent = solo !== null
+      ? `Solo · ${mcState.tracks[solo] ? mcState.tracks[solo].label : ''}`
+      : `${mcState.isPlaying ? 'Playing' : 'Stopped'} · Full mix`;
+  }
+  $('#mc-transport-time').textContent = `${fmtTime(pos)} / ${fmtTime(total)}`;
+  $$('.mc-track-disc').forEach(disc => {
+    const i = parseInt(disc.dataset.index, 10);
+    const track = mcState.tracks[i];
+    mcSetDisc(disc, pos, track && track.buffer ? track.buffer.duration : 0, MC_ARC_TRACK);
+  });
+}
+
+// Drag anywhere on a disc: the angle under the pointer is the position.
+function mcAttachScrub(el, getDuration) {
+  el.addEventListener('pointerdown', e => {
+    const duration = getDuration();
+    if (!duration || !mcState.tracks.some(t => t.buffer)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const box = el.getBoundingClientRect();
+    const cx = box.left + box.width / 2;
+    const cy = box.top + box.height / 2;
+    const angleOf = ev => (((Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI) + 90) + 360) % 360;
+    const apply = ev => {
+      mcState.cursor = Math.max(0, Math.min(mcState.totalDuration, (angleOf(ev) / 360) * duration));
+      mcRenderPositions(mcState.cursor);
+    };
+    apply(e);
+    const move = ev => apply(ev);
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      if (mcState.isPlaying) mcPlayAll(mcState.cursor);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+}
 
 function mcMakeTrack(i) {
   return { label: `Track ${i + 1}`, buffer: null, fileName: null, customLabel: false, muted: false };
@@ -2777,6 +2962,8 @@ function updateMcMeta() {
   if (!mcState.tracks.some(t => t.buffer)) mcState.sampleRate = null;
 
   $('#mc-meta-channels').textContent = mcState.tracks.length * 2;
+  const chansEl = $('#mc-deck-chans');
+  if (chansEl) chansEl.textContent = `${mcState.tracks.length * 2} ch interleaved`;
   $('#mc-meta-samplerate').textContent = mcState.sampleRate ? `${mcState.sampleRate} Hz` : '—';
   $('#mc-meta-duration').textContent = fmtTime(mcState.totalDuration);
   $('#mc-transport-time').textContent = `0:00 / ${fmtTime(mcState.totalDuration)}`;
@@ -2802,6 +2989,7 @@ function renderMcTracks() {
 
     el.innerHTML = `
       <div class="mc-track-index">${String(i + 1).padStart(2, '0')}</div>
+      <div class="mc-track-disc" data-index="${i}" title="${track.buffer ? 'Drag to scrub this pair' : 'No audio loaded'}">${mcDiscSVG('track')}</div>
       <div class="mc-track-content">
         <input class="mc-track-label" value="${track.label}" spellcheck="false" title="Track name">
         <div class="mc-track-channels">CH ${i * 2 + 1}–${i * 2 + 2}</div>
@@ -2931,9 +3119,11 @@ function renderMcTracks() {
     }
 
     wrap.appendChild(el);
+    mcAttachScrub(el.querySelector('.mc-track-disc'), () => track.buffer ? track.buffer.duration : 0);
   });
 
   updateMcMeta();
+  mcRenderPositions(mcState.cursor);
 }
 
 // ---------- Playback (preview only — real hardware output is stereo) ----------
@@ -3002,8 +3192,7 @@ function mcTick() {
     if (elapsed >= duration) { mcStop(); return; }
     if (mcState.playingIndex === null) {
       const safe = Math.max(0, elapsed);
-      $('#mc-transport-time').textContent = `${fmtTime(safe)} / ${fmtTime(duration)}`;
-      $('#mc-transport-progress-bar').style.width = `${duration ? (safe / duration) * 100 : 0}%`;
+      mcRenderPositions(safe);
     }
     mcState.rafId = requestAnimationFrame(step);
   }
@@ -3021,8 +3210,7 @@ function mcStop() {
 
   $('#mc-play-btn').classList.remove('playing');
   $('#mc-play-btn').textContent = '▶';
-  $('#mc-transport-time').textContent = `0:00 / ${fmtTime(mcState.totalDuration)}`;
-  $('#mc-transport-progress-bar').style.width = '0%';
+  mcState.cursor = 0;
   renderMcTracks();
 }
 
@@ -3142,16 +3330,14 @@ $('#mc-track-input').addEventListener('change', e => {
 });
 $('#mc-play-btn').addEventListener('click', () => {
   if (mcState.isPlaying) mcStop();
-  else mcPlayAll();
+  else mcPlayAll(mcState.cursor);
 });
 $('#mc-stop-btn').addEventListener('click', mcStop);
 $('#mc-export-btn').addEventListener('click', mcExport);
-$('#mc-transport-progress').addEventListener('click', e => {
-  if (!mcState.tracks.some(t => t.buffer) || mcState.totalDuration <= 0) return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  mcPlayAll(ratio * mcState.totalDuration);
-});
+
+// The output-file disc: built once, scrubbed against the full mix length.
+$('#mc-master-disc').innerHTML = mcDiscSVG('master');
+mcAttachScrub($('#mc-master-disc'), () => mcState.totalDuration);
 
 mcInit();
 
