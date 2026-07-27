@@ -1132,167 +1132,327 @@ header {
   gap: 14px;
 }
 
-.mc-tracks {
+/* ---- Vertical channel strips (right of the deck) ---- */
+.mc-strips {
   flex: 1;
-  overflow-y: auto;
+  min-width: 0;
   min-height: 0;
-}
-
-.mc-track {
+  overflow: hidden;
   display: flex;
   align-items: stretch;
-  border-bottom: 1px solid var(--hairline);
-  transition: background 0.12s ease;
 }
 
-.mc-track:hover { background: var(--hairline); }
+.mc-strip {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 170px;
+  height: 100%;
+  border-right: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  transition: background 0.12s ease;
+  cursor: grab;
+}
 
-.mc-track-index {
-  font-family: var(--font-mono);
+.mc-strip.is-soloed { background: #e9e7e2; }
+
+.mc-strip-head {
+  padding: 8px 12px 7px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+
+.mc-strip-num {
   font-size: 11px;
   color: var(--muted);
-  padding: 14px 14px 14px 26px;
-  display: flex;
-  align-items: center;
-  min-width: 56px;
   font-variant-numeric: tabular-nums;
 }
 
-.mc-track-content {
-  flex: 1;
-  padding: 11px 0;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
+.mc-strip-ch {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-.mc-track-label {
+.mc-strip-name-wrap {
+  padding: 9px 12px 7px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.mc-strip-name {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink);
   background: transparent;
   border: none;
   border-bottom: 1px solid transparent;
   padding: 2px 0;
-  width: 140px;
-  flex-shrink: 0;
+  width: 100%;
+  text-align: center;
 }
 
-.mc-track-label:hover, .mc-track-label:focus {
+.mc-strip-name:hover, .mc-strip-name:focus {
   outline: none;
   border-bottom-color: var(--rule);
 }
 
-.mc-track-channels {
-  font-size: 9.5px;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  flex-shrink: 0;
-  min-width: 70px;
-}
+.mc-strip.is-dim .mc-strip-name { opacity: 0.4; }
 
-.mc-track-status {
-  font-size: 9.5px;
-  color: var(--muted);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+/* Stereo meter area */
+.mc-meter {
   flex: 1;
+  min-height: 64px;
+  padding: 6px;
+  display: flex;
+  gap: 5px;
+  justify-content: center;
   min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.mc-track-status.loaded { color: var(--ink); }
+.mc-meter-scale {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 7.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  padding: 1px 0;
+  flex-shrink: 1;
+  overflow: hidden;
+}
 
-.mc-track-play,
-.mc-track-mute,
-.mc-track-upload,
-.mc-track-clear {
+.mc-meter-bars {
+  display: flex;
+  gap: 3px;
+  width: 26px;
+}
+
+.mc-meter-bar {
+  flex: 1;
+  background: var(--panel-fill);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+}
+
+.mc-meter-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--ink);
+  height: 0%;
+}
+
+.mc-meter-peak {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ink);
+  bottom: 0%;
+}
+
+.mc-meter-seg {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to top, transparent 0 4px, var(--paper) 4px 5px);
+}
+
+.mc-strip-readout {
+  padding: 0 12px 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mc-strip-db {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.mc-strip-peak {
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Mute / Solo row */
+.mc-strip-ms {
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-shrink: 0;
+}
+
+.mc-ms-btn {
+  flex: 1;
   border: none;
-  padding: 0 14px;
+  padding: 8px 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
   background: transparent;
   color: var(--muted);
-  cursor: pointer;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: color 0.12s;
-  font-family: var(--font-mono);
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
-.mc-track-play:hover,
-.mc-track-mute:hover,
-.mc-track-upload:hover { color: var(--ink); }
+.mc-ms-btn.mute { border-right: 1px solid var(--hairline); }
 
-.mc-track-clear:hover { color: var(--danger); }
-
-.mc-track-mute.active {
-  color: var(--ink);
-  font-weight: 700;
+.mc-ms-btn.active {
+  background: var(--ink);
+  color: var(--ink-invert);
 }
 
-.mc-track-clear:disabled,
-.mc-track-play:disabled,
-.mc-track-mute:disabled {
+.mc-ms-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
 
-.mc-track.is-muted .mc-track-label,
-.mc-track.is-muted .mc-track-channels,
-.mc-track.is-muted .mc-track-status {
-  opacity: 0.4;
+/* Per-strip export block */
+.mc-strip-export {
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
-/* Reordering a channel pair by dragging its row */
-.mc-track {
+.mc-strip-dragout {
+  border: none;
+  background: transparent;
+  padding: 8px 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
   cursor: grab;
+  border-bottom: 1px solid var(--hairline);
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
-.mc-track.dragging {
+.mc-strip-dragout:hover:not(.disabled) {
+  background: var(--ink);
+  color: var(--ink-invert);
+}
+
+.mc-strip-dragout.dragging { background: var(--ink); color: var(--ink-invert); }
+
+.mc-strip-dragout.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  color: var(--muted);
+}
+
+.mc-strip-actions { display: flex; }
+
+.mc-strip-upload {
+  flex: 1;
+  border: none;
+  border-right: 1px solid var(--hairline);
+  background: transparent;
+  padding: 7px 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.12s;
+}
+
+.mc-strip-upload:hover { color: var(--ink); }
+
+.mc-strip-clear {
+  width: 32px;
+  border: none;
+  background: transparent;
+  padding: 7px 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.12s;
+}
+
+.mc-strip-clear:hover:not(:disabled) { color: var(--danger); }
+
+.mc-strip-clear:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.mc-strip-status {
+  border-top: 1px solid var(--hairline);
+  padding: 7px 12px 8px;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.mc-strip-status.loaded { color: var(--ink); }
+
+/* Trailing "add pair" column */
+.mc-add-col {
+  flex: 0 0 30px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 14px 4px;
+}
+
+.mc-add-btn {
+  border: 1px dashed var(--rule);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 6px;
+  cursor: pointer;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.mc-add-btn:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+.mc-add-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Reordering a channel pair by dragging its strip */
+.mc-strip.dragging {
   opacity: 0.3;
   cursor: grabbing;
 }
 
-.mc-track.drag-over {
-  box-shadow: inset 0 2px 0 var(--ink);
+.mc-strip.drag-over {
+  box-shadow: inset 2px 0 0 var(--ink);
 }
 
 /* Dragging a single pair straight out of the browser to export it */
-.mc-track-dragout {
-  border: none;
-  padding: 0 14px;
-  background: transparent;
-  color: var(--muted);
-  cursor: grab;
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  transition: color 0.12s;
-  font-family: var(--font-mono);
-  flex-shrink: 0;
-}
+.mc-strip.is-muted .mc-meter,
+.mc-strip.is-muted .mc-strip-readout { opacity: 0.4; }
 
-.mc-track-dragout:hover {
-  color: var(--ink);
-}
-
-.mc-track-dragout.dragging {
-  color: var(--ink);
-}
-
-.mc-track-dragout.disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-/* Dropping an audio file onto a single row loads/replaces just that pair */
-.mc-track.drag-over-file {
+/* Dropping an audio file onto a strip loads/replaces just that pair */
+.mc-strip.drag-over-file {
   box-shadow: inset 0 0 0 2px var(--ink);
   background: var(--hairline);
 }
@@ -1316,7 +1476,7 @@ header {
 .mc-export-name:hover { border-color: var(--ink); }
 .mc-export-name:focus { outline: none; border-color: var(--ink); }
 
-/* ---- Disc-based position navigation (replaces linear progress bars) ---- */
+/* ---- Master deck (left column: disc, VU, transport, export) ---- */
 .mc-body {
   flex: 1;
   display: flex;
@@ -1325,31 +1485,22 @@ header {
 }
 
 .mc-deck {
-  width: 392px;
+  width: 286px;
   flex-shrink: 0;
   border-right: 1px solid var(--rule);
-  padding: 24px 34px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 6px;
+  min-height: 0;
   overflow-y: auto;
 }
 
-.mc-deck-head {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 .mc-disc {
-  width: min(240px, 100%);
+  width: min(146px, 100%);
   aspect-ratio: 1;
+  flex-shrink: 0;
   cursor: grab;
   user-select: none;
   touch-action: none;
@@ -1358,50 +1509,143 @@ header {
 .mc-disc:active { cursor: grabbing; }
 .mc-disc svg { width: 100%; height: 100%; display: block; }
 
-.mc-deck-readout {
+/* Stereo moving-coil VU pair */
+.mc-vu-row {
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  gap: 14px;
+  flex-shrink: 0;
+  padding: 0 2px;
 }
 
-.mc-deck-time {
-  font-size: 30px;
+.mc-vu {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mc-vu svg { width: 100%; height: 26px; display: block; }
+
+.mc-vu-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.mc-vu-ch {
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.mc-vu-db {
+  font-size: 9px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Position display box */
+.mc-posbox {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--rule);
+  background: #f6f5f2;
+  padding: 5px 9px;
+  flex-shrink: 0;
+}
+
+.mc-pos-left { display: flex; flex-direction: column; gap: 1px; }
+.mc-pos-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+.mc-pos-label {
+  font-size: 7.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mc-pos-time {
+  font-size: 17px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   line-height: 1;
 }
 
-.mc-deck-state,
-.mc-deck-hint {
+.mc-pos-total {
   font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
-  text-align: center;
 }
 
-.mc-track-disc {
-  width: 54px;
-  height: 54px;
-  flex-shrink: 0;
-  margin: 0 4px 0 0;
-  cursor: grab;
-  touch-action: none;
-}
-
-.mc-track-disc:active { cursor: grabbing; }
-.mc-track-disc svg { width: 100%; height: 100%; display: block; }
-.mc-track.is-muted .mc-track-disc { opacity: 0.45; }
-
-.mc-transport-hint {
-  flex: 1;
-  font-size: 9px;
-  color: var(--muted);
+.mc-pos-state {
+  font-size: 7.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  color: var(--muted);
 }
+
+/* Turntable button pad */
+.mc-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.mc-pad-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: 6px 0 5px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.mc-pad-btn .glyph { font-size: 12px; line-height: 1; }
+.mc-pad-btn .cap { font-size: 7px; letter-spacing: 0.14em; text-transform: uppercase; }
+.mc-pad-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.mc-pad-play {
+  background: var(--ink);
+  color: var(--ink-invert);
+  border-color: var(--ink);
+}
+
+.mc-pad-stop { border-color: var(--ink); }
+.mc-pad-stop:hover:not(:disabled) { background: var(--ink); color: var(--ink-invert); }
+.mc-pad-nudge:hover:not(:disabled) { border-color: var(--ink); }
+
+/* Deck export block, pinned to the bottom of the column */
+.mc-deck-export {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.mc-deck-export .mc-export-name {
+  width: 100%;
+  min-width: 0;
+  font-size: 9.5px;
+  padding: 6px 8px;
+}
+
+.mc-deck-export .btn { width: 100%; padding: 9px 8px; font-size: 9px; }
 
 /* ========== MOBILE/NARROW ========== */
 @media (max-width: 800px) {
@@ -1549,27 +1793,51 @@ header {
 
     <div class="mc-body">
       <div class="mc-deck">
-        <div class="mc-deck-head">
-          <span>Output File</span>
-          <span id="mc-deck-chans">2 ch interleaved</span>
-        </div>
         <div class="mc-disc" id="mc-master-disc" title="Drag to scrub the exported mix"></div>
-        <div class="mc-deck-readout">
-          <div class="mc-deck-time" id="mc-deck-time">0:00</div>
-          <div class="mc-deck-state" id="mc-deck-state">Stopped · Full mix</div>
-        </div>
-        <div class="mc-deck-hint">Drag the disc to scrub · release to play from there</div>
-      </div>
-      <div class="mc-tracks" id="mc-tracks"></div>
-    </div>
 
-    <div class="transport">
-      <button id="mc-play-btn" class="transport-btn" disabled title="Play / Pause mix">▶</button>
-      <button id="mc-stop-btn" class="transport-btn" title="Stop">■</button>
-      <div class="transport-time" id="mc-transport-time">0:00 / 0:00</div>
-      <div class="mc-transport-hint">Scrub any disc to seek — pair discs share the master playhead</div>
-      <input id="mc-export-name" class="mc-export-name" type="text" value="multichannel_mix.wav" spellcheck="false" title="Export filename">
-      <button id="mc-export-btn" class="btn btn-primary" disabled>Export Multi-Channel WAV</button>
+        <div class="mc-vu-row">
+          <div class="mc-vu" id="mc-vu-l">
+            <div class="mc-vu-face"></div>
+            <div class="mc-vu-foot"><span class="mc-vu-ch">L</span><span class="mc-vu-db">-∞</span></div>
+          </div>
+          <div class="mc-vu" id="mc-vu-r">
+            <div class="mc-vu-face"></div>
+            <div class="mc-vu-foot"><span class="mc-vu-ch">R</span><span class="mc-vu-db">-∞</span></div>
+          </div>
+        </div>
+
+        <div class="mc-posbox">
+          <div class="mc-pos-left">
+            <span class="mc-pos-label">Position</span>
+            <span class="mc-pos-time" id="mc-pos-time">0:00</span>
+          </div>
+          <div class="mc-pos-right">
+            <span class="mc-pos-total" id="mc-pos-total">0:00 / 0:00</span>
+            <span class="mc-pos-state" id="mc-pos-state">Stopped · Full mix</span>
+          </div>
+        </div>
+
+        <div class="mc-pad">
+          <button id="mc-play-btn" class="mc-pad-btn mc-pad-play" disabled title="Play / Pause mix">
+            <span class="glyph" id="mc-play-glyph">▶</span><span class="cap" id="mc-play-cap">Play</span>
+          </button>
+          <button id="mc-stop-btn" class="mc-pad-btn mc-pad-stop" title="Stop">
+            <span class="glyph">■</span><span class="cap">Stop</span>
+          </button>
+          <button id="mc-nudge-back" class="mc-pad-btn mc-pad-nudge" disabled title="Nudge back 5s">
+            <span class="glyph">‹‹</span><span class="cap">Nudge</span>
+          </button>
+          <button id="mc-nudge-fwd" class="mc-pad-btn mc-pad-nudge" disabled title="Nudge forward 5s">
+            <span class="glyph">››</span><span class="cap">Nudge</span>
+          </button>
+        </div>
+
+        <div class="mc-deck-export">
+          <input id="mc-export-name" class="mc-export-name" type="text" value="multichannel_mix.wav" spellcheck="false" title="Export filename">
+          <button id="mc-export-btn" class="btn btn-primary" disabled>Export Multi-Channel WAV</button>
+        </div>
+      </div>
+      <div class="mc-strips" id="mc-tracks"></div>
     </div>
   </section>
 </div>
@@ -2710,6 +2978,15 @@ const mcState = {
   totalDuration: 0,
   uploadTarget: null,    // track index awaiting a file from #mc-track-input
   cursor: 0,             // playhead position (seconds) shown on the discs while stopped
+
+  // ---- Metering (real analyser data drives the strip meters + master VU) ----
+  masterBus: null,       // GainNode every pair feeds; also tapped for the master VU
+  masterAnalysers: null, // [analyserL, analyserR] on the master bus
+  trackAnalysers: new Map(), // track index -> [analyserL, analyserR], post-gain, while playing
+  animId: null,          // requestAnimationFrame handle for the metering/position loop
+  vuDb: [-24, -24],      // master VU needle values (dB), lagged by mechanical ballistics
+  stripMeterEls: [],     // per-strip { fillL, fillR, peakL, peakR, db, peak } DOM refs
+  stripPeaks: [],        // per-strip [peakHoldL, peakHoldR] (linear 0..1), decays each frame
 };
 
 // ---------- Disc position navigation ----------
@@ -2740,6 +3017,176 @@ function mcDiscSVG(kind) {
   </svg>`;
 }
 
+// ---------- Master VU meters (classic moving-coil faces) ----------
+// -20 dB at the left stop, 0 dB at +26°, +3 dB at the right stop; ticks past
+// 0 dB switch to --danger. Angles/geometry match the design handoff exactly.
+function mcVuAngle(dbv) {
+  const d = Math.max(-24, Math.min(3, dbv));
+  return d <= 0 ? -52 + ((d + 20) / 20) * 78 : 26 + (d / 3) * 26;
+}
+function mcVuPolar(a, r) {
+  const rad = a * Math.PI / 180;
+  return [100 + r * Math.sin(rad), 118 - r * Math.cos(rad)];
+}
+const MC_VU_TICKS = [-20, -15, -10, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3].map(d => {
+  const major = [-20, -10, -5, -3, 0, 3].includes(d);
+  const a = mcVuAngle(d);
+  const [x1, y1] = mcVuPolar(a, 88);
+  const [x2, y2] = mcVuPolar(a, major ? 79 : 83);
+  return {
+    x1: x1.toFixed(1), y1: y1.toFixed(1), x2: x2.toFixed(1), y2: y2.toFixed(1),
+    w: major ? 1.4 : 0.8, color: d >= 0 ? 'var(--danger)' : 'var(--ink)',
+  };
+});
+function mcVuSVG() {
+  const ticks = MC_VU_TICKS
+    .map(k => `<line x1="${k.x1}" y1="${k.y1}" x2="${k.x2}" y2="${k.y2}" stroke="${k.color}" stroke-width="${k.w}"></line>`)
+    .join('');
+  return `<svg viewBox="24 30 152 62" aria-hidden="true">
+    <path d="M30.7 63.8 A88 88 0 0 1 169.3 63.8" fill="none" stroke="var(--rule)" stroke-width="1"></path>
+    <path d="M138.6 38.9 A88 88 0 0 1 169.3 63.8" fill="none" stroke="var(--danger)" stroke-width="1.6"></path>
+    ${ticks}
+    <line class="mc-vu-needle" x1="100" y1="118" x2="100" y2="32" stroke="var(--ink)" stroke-width="1.6" transform="rotate(0 100 118)"></line>
+  </svg>`;
+}
+
+function mcDbStr(v) {
+  return v <= 0.0011 ? '-∞' : (20 * Math.log10(Math.min(1, v))).toFixed(1);
+}
+
+// ---------- Audio graph: master bus + per-channel analysers ----------
+// Every pair feeds a single master GainNode (→ speakers). The bus is also
+// tapped by a stereo pair of analysers for the master VU, and each playing
+// pair gets its own stereo analyser pair (post-gain) for its strip meter.
+function mcEnsureBus() {
+  const ctx = ensureAudioCtx();
+  if (mcState.masterBus) return mcState.masterBus;
+  const bus = ctx.createGain();
+  bus.connect(ctx.destination);
+  const splitter = ctx.createChannelSplitter(2);
+  bus.connect(splitter);
+  const aL = ctx.createAnalyser();
+  const aR = ctx.createAnalyser();
+  aL.fftSize = 1024;
+  aR.fftSize = 1024;
+  splitter.connect(aL, 0);
+  splitter.connect(aR, 1);
+  mcState.masterBus = bus;
+  mcState.masterAnalysers = [aL, aR];
+  return bus;
+}
+
+// Build a stereo analyser pair fed by `node` (a per-pair GainNode).
+function mcMakeAnalyserPair(node) {
+  const ctx = ensureAudioCtx();
+  const splitter = ctx.createChannelSplitter(2);
+  const aL = ctx.createAnalyser();
+  const aR = ctx.createAnalyser();
+  aL.fftSize = 1024;
+  aR.fftSize = 1024;
+  node.connect(splitter);
+  splitter.connect(aL, 0);
+  splitter.connect(aR, 1);
+  return [aL, aR];
+}
+
+const MC_METER_BUF = new Float32Array(1024);
+// Peak amplitude (linear 0..1) currently in an analyser's time-domain window.
+function mcAnalyserPeak(analyser) {
+  analyser.getFloatTimeDomainData(MC_METER_BUF);
+  let peak = 0;
+  for (let i = 0; i < MC_METER_BUF.length; i++) {
+    const a = Math.abs(MC_METER_BUF[i]);
+    if (a > peak) peak = a;
+  }
+  return peak;
+}
+
+// A pair is audible when it has audio, isn't muted, and — if any pair is
+// soloed — is itself soloed. Mute always wins over solo on the same strip.
+function mcAnySolo() {
+  return mcState.tracks.some(t => t.soloed);
+}
+function mcAudible(i) {
+  const t = mcState.tracks[i];
+  if (!t || !t.buffer || t.muted) return false;
+  return !mcAnySolo() || t.soloed;
+}
+
+// Push the mute/solo picture into the live playing mix without interrupting it.
+function mcApplyGains() {
+  mcState.tracks.forEach((t, i) => {
+    const g = mcState.trackGains.get(i);
+    if (g) g.gain.value = mcAudible(i) ? 1 : 0;
+  });
+}
+
+// Keep the pad's Play/Pause glyph + caption in sync with playback state.
+function mcUpdateTransportUI() {
+  const g = $('#mc-play-glyph');
+  const c = $('#mc-play-cap');
+  if (g) g.textContent = mcState.isPlaying ? '⏸' : '▶';
+  if (c) c.textContent = mcState.isPlaying ? 'Pause' : 'Play';
+}
+
+// Single always-on loop: advances the master playhead while playing and paints
+// every strip meter + the master VU from real analyser data (or decays them to
+// silence when idle). Started once in mcInit.
+function mcAnimate() {
+  mcState.animId = requestAnimationFrame(mcAnimate);
+
+  // Skip painting while the mixer view is hidden and nothing is playing —
+  // meters simply resume the next time the view is active.
+  const mcApp = document.getElementById('mc-app');
+  if ((!mcApp || !mcApp.classList.contains('active')) && !mcState.isPlaying) return;
+
+  // Advance / stop the master playhead.
+  if (mcState.isPlaying && mcState.playingIndex === null) {
+    const ctx = mcState.masterBus ? mcState.masterBus.context : null;
+    if (ctx) {
+      const elapsed = (ctx.currentTime - mcState.playStartTime) + mcState.seekOffset;
+      if (elapsed >= mcState.totalDuration) { mcStop(); return; }
+      mcRenderPositions(Math.max(0, elapsed));
+    }
+  }
+
+  // Per-strip stereo meters.
+  mcState.tracks.forEach((t, i) => {
+    const els = mcState.stripMeterEls[i];
+    if (!els) return;
+    const an = mcState.trackAnalysers.get(i);
+    let lv = 0, rv = 0;
+    if (an && mcState.isPlaying) {
+      lv = mcAnalyserPeak(an[0]);
+      rv = mcAnalyserPeak(an[1]);
+    }
+    const ph = mcState.stripPeaks[i] || (mcState.stripPeaks[i] = [0, 0]);
+    ph[0] = Math.max(lv, ph[0] - 0.006);
+    ph[1] = Math.max(rv, ph[1] - 0.006);
+    els.fillL.style.height = (lv * 100).toFixed(1) + '%';
+    els.fillR.style.height = (rv * 100).toFixed(1) + '%';
+    els.peakL.style.bottom = (ph[0] * 100).toFixed(1) + '%';
+    els.peakR.style.bottom = (ph[1] * 100).toFixed(1) + '%';
+    els.db.textContent = mcDbStr(Math.max(lv, rv));
+    els.peak.textContent = 'Peak ' + mcDbStr(Math.max(ph[0], ph[1]));
+  });
+
+  // Master VU needles with mechanical ballistics (needle lags its channel).
+  const faces = $$('.mc-vu-needle');
+  const dbEls = $$('.mc-vu-db');
+  const master = mcState.masterAnalysers;
+  for (let n = 0; n < 2; n++) {
+    let peak = 0;
+    if (master && mcState.isPlaying && mcState.playingIndex === null) {
+      peak = mcAnalyserPeak(master[n]);
+    }
+    const target = peak <= 0.0011 ? -24 : Math.max(-24, 20 * Math.log10(Math.min(1, peak)));
+    mcState.vuDb[n] += (target - mcState.vuDb[n]) * (target > mcState.vuDb[n] ? 0.22 : 0.09);
+    if (faces[n]) faces[n].setAttribute('transform', `rotate(${mcVuAngle(mcState.vuDb[n]).toFixed(2)} 100 118)`);
+    if (dbEls[n]) dbEls[n].textContent = mcState.vuDb[n] <= -23.5 ? '-∞' : mcState.vuDb[n].toFixed(1);
+  }
+}
+
 function mcSetDisc(el, pos, duration, circumference) {
   if (!el) return;
   const p = duration > 0 ? Math.max(0, Math.min(1, pos / duration)) : 0;
@@ -2749,25 +3196,23 @@ function mcSetDisc(el, pos, duration, circumference) {
   if (needle) needle.setAttribute('transform', `rotate(${(p * 360).toFixed(2)} 50 50)`);
 }
 
-// Paint every disc + readout for a given playhead position.
+// Paint the master disc + deck position readout for a given playhead position.
 function mcRenderPositions(pos) {
   const total = mcState.totalDuration;
   mcSetDisc($('#mc-master-disc'), pos, total, MC_ARC_MASTER);
-  const timeEl = $('#mc-deck-time');
+  const timeEl = $('#mc-pos-time');
   if (timeEl) timeEl.textContent = fmtTime(pos);
-  const stateEl = $('#mc-deck-state');
+  const totalEl = $('#mc-pos-total');
+  if (totalEl) totalEl.textContent = `${fmtTime(pos)} / ${fmtTime(total)}`;
+  const stateEl = $('#mc-pos-state');
   if (stateEl) {
-    const solo = mcState.playingIndex;
-    stateEl.textContent = solo !== null
-      ? `Solo · ${mcState.tracks[solo] ? mcState.tracks[solo].label : ''}`
-      : `${mcState.isPlaying ? 'Playing' : 'Stopped'} · Full mix`;
+    const soloed = mcState.tracks.filter(t => t.soloed);
+    if (soloed.length) {
+      stateEl.textContent = `Solo · ${soloed.map(t => t.label).join(' + ')}`;
+    } else {
+      stateEl.textContent = `${mcState.isPlaying ? 'Playing' : (pos > 0 ? 'Paused' : 'Stopped')} · Full mix`;
+    }
   }
-  $('#mc-transport-time').textContent = `${fmtTime(pos)} / ${fmtTime(total)}`;
-  $$('.mc-track-disc').forEach(disc => {
-    const i = parseInt(disc.dataset.index, 10);
-    const track = mcState.tracks[i];
-    mcSetDisc(disc, pos, track && track.buffer ? track.buffer.duration : 0, MC_ARC_TRACK);
-  });
 }
 
 // Drag anywhere on a disc: the angle under the pointer is the position.
@@ -2798,7 +3243,7 @@ function mcAttachScrub(el, getDuration) {
 }
 
 function mcMakeTrack(i) {
-  return { label: `Track ${i + 1}`, buffer: null, fileName: null, customLabel: false, muted: false };
+  return { label: `Track ${i + 1}`, buffer: null, fileName: null, customLabel: false, muted: false, soloed: false };
 }
 
 function mcInit() {
@@ -2962,68 +3407,114 @@ function updateMcMeta() {
   if (!mcState.tracks.some(t => t.buffer)) mcState.sampleRate = null;
 
   $('#mc-meta-channels').textContent = mcState.tracks.length * 2;
-  const chansEl = $('#mc-deck-chans');
-  if (chansEl) chansEl.textContent = `${mcState.tracks.length * 2} ch interleaved`;
   $('#mc-meta-samplerate').textContent = mcState.sampleRate ? `${mcState.sampleRate} Hz` : '—';
   $('#mc-meta-duration').textContent = fmtTime(mcState.totalDuration);
-  $('#mc-transport-time').textContent = `0:00 / ${fmtTime(mcState.totalDuration)}`;
+  const totalEl = $('#mc-pos-total');
+  if (totalEl) totalEl.textContent = `0:00 / ${fmtTime(mcState.totalDuration)}`;
 
   const hasContent = mcState.tracks.some(t => t.buffer);
   $('#mc-play-btn').disabled = !hasContent;
   $('#mc-export-btn').disabled = !hasContent;
+  $('#mc-nudge-back').disabled = !hasContent;
+  $('#mc-nudge-fwd').disabled = !hasContent;
 }
 
 function renderMcTracks() {
   const wrap = $('#mc-tracks');
   wrap.innerHTML = '';
+  mcState.stripMeterEls = [];
+  // Keep peak-hold values across re-renders where the pair still exists.
+  mcState.stripPeaks = mcState.tracks.map((_, i) => mcState.stripPeaks[i] || [0, 0]);
+
+  const anySolo = mcAnySolo();
 
   mcState.tracks.forEach((track, i) => {
     const el = document.createElement('div');
-    el.className = 'mc-track' + (track.muted ? ' is-muted' : '');
+    const dimmed = track.muted || (anySolo && !track.soloed);
+    el.className = 'mc-strip'
+      + (track.soloed ? ' is-soloed' : '')
+      + (track.muted ? ' is-muted' : '')
+      + (dimmed ? ' is-dim' : '');
     el.dataset.index = i;
-    const status = track.buffer
-      ? `${track.fileName || 'Loaded'} — ${fmtTime(track.buffer.duration)}`
-      : 'Empty — no audio loaded';
-
     el.draggable = true;
 
+    const status = track.buffer
+      ? `${track.fileName || 'Loaded'} · ${fmtTime(track.buffer.duration)}`
+      : 'Empty — no audio';
+
     el.innerHTML = `
-      <div class="mc-track-index">${String(i + 1).padStart(2, '0')}</div>
-      <div class="mc-track-disc" data-index="${i}" title="${track.buffer ? 'Drag to scrub this pair' : 'No audio loaded'}">${mcDiscSVG('track')}</div>
-      <div class="mc-track-content">
-        <input class="mc-track-label" value="${track.label}" spellcheck="false" title="Track name">
-        <div class="mc-track-channels">CH ${i * 2 + 1}–${i * 2 + 2}</div>
-        <div class="mc-track-status${track.buffer ? ' loaded' : ''}">${status}</div>
+      <div class="mc-strip-head">
+        <span class="mc-strip-num">${String(i + 1).padStart(2, '0')}</span>
+        <span class="mc-strip-ch">CH ${i * 2 + 1}–${i * 2 + 2}</span>
       </div>
-      <button class="mc-track-play" title="Play this pair on its own" ${track.buffer ? '' : 'disabled'}>${mcState.isPlaying && mcState.playingIndex === i ? '⏸' : '▶'}</button>
-      <button class="mc-track-mute${track.muted ? ' active' : ''}" title="Mute this pair in the full mix" ${track.buffer ? '' : 'disabled'}>${track.muted ? 'Muted' : 'Mute'}</button>
-      <button class="mc-track-upload">${track.buffer ? 'Replace' : 'Upload'}</button>
-      <span class="mc-track-dragout${track.buffer ? '' : ' disabled'}" draggable="${track.buffer ? 'true' : 'false'}" title="${track.buffer ? 'Click to export this track as a WAV file, or drag it out of the browser onto your desktop/file manager (Chrome/Edge only)' : 'Load audio to enable'}">⇲</span>
-      <button class="mc-track-clear" title="Clear this track" ${track.buffer ? '' : 'disabled'}>✕</button>
+      <div class="mc-strip-name-wrap">
+        <input class="mc-strip-name" value="${track.label}" spellcheck="false" title="Track name">
+      </div>
+      <div class="mc-meter">
+        <div class="mc-meter-scale"><span>0</span><span>-6</span><span>-12</span><span>-24</span><span>-∞</span></div>
+        <div class="mc-meter-bars">
+          <div class="mc-meter-bar">
+            <div class="mc-meter-fill" data-ch="l"></div>
+            <div class="mc-meter-peak" data-ch="l"></div>
+            <div class="mc-meter-seg"></div>
+          </div>
+          <div class="mc-meter-bar">
+            <div class="mc-meter-fill" data-ch="r"></div>
+            <div class="mc-meter-peak" data-ch="r"></div>
+            <div class="mc-meter-seg"></div>
+          </div>
+        </div>
+      </div>
+      <div class="mc-strip-readout">
+        <div class="mc-strip-db">-∞</div>
+        <div class="mc-strip-peak">Peak -∞</div>
+      </div>
+      <div class="mc-strip-ms">
+        <button class="mc-ms-btn mute${track.muted ? ' active' : ''}" title="Mute this pair" ${track.buffer ? '' : 'disabled'}>M</button>
+        <button class="mc-ms-btn solo${track.soloed ? ' active' : ''}" title="Solo this pair" ${track.buffer ? '' : 'disabled'}>S</button>
+      </div>
+      <div class="mc-strip-export">
+        <button class="mc-strip-dragout${track.buffer ? '' : ' disabled'}" draggable="${track.buffer ? 'true' : 'false'}" title="${track.buffer ? 'Click to export this pair as a WAV, or drag it out of the browser onto your desktop (Chrome/Edge only)' : 'Load audio to enable'}">Export ⇲</button>
+        <div class="mc-strip-actions">
+          <button class="mc-strip-upload" title="Load / replace this pair">${track.buffer ? 'Replace' : 'Upload'}</button>
+          <button class="mc-strip-clear" title="Clear this pair" ${track.buffer ? '' : 'disabled'}>✕</button>
+        </div>
+      </div>
+      <div class="mc-strip-status${track.buffer ? ' loaded' : ''}">${status}</div>
     `;
 
-    el.querySelector('.mc-track-label').addEventListener('change', e => {
+    // Cache meter DOM refs so the animation loop can paint them cheaply.
+    mcState.stripMeterEls[i] = {
+      fillL: el.querySelector('.mc-meter-fill[data-ch="l"]'),
+      fillR: el.querySelector('.mc-meter-fill[data-ch="r"]'),
+      peakL: el.querySelector('.mc-meter-peak[data-ch="l"]'),
+      peakR: el.querySelector('.mc-meter-peak[data-ch="r"]'),
+      db: el.querySelector('.mc-strip-db'),
+      peak: el.querySelector('.mc-strip-peak'),
+    };
+
+    el.querySelector('.mc-strip-name').addEventListener('change', e => {
       track.label = e.target.value.trim() || `Track ${i + 1}`;
       track.customLabel = true;
       e.target.value = track.label;
     });
-    el.querySelector('.mc-track-play').addEventListener('click', () => {
-      if (mcState.isPlaying && mcState.playingIndex === i) mcStop();
-      else mcPlayTrack(i);
-    });
-    el.querySelector('.mc-track-mute').addEventListener('click', () => {
+    el.querySelector('.mc-ms-btn.mute').addEventListener('click', () => {
       track.muted = !track.muted;
-      // Live-update the playing mix without interrupting playback.
-      if (mcState.trackGains.has(i)) mcState.trackGains.get(i).gain.value = track.muted ? 0 : 1;
+      mcApplyGains();   // live-update the playing mix without interrupting it
       renderMcTracks();
     });
-    el.querySelector('.mc-track-upload').addEventListener('click', () => {
+    el.querySelector('.mc-ms-btn.solo').addEventListener('click', () => {
+      track.soloed = !track.soloed;
+      mcApplyGains();   // solo silences every non-soloed pair, live
+      renderMcTracks();
+    });
+    el.querySelector('.mc-strip-upload').addEventListener('click', () => {
       mcState.uploadTarget = i;
       $('#mc-track-input').click();
     });
-    el.querySelector('.mc-track-clear').addEventListener('click', () => mcClearTrack(i));
+    el.querySelector('.mc-strip-clear').addEventListener('click', () => mcClearTrack(i));
 
-    // Reorder pairs by dragging a row onto another
+    // Reorder pairs by dragging a strip onto another
     el.addEventListener('dragstart', e => {
       if (e.target.tagName === 'INPUT') { e.preventDefault(); return; }
       e.dataTransfer.setData('text/mc-track-index', String(i));
@@ -3032,7 +3523,7 @@ function renderMcTracks() {
     });
     el.addEventListener('dragend', () => {
       el.classList.remove('dragging');
-      $$('.mc-track').forEach(t => t.classList.remove('drag-over'));
+      $$('.mc-strip').forEach(t => t.classList.remove('drag-over'));
     });
     el.addEventListener('dragover', e => {
       if (!e.dataTransfer.types.includes('text/mc-track-index')) return;
@@ -3053,7 +3544,7 @@ function renderMcTracks() {
       renderMcTracks();
     });
 
-    // Drop an audio file directly onto a row to load/replace just that pair.
+    // Drop an audio file directly onto a strip to load/replace just that pair.
     // stopPropagation keeps this from also triggering the panel-level
     // multi-channel import drop zone wired up in the EVENT WIRING section.
     el.addEventListener('dragenter', e => {
@@ -3088,7 +3579,7 @@ function renderMcTracks() {
     // to the drag, no error either way, which is why click is the primary
     // path and drag-out is a bonus for browsers that support it).
     if (track.buffer) {
-      const dragoutEl = el.querySelector('.mc-track-dragout');
+      const dragoutEl = el.querySelector('.mc-strip-dragout');
       const safeName = (track.label || `Track ${i + 1}`).replace(/[\\/:*?"<>|]+/g, '_').trim() || `Track ${i + 1}`;
       const extraChunks = mcState.tempo > 0 ? [buildAcidChunk(mcState.tempo)] : [];
 
@@ -3119,8 +3610,17 @@ function renderMcTracks() {
     }
 
     wrap.appendChild(el);
-    mcAttachScrub(el.querySelector('.mc-track-disc'), () => track.buffer ? track.buffer.duration : 0);
   });
+
+  // Trailing dashed "Add pair" column (up to 6 pairs).
+  const addCol = document.createElement('div');
+  addCol.className = 'mc-add-col';
+  const atMax = mcState.tracks.length >= 6;
+  addCol.innerHTML = `<button class="mc-add-btn" ${atMax ? 'disabled' : ''} title="${atMax ? 'Maximum of 6 stereo pairs' : 'Add a stereo pair'}">Add pair</button>`;
+  addCol.querySelector('.mc-add-btn').addEventListener('click', () => {
+    if (mcState.tracks.length < 6) mcSetPairCount(mcState.tracks.length + 1);
+  });
+  wrap.appendChild(addCol);
 
   updateMcMeta();
   mcRenderPositions(mcState.cursor);
@@ -3136,15 +3636,19 @@ function mcPlayAll(offsetSec = 0) {
   const startAt = ctx.currentTime + 0.08;
   offsetSec = Math.max(0, Math.min(offsetSec, mcState.totalDuration));
 
+  const bus = mcEnsureBus();
+
   mcState.tracks.forEach((track, i) => {
     if (!track.buffer) return;
     if (offsetSec >= track.buffer.duration) return; // already past this pair's end
     const src = ctx.createBufferSource();
     src.buffer = track.buffer;
     const gain = ctx.createGain();
-    gain.gain.value = track.muted ? 0 : 1;
+    gain.gain.value = mcAudible(i) ? 1 : 0;
     src.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(bus);
+    // Post-gain stereo analysers feed this pair's strip meter.
+    mcState.trackAnalysers.set(i, mcMakeAnalyserPair(gain));
     src.start(startAt, offsetSec);
     mcState.scheduledSources.push(src);
     mcState.trackGains.set(i, gain);
@@ -3155,61 +3659,21 @@ function mcPlayAll(offsetSec = 0) {
   mcState.isPlaying = true;
   mcState.playingIndex = null;
   $('#mc-play-btn').classList.add('playing');
-  $('#mc-play-btn').textContent = '⏸';
-  mcTick();
-}
-
-function mcPlayTrack(index) {
-  const track = mcState.tracks[index];
-  if (!track || !track.buffer) return;
-  mcStop();
-  const ctx = ensureAudioCtx();
-  const startAt = ctx.currentTime + 0.08;
-
-  const src = ctx.createBufferSource();
-  src.buffer = track.buffer;
-  src.connect(ctx.destination);
-  src.start(startAt);
-  mcState.scheduledSources.push(src);
-
-  mcState.playStartTime = startAt;
-  mcState.seekOffset = 0;
-  mcState.isPlaying = true;
-  mcState.playingIndex = index;
-  renderMcTracks();
-  mcTick();
-}
-
-function mcTick() {
-  const ctx = ensureAudioCtx();
-  const duration = mcState.playingIndex === null
-    ? mcState.totalDuration
-    : mcState.tracks[mcState.playingIndex].buffer.duration;
-
-  function step() {
-    if (!mcState.isPlaying) return;
-    const elapsed = (ctx.currentTime - mcState.playStartTime) + mcState.seekOffset;
-    if (elapsed >= duration) { mcStop(); return; }
-    if (mcState.playingIndex === null) {
-      const safe = Math.max(0, elapsed);
-      mcRenderPositions(safe);
-    }
-    mcState.rafId = requestAnimationFrame(step);
-  }
-  step();
+  mcUpdateTransportUI();
 }
 
 function mcStop() {
   mcState.scheduledSources.forEach(src => { try { src.stop(); } catch (e) {} });
   mcState.scheduledSources = [];
   mcState.trackGains.clear();
+  mcState.trackAnalysers.clear();
   mcState.isPlaying = false;
   mcState.playingIndex = null;
   mcState.seekOffset = 0;
   if (mcState.rafId) cancelAnimationFrame(mcState.rafId);
 
   $('#mc-play-btn').classList.remove('playing');
-  $('#mc-play-btn').textContent = '▶';
+  mcUpdateTransportUI();
   mcState.cursor = 0;
   renderMcTracks();
 }
@@ -3335,11 +3799,26 @@ $('#mc-play-btn').addEventListener('click', () => {
 $('#mc-stop-btn').addEventListener('click', mcStop);
 $('#mc-export-btn').addEventListener('click', mcExport);
 
+// Nudge the playhead ±5s; if playing, restart from the new position.
+function mcNudge(delta) {
+  if (!mcState.tracks.some(t => t.buffer)) return;
+  mcState.cursor = Math.max(0, Math.min(mcState.totalDuration, mcState.cursor + delta));
+  mcRenderPositions(mcState.cursor);
+  if (mcState.isPlaying) mcPlayAll(mcState.cursor);
+}
+$('#mc-nudge-back').addEventListener('click', () => mcNudge(-5));
+$('#mc-nudge-fwd').addEventListener('click', () => mcNudge(5));
+
 // The output-file disc: built once, scrubbed against the full mix length.
 $('#mc-master-disc').innerHTML = mcDiscSVG('master');
 mcAttachScrub($('#mc-master-disc'), () => mcState.totalDuration);
 
+// The two master VU faces (static scale/ticks; needles animate each frame).
+$$('#mc-vu-l .mc-vu-face, #mc-vu-r .mc-vu-face').forEach(face => { face.innerHTML = mcVuSVG(); });
+
 mcInit();
+// Always-on metering + playhead loop for the multi-channel mixer.
+mcAnimate();
 
 $('#play-btn').addEventListener('click', () => {
   if (state.isPlaying) stop();
