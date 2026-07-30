@@ -1718,7 +1718,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 3.1</span>
+    <span class="logo-tag">Rev 3.2</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -1814,7 +1814,8 @@ header {
       <button id="load-song-btn" class="btn btn-ghost" title="Open a saved song file (.json)">Load Song</button>
       <button id="save-project-btn" class="btn btn-ghost" disabled title="Save a small text file with the arrangement — re-load the same stems folder to reopen it">Save Project</button>
       <button id="save-bundle-btn" class="btn btn-ghost" disabled title="Save a self-contained file with the audio embedded — reopens with no stems folder needed">Save Bundle</button>
-      <button id="export-btn" class="btn btn-primary" disabled>Export Stems</button>
+      <button id="export-btn" class="btn btn-primary" disabled title="Download one WAV per instrument">Export Stems</button>
+      <button id="export-multitrack-btn" class="btn btn-primary" disabled title="Download one interleaved multi-channel WAV with every instrument on its own channel">Export Multi-Track</button>
     </div>
   </section>
 </div>
@@ -2966,10 +2967,11 @@ function renderArrangement() {
   $('#transport-time').textContent   = `0:00 / ${fmtTime(state.totalDuration)}`;
 
   const hasContent = state.arrangement.length > 0;
-  $('#play-btn').disabled        = !hasContent;
-  $('#export-btn').disabled      = !hasContent;
-  $('#save-project-btn').disabled = !hasContent;
-  $('#save-bundle-btn').disabled  = !hasContent;
+  $('#play-btn').disabled              = !hasContent;
+  $('#export-btn').disabled            = !hasContent;
+  $('#export-multitrack-btn').disabled = !hasContent;
+  $('#save-project-btn').disabled      = !hasContent;
+  $('#save-bundle-btn').disabled       = !hasContent;
 }
 
 // ============================================================
@@ -3211,19 +3213,53 @@ function buildAcidChunk(tempo) {
 // ============================================================
 // EXPORT
 // ============================================================
+// Pick any loaded buffer to read the project's sample rate / channel count from
+// (all stems share these). Returns null if nothing is loaded.
+function findReferenceBuffer() {
+  for (const sec of Object.values(state.stems)) {
+    for (const loop of Object.values(sec)) {
+      const buf = Object.values(loop)[0];
+      if (buf) return buf;
+    }
+  }
+  return null;
+}
+
+// Render one instrument's full arrangement to an AudioBuffer, laying each
+// block's stem end-to-end and honouring its trim — the same schedule used for
+// live playback and the per-stem export. Returns the rendered buffer, or null
+// if the offline context couldn't be created.
+async function renderInstrumentArrangement(instrument, numChannels, totalSamples, sampleRate) {
+  let offlineCtx;
+  try {
+    offlineCtx = new OfflineAudioContext(numChannels, totalSamples, sampleRate);
+  } catch (err) {
+    return null;
+  }
+
+  let cursor = 0;
+  for (const block of state.arrangement) {
+    const stems         = state.stems[block.section]?.[block.loop];
+    const trimStartSecs = trimBeatsToSecs(block.trimStart);
+    const blockDur      = getBlockDuration(block);
+
+    if (stems && stems[instrument] && blockDur > 0) {
+      const src = offlineCtx.createBufferSource();
+      src.buffer = stems[instrument];
+      src.connect(offlineCtx.destination);
+      src.start(cursor, trimStartSecs, blockDur);
+    }
+    cursor += blockDur;
+  }
+
+  return offlineCtx.startRendering();
+}
+
 async function exportStems() {
   if (state.arrangement.length === 0) return;
   if (state.isPlaying) stop();
 
-  // Discover sample rate and channel count from any buffer
-  let referenceBuffer = null;
-  for (const sec of Object.values(state.stems)) {
-    for (const loop of Object.values(sec)) {
-      const buf = Object.values(loop)[0];
-      if (buf) { referenceBuffer = buf; break; }
-    }
-    if (referenceBuffer) break;
-  }
+  const referenceBuffer = findReferenceBuffer();
   if (!referenceBuffer) return;
 
   const sampleRate = referenceBuffer.sampleRate;
@@ -3238,31 +3274,12 @@ async function exportStems() {
     const instrument = instruments[i];
     updateOverlay(i / instruments.length, `Rendering ${instrument} (${i + 1}/${instruments.length})`);
 
-    let offlineCtx;
-    try {
-      offlineCtx = new OfflineAudioContext(numChannels, totalSamples, sampleRate);
-    } catch (err) {
+    const rendered = await renderInstrumentArrangement(instrument, numChannels, totalSamples, sampleRate);
+    if (!rendered) {
       toast('Could not create export context — try a shorter arrangement', 'error');
       hideOverlay();
       return;
     }
-
-    let cursor = 0;
-    for (const block of state.arrangement) {
-      const stems           = state.stems[block.section]?.[block.loop];
-      const trimStartSecs   = trimBeatsToSecs(block.trimStart);
-      const blockDur        = getBlockDuration(block);
-
-      if (stems && stems[instrument] && blockDur > 0) {
-        const src = offlineCtx.createBufferSource();
-        src.buffer = stems[instrument];
-        src.connect(offlineCtx.destination);
-        src.start(cursor, trimStartSecs, blockDur);
-      }
-      cursor += blockDur;
-    }
-
-    const rendered = await offlineCtx.startRendering();
     const blob = audioBufferToWav(rendered);
 
     // Trigger download
@@ -3283,6 +3300,71 @@ async function exportStems() {
   setTimeout(() => {
     hideOverlay();
     toast(`Exported ${instruments.length} stem WAV${instruments.length === 1 ? '' : 's'}`, 'success');
+  }, 400);
+}
+
+// Export the whole arrangement as ONE interleaved multi-channel WAV — every
+// instrument packed into its own channel group, like the Multi-Channel tool's
+// combined export. Each instrument occupies `numChannels` consecutive channels
+// (instrument 0 → channels 0..n-1, instrument 1 → n..2n-1, …). Project tempo is
+// embedded as an ACID chunk so DAWs pick it up.
+async function exportMultiTrack() {
+  if (state.arrangement.length === 0) return;
+  if (state.isPlaying) stop();
+
+  const referenceBuffer = findReferenceBuffer();
+  if (!referenceBuffer) return;
+
+  const sampleRate   = referenceBuffer.sampleRate;
+  const numChannels  = referenceBuffer.numberOfChannels;
+  const totalSamples = Math.max(1, Math.ceil(state.totalDuration * sampleRate));
+
+  const instruments   = Array.from(state.instruments).sort();
+  const totalChannels = instruments.length * numChannels;
+
+  showOverlay('Exporting <em>multi-track</em>', `Combining ${instruments.length} stems into one file…`);
+
+  const ctx = ensureAudioCtx();
+  let combined;
+  try {
+    combined = ctx.createBuffer(totalChannels, totalSamples, sampleRate);
+  } catch (err) {
+    hideOverlay();
+    toast('Could not create a buffer for that many channels', 'error');
+    return;
+  }
+
+  for (let i = 0; i < instruments.length; i++) {
+    const instrument = instruments[i];
+    updateOverlay(i / instruments.length, `Rendering ${instrument} (${i + 1}/${instruments.length})`);
+
+    const rendered = await renderInstrumentArrangement(instrument, numChannels, totalSamples, sampleRate);
+    if (!rendered) {
+      hideOverlay();
+      toast('Could not create export context — try a shorter arrangement', 'error');
+      return;
+    }
+    for (let ch = 0; ch < numChannels; ch++) {
+      combined.copyToChannel(rendered.getChannelData(ch), i * numChannels + ch);
+    }
+  }
+
+  const extraChunks = state.bpm > 0 ? [buildAcidChunk(state.bpm)] : [];
+  const blob = audioBufferToWav(combined, extraChunks);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'arrangement_multitrack.wav';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+  updateOverlay(1, 'Done');
+  const tempoNote = state.bpm > 0 ? ` · ${Math.round(state.bpm)} BPM embedded` : '';
+  setTimeout(() => {
+    hideOverlay();
+    toast(`Exported ${totalChannels}-channel WAV (${instruments.length} stem${instruments.length === 1 ? '' : 's'})${tempoNote}`, 'success');
   }, 400);
 }
 
@@ -4199,6 +4281,7 @@ $('#play-btn').addEventListener('click', () => {
 $('#stop-btn').addEventListener('click', stop);
 $('#clear-btn').addEventListener('click', clearArrangement);
 $('#export-btn').addEventListener('click', exportStems);
+$('#export-multitrack-btn').addEventListener('click', exportMultiTrack);
 
 $('#save-project-btn').addEventListener('click', () => saveSong({ includeAudio: false }));
 $('#save-bundle-btn').addEventListener('click', () => saveSong({ includeAudio: true }));

@@ -5,7 +5,7 @@ browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
 
-The current version is shown next to the logo in the header (**Rev 3.1**).
+The current version is shown next to the logo in the header (**Rev 3.2**).
 
 ## Choosing a module
 
@@ -38,6 +38,10 @@ The header shows the current revision. **Big changes bump the first digit,
 small changes bump the second.** Update the `Rev X.Y` label in the header (and
 this list) with every change.
 
+- **Rev 3.2** — Stem Arranger gained an **Export Multi-Track** option: instead
+  of one WAV per instrument, render the whole arrangement to a single
+  interleaved multi-channel WAV (each instrument on its own channel group, with
+  the project tempo embedded), the same format the Multi-Channel tool produces.
 - **Rev 3.1** — Stem Arranger can now save and reopen songs. **Save Project**
   writes a small JSON file with the arrangement and tempo (re-load the same
   stems folder to reopen it); **Save Bundle** writes a self-contained JSON file
@@ -95,6 +99,10 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
 - **Export stems** — renders each instrument to its own WAV
   (`INSTRUMENT_arrangement.wav`) covering the whole song using an
   `OfflineAudioContext`.
+- **Export multi-track** — renders the whole arrangement to a single
+  interleaved multi-channel WAV (`arrangement_multitrack.wav`) with each
+  instrument on its own channel group and the project tempo embedded as an ACID
+  chunk — the same combined format the Multi-Channel tool produces.
 - **Save & reopen songs** — save the current song to a `.json` file so you don't
   rebuild it from scratch next time, then **Load Song** to bring it back. Two
   save formats:
@@ -115,7 +123,8 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
 4. Reorder, swap variations, and trim blocks as needed.
 5. Set the BPM and beats/bar if the auto-detected values need adjusting.
 6. Press play (or Space) to preview.
-7. Click **Export Stems** to download one WAV per instrument.
+7. Click **Export Stems** for one WAV per instrument, or **Export Multi-Track**
+   for a single multi-channel WAV with every instrument on its own channel.
 8. Click **Save Project** (or **Save Bundle**) to save the song to a `.json`
    file, and **Load Song** to reopen a saved song later.
 
