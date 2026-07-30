@@ -1718,7 +1718,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 3.0</span>
+    <span class="logo-tag">Rev 3.1</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -1811,6 +1811,9 @@ header {
         <div class="transport-progress-bar" id="transport-progress-bar"></div>
       </div>
       <button id="clear-btn" class="btn btn-ghost">Clear</button>
+      <button id="load-song-btn" class="btn btn-ghost" title="Open a saved song file (.json)">Load Song</button>
+      <button id="save-project-btn" class="btn btn-ghost" disabled title="Save a small text file with the arrangement — re-load the same stems folder to reopen it">Save Project</button>
+      <button id="save-bundle-btn" class="btn btn-ghost" disabled title="Save a self-contained file with the audio embedded — reopens with no stems folder needed">Save Bundle</button>
       <button id="export-btn" class="btn btn-primary" disabled>Export Stems</button>
     </div>
   </section>
@@ -1909,6 +1912,7 @@ header {
 
 <!-- Hidden file input -->
 <input type="file" id="file-input" webkitdirectory directory multiple style="display:none" />
+<input type="file" id="song-input" accept=".json,application/json" style="display:none" />
 <input type="file" id="mc-import-input" accept="audio/wav,audio/x-wav,.wav" style="display:none" />
 <input type="file" id="mc-track-input" accept="audio/*" style="display:none" />
 
@@ -2519,6 +2523,215 @@ function getSectionDuration(section, loop) {
 }
 
 // ============================================================
+// SONG SAVE / LOAD
+// ============================================================
+// A "song" file is JSON with the arrangement + tempo so you don't rebuild
+// from scratch. Two flavours share one schema and one import path:
+//   • Project (includeAudio=false) — tiny text; re-load the same stems folder
+//     to reopen. `audio` is null.
+//   • Bundle  (includeAudio=true)  — self-contained; each decoded AudioBuffer
+//     is re-encoded to WAV (audioBufferToWav) and base64'd, so it reopens with
+//     no stems folder present.
+const SONG_FORMAT = 'stem-arranger-song';
+const SONG_VERSION = 1;
+
+// base64 <-> ArrayBuffer, chunked so large buffers don't blow the call stack.
+function arrayBufferToBase64(buf) {
+  const bytes = new Uint8Array(buf);
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+function base64ToArrayBuffer(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+// Build the serializable song object. Async because encoding the audio for a
+// bundle is heavy; the caller drives the progress overlay.
+async function serializeSong({ includeAudio }) {
+  const song = {
+    format: SONG_FORMAT,
+    version: SONG_VERSION,
+    bpm: state.bpm,
+    detectedTempo: state.detectedTempo,
+    beatsPerBar: state.beatsPerBar,
+    sectionOrder: [...state.sectionOrder],
+    loopMeta: state.loopMeta,
+    // Drop cropOpen — it's disposable UI state, rebuilt on import.
+    arrangement: state.arrangement.map(b => ({
+      id: b.id, section: b.section, loop: b.loop,
+      trimStart: b.trimStart, trimEnd: b.trimEnd
+    })),
+    audio: null
+  };
+
+  if (includeAudio) {
+    // Count buffers first so the overlay can show real progress.
+    const total = Object.values(state.stems)
+      .reduce((n, loops) => n + Object.values(loops)
+        .reduce((m, insts) => m + Object.keys(insts).length, 0), 0);
+    let done = 0;
+    const audio = {};
+    for (const [section, loops] of Object.entries(state.stems)) {
+      audio[section] = {};
+      for (const [loop, insts] of Object.entries(loops)) {
+        audio[section][loop] = {};
+        for (const [instrument, buffer] of Object.entries(insts)) {
+          const blob = audioBufferToWav(buffer);
+          const buf = await blob.arrayBuffer();
+          audio[section][loop][instrument] = arrayBufferToBase64(buf);
+          done++;
+          updateOverlay(done / Math.max(1, total), `Encoding ${section} / ${loop} / ${instrument}`);
+          // Yield so the overlay can paint between buffers.
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+    }
+    song.audio = audio;
+  }
+
+  return song;
+}
+
+// Trigger a browser download of an object as a .json file. Reuses the same
+// object-URL + anchor pattern as exportStems().
+function downloadJSON(obj, filename) {
+  const blob = new Blob([JSON.stringify(obj)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+async function saveSong({ includeAudio }) {
+  if (state.arrangement.length === 0) return;
+  if (state.isPlaying) stop();
+  const label = includeAudio ? 'bundle' : 'project';
+  try {
+    if (includeAudio) showOverlay('Saving <em>bundle</em>', 'Encoding audio…');
+    const song = await serializeSong({ includeAudio });
+    downloadJSON(song, `song.${label}.json`);
+    if (includeAudio) hideOverlay();
+    toast(`Saved song ${label}`, 'success');
+  } catch (err) {
+    console.error('Save failed', err);
+    if (includeAudio) hideOverlay();
+    toast('Could not save song', 'error');
+  }
+}
+
+// Rebuild state.instruments from whatever is currently in state.stems.
+function rebuildInstrumentSet() {
+  const set = new Set();
+  for (const loops of Object.values(state.stems)) {
+    for (const insts of Object.values(loops)) {
+      for (const instrument of Object.keys(insts)) set.add(instrument);
+    }
+  }
+  state.instruments = set;
+}
+
+async function importSong(file) {
+  let song;
+  try {
+    song = JSON.parse(await file.text());
+  } catch {
+    toast('That file is not valid JSON', 'error');
+    return;
+  }
+  if (!song || song.format !== SONG_FORMAT || !Array.isArray(song.arrangement)) {
+    toast('That is not a Stem Arranger song file', 'error');
+    return;
+  }
+
+  if (state.isPlaying) stop();
+  const hasAudio = song.audio && typeof song.audio === 'object';
+
+  try {
+    if (hasAudio) showOverlay('Loading <em>song</em>', 'Decoding audio…');
+
+    // Restore tempo / order / metadata.
+    state.bpm           = song.bpm ?? null;
+    state.detectedTempo = song.detectedTempo ?? null;
+    state.beatsPerBar   = song.beatsPerBar ?? 4;
+    state.sectionOrder  = Array.isArray(song.sectionOrder) ? [...song.sectionOrder] : [];
+    state.loopMeta      = song.loopMeta && typeof song.loopMeta === 'object' ? song.loopMeta : {};
+
+    if (hasAudio) {
+      // Bundle: rebuild the sample library from embedded WAVs.
+      const ctx = ensureAudioCtx();
+      state.stems = {};
+      const entries = [];
+      for (const [section, loops] of Object.entries(song.audio)) {
+        for (const [loop, insts] of Object.entries(loops)) {
+          for (const [instrument, b64] of Object.entries(insts)) {
+            entries.push([section, loop, instrument, b64]);
+          }
+        }
+      }
+      let done = 0;
+      for (const [section, loop, instrument, b64] of entries) {
+        const buffer = await ctx.decodeAudioData(base64ToArrayBuffer(b64));
+        if (!state.stems[section]) state.stems[section] = {};
+        if (!state.stems[section][loop]) state.stems[section][loop] = {};
+        state.stems[section][loop][instrument] = buffer;
+        done++;
+        updateOverlay(done / Math.max(1, entries.length), `Decoding ${section} / ${loop} / ${instrument}`);
+      }
+      if (state.sectionOrder.length === 0) state.sectionOrder = Object.keys(state.stems);
+    }
+    // Project file: keep whatever stems are already loaded.
+    rebuildInstrumentSet();
+
+    // Restore the arrangement. Regenerate ids so they're unique, and re-add
+    // the disposable cropOpen flag.
+    state.arrangement = song.arrangement.map(b => ({
+      id: uid(),
+      section: b.section,
+      loop: b.loop,
+      trimStart: b.trimStart || 0,
+      trimEnd: b.trimEnd || 0,
+      cropOpen: false
+    }));
+
+    // Warn if any block points at stems that aren't loaded (project file
+    // opened without the matching folder).
+    const missing = state.arrangement.some(b => !state.stems[b.section]?.[b.loop]);
+
+    if (hasAudio) hideOverlay();
+
+    // Reflect the restored song to the UI — same tail as loadFolder().
+    const bpmInput = $('#bpm-input');
+    if (bpmInput && state.bpm) bpmInput.value = state.bpm;
+    updateBPMDetectedHint();
+    $('#empty-state').style.display = 'none';
+    $('#app').classList.add('active');
+    renderLibrary();
+    renderArrangement();
+
+    if (missing) {
+      toast('Song loaded — load the matching stems folder to hear it', 'info');
+    } else {
+      toast('Song loaded', 'success');
+    }
+  } catch (err) {
+    console.error('Import failed', err);
+    if (hasAudio) hideOverlay();
+    toast('Could not load that song', 'error');
+  }
+}
+
+// ============================================================
 // CROP LOGIC
 // ============================================================
 function updateTrim(id, side, delta) {
@@ -2753,8 +2966,10 @@ function renderArrangement() {
   $('#transport-time').textContent   = `0:00 / ${fmtTime(state.totalDuration)}`;
 
   const hasContent = state.arrangement.length > 0;
-  $('#play-btn').disabled   = !hasContent;
-  $('#export-btn').disabled = !hasContent;
+  $('#play-btn').disabled        = !hasContent;
+  $('#export-btn').disabled      = !hasContent;
+  $('#save-project-btn').disabled = !hasContent;
+  $('#save-bundle-btn').disabled  = !hasContent;
 }
 
 // ============================================================
@@ -3984,6 +4199,14 @@ $('#play-btn').addEventListener('click', () => {
 $('#stop-btn').addEventListener('click', stop);
 $('#clear-btn').addEventListener('click', clearArrangement);
 $('#export-btn').addEventListener('click', exportStems);
+
+$('#save-project-btn').addEventListener('click', () => saveSong({ includeAudio: false }));
+$('#save-bundle-btn').addEventListener('click', () => saveSong({ includeAudio: true }));
+$('#load-song-btn').addEventListener('click', () => $('#song-input').click());
+$('#song-input').addEventListener('change', e => {
+  if (e.target.files.length > 0) importSong(e.target.files[0]);
+  e.target.value = '';
+});
 
 // When BPM changes: recalculate all trim amounts and re-render crop UIs
 function onBPMChanged() {
