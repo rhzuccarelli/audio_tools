@@ -1107,6 +1107,93 @@ header {
   background: var(--hairline);
 }
 
+/* ========== LANDING / MODULE SELECT ========== */
+/* The landing grid, the header switcher and the router are all generated
+   from the TOOLS registry — adding a tool needs no changes here. */
+.landing {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  padding: 48px 40px;
+  overflow-y: auto;
+}
+.landing.active { display: flex; }
+
+.landing-head { text-align: center; max-width: 620px; }
+
+.landing-title {
+  font-family: var(--font-grot);
+  font-size: clamp(34px, 5vw, 60px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.98;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.landing-title em { font-style: normal; color: var(--muted); }
+
+.landing-subtitle {
+  margin-top: 18px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 12px;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 300px));
+  gap: 18px;
+  justify-content: center;
+  width: 100%;
+  max-width: 640px;
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+  padding: 24px;
+  min-height: 190px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+}
+.tool-card:hover { background: var(--ink); color: var(--ink-invert); transform: translateY(-2px); }
+.tool-card:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+.tool-card-icon { width: 34px; height: 34px; }
+.tool-card-icon svg { width: 100%; height: 100%; display: block; stroke: currentColor; fill: none; }
+
+.tool-card-name {
+  font-family: var(--font-grot);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+.tool-card-tag { font-size: 11px; line-height: 1.6; color: var(--muted); }
+.tool-card:hover .tool-card-tag { color: var(--muted-on-ink); }
+
+.tool-card-cta {
+  margin-top: auto;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tool-card:hover .tool-card-cta { color: var(--ink-invert); }
+
+/* Logo doubles as a "back to modules" button once inside a tool. */
+.logo.is-home { cursor: pointer; }
+.logo.is-home:hover .brand-name { color: var(--muted); }
+
 /* ========== MULTI-CHANNEL MIXER ========== */
 .mc-app {
   display: none;
@@ -1659,22 +1746,31 @@ header {
 <body>
 
 <header>
-  <div class="logo">
+  <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
-    <span class="brand-name">Stem Arranger</span>
+    <span class="brand-name">Audio Tools</span>
     <span class="logo-tag">Rev 2.0</span>
   </div>
   <div class="header-actions">
-    <div class="mode-tabs">
-      <button id="mode-stems-btn" class="mode-tab active">Stem Arranger</button>
-      <button id="mode-mc-btn" class="mode-tab">Multi-Channel WAV</button>
-    </div>
-    <button id="load-btn" class="btn btn-ghost">Load Folder</button>
+    <!-- Tool switcher + landing grid are generated from the TOOLS registry in JS. -->
+    <div class="mode-tabs" id="tool-switcher" style="display:none"></div>
+    <button id="load-btn" class="btn btn-ghost" style="display:none">Load Folder</button>
   </div>
 </header>
 
+<!-- Landing: module selection (cards generated from TOOLS) -->
+<div class="landing" id="landing">
+  <div class="landing-head">
+    <h1 class="landing-title">Pick a <em>tool.</em></h1>
+    <p class="landing-subtitle">
+      A local, browser-only audio toolkit. Choose a module to get started — everything runs on your machine, nothing is uploaded.
+    </p>
+  </div>
+  <div class="tool-grid" id="tool-grid"></div>
+</div>
+
 <!-- Empty state -->
-<div class="empty-state" id="empty-state">
+<div class="empty-state" id="empty-state" style="display:none">
   <h1 class="empty-title">Arrange your <em>stems.</em></h1>
   <p class="empty-subtitle">
     Drop in a folder of stems organised by section &amp; loop. Sequence them however you like, preview the result, then export one clean WAV per instrument across the whole song.
@@ -1860,7 +1956,57 @@ header {
 // ============================================================
 // STATE
 // ============================================================
-let currentMode = 'stems'; // 'stems' | 'mc'
+// ============================================================
+// TOOL REGISTRY
+// ============================================================
+// The single place a tool is registered. The landing grid, the header
+// switcher, the hash router and the keyboard handler are all derived from
+// this array, so adding a new tool is one entry here plus its own markup
+// container — no router, switcher or keyboard edits required.
+//
+// Each entry owns its lifecycle:
+//   enter()   reveal this tool's UI (and only this tool's UI)
+//   leave()   tear it down / stop its audio when navigating away
+//   onSpace() optional: what the spacebar does while this tool is active
+// Methods are called at runtime, so they may reference functions/state
+// defined later in this script.
+const TOOLS = [
+  {
+    id: 'stem-arranger',
+    name: 'Stem Arranger',
+    tagline: 'Sequence loops into a full song and export one clean WAV per instrument.',
+    cta: 'Arrange stems',
+    icon: '<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="13" y2="12"/><line x1="4" y1="17" x2="17" y2="17"/></svg>',
+    showLoadBtn: true,
+    enter() {
+      $('#empty-state').style.display = state.sectionOrder.length ? 'none' : 'flex';
+      $('#app').classList.toggle('active', state.sectionOrder.length > 0);
+    },
+    leave() {
+      stop();
+      $('#empty-state').style.display = 'none';
+      $('#app').classList.remove('active');
+    },
+    onSpace() {
+      if (state.arrangement.length > 0) { if (state.isPlaying) stop(); else play(); }
+    },
+  },
+  {
+    id: 'multichannel',
+    name: 'Multi-Channel WAV',
+    tagline: 'Build or edit interleaved multi-channel WAVs from independent stereo pairs.',
+    cta: 'Open mixer',
+    icon: '<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="6" y1="4" x2="6" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="18" y1="4" x2="18" y2="20"/><circle cx="6" cy="9" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1.7" fill="currentColor" stroke="none"/><circle cx="18" cy="8" r="1.7" fill="currentColor" stroke="none"/></svg>',
+    showLoadBtn: false,
+    enter() { $('#mc-app').classList.add('active'); },
+    leave() { mcStop(); $('#mc-app').classList.remove('active'); },
+    onSpace() {
+      if (mcState.tracks.some(t => t.buffer)) { if (mcState.isPlaying) mcStop(); else mcPlayAll(); }
+    },
+  },
+];
+const TOOLS_BY_ID = Object.fromEntries(TOOLS.map(t => [t.id, t]));
+let currentTool = null; // null → on the landing page
 const state = {
   audioCtx: null,
   stems: {},                  // { section: { loop: { instrument: AudioBuffer } } }
@@ -3743,27 +3889,79 @@ $('#file-input').addEventListener('change', e => {
   });
 });
 
-// ---------- Mode switching ----------
-function setMode(mode) {
-  stop();
-  mcStop();
-  currentMode = mode;
-  const isStems = mode === 'stems';
-  $('#mode-stems-btn').classList.toggle('active', isStems);
-  $('#mode-mc-btn').classList.toggle('active', !isStems);
-  $('#load-btn').style.display = isStems ? '' : 'none';
-  $('#mc-app').classList.toggle('active', !isStems);
-  if (isStems) {
-    $('#empty-state').style.display = state.sectionOrder.length ? 'none' : 'flex';
-    $('#app').classList.toggle('active', state.sectionOrder.length > 0);
-  } else {
-    $('#empty-state').style.display = 'none';
-    $('#app').classList.remove('active');
-  }
+// ---------- Landing + tool router ----------
+// The URL hash owns the current view: '#/' (or empty) → landing,
+// '#/<tool-id>' → that tool. Navigation just sets location.hash, so
+// deep-links and browser back/forward work for free.
+
+// Build the landing cards and header switcher from the registry.
+function buildFromRegistry() {
+  $('#tool-switcher').innerHTML = TOOLS.map(t =>
+    `<button class="mode-tab" data-tool="${t.id}">${t.name}</button>`).join('');
+  $('#tool-grid').innerHTML = TOOLS.map(t =>
+    `<button class="tool-card" data-tool="${t.id}">
+       <span class="tool-card-icon">${t.icon}</span>
+       <span class="tool-card-name">${t.name}</span>
+       <span class="tool-card-tag">${t.tagline}</span>
+       <span class="tool-card-cta">${t.cta} &rarr;</span>
+     </button>`).join('');
 }
 
-$('#mode-stems-btn').addEventListener('click', () => setMode('stems'));
-$('#mode-mc-btn').addEventListener('click', () => setMode('mc'));
+// Highlight the active tool in the header switcher.
+function syncSwitcher() {
+  $$('#tool-switcher .mode-tab').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.tool === currentTool));
+}
+
+function showLanding() {
+  if (currentTool) TOOLS_BY_ID[currentTool].leave();
+  currentTool = null;
+  $('#landing').classList.add('active');
+  $('#tool-switcher').style.display = 'none';
+  $('#load-btn').style.display = 'none';
+  $('#home-link').classList.remove('is-home');
+  syncSwitcher();
+}
+
+function goToTool(id) {
+  const tool = TOOLS_BY_ID[id];
+  if (!tool) { location.hash = '#/'; return; }
+  if (currentTool !== id) {
+    if (currentTool) TOOLS_BY_ID[currentTool].leave();
+    currentTool = id;
+    tool.enter();
+  }
+  $('#landing').classList.remove('active');
+  $('#tool-switcher').style.display = '';
+  $('#load-btn').style.display = tool.showLoadBtn ? '' : 'none';
+  $('#home-link').classList.add('is-home');
+  syncSwitcher();
+}
+
+// Resolve the current hash to a view.
+function route() {
+  const id = location.hash.replace(/^#\/?/, '');
+  if (id && TOOLS_BY_ID[id]) goToTool(id);
+  else showLanding();
+}
+
+window.addEventListener('hashchange', route);
+
+// A single delegated handler covers both the landing cards and the header
+// switcher buttons — anything carrying data-tool navigates to that tool.
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-tool]');
+  if (el) location.hash = '#/' + el.dataset.tool;
+});
+
+// Logo → back to the module picker (also keyboard-activatable).
+$('#home-link').addEventListener('click', () => { location.hash = '#/'; });
+$('#home-link').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.hash = '#/'; }
+});
+
+buildFromRegistry();
+route();
 
 // ---------- Multi-channel mixer wiring ----------
 $('#mc-tempo-input').addEventListener('change', e => {
@@ -3877,16 +4075,10 @@ $('#transport-progress').addEventListener('click', e => {
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.code === 'Space') {
-    e.preventDefault();
-    if (currentMode === 'stems') {
-      if (state.arrangement.length > 0) {
-        if (state.isPlaying) stop(); else play();
-      }
-    } else {
-      if (mcState.tracks.some(t => t.buffer)) {
-        if (mcState.isPlaying) mcStop(); else mcPlayAll();
-      }
-    }
+    // On the landing page (currentTool === null) space does nothing;
+    // otherwise the active tool decides what play/stop means.
+    const tool = currentTool && TOOLS_BY_ID[currentTool];
+    if (tool && tool.onSpace) { e.preventDefault(); tool.onSpace(); }
   }
 });
 </script>

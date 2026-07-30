@@ -1,10 +1,33 @@
-# Stem Arranger
+# Audio Tools
 
-A single-file, browser-based tool for arranging musical stems into a full song
-and exporting one clean WAV per instrument. Everything runs locally in your
+A single-file, browser-based audio toolkit. Everything runs locally in your
 browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
+
+## Choosing a module
+
+The app opens on a **module-selection landing page** where you pick which tool
+to work with:
+
+- **Stem Arranger** — sequence loops into a full song and export one clean WAV
+  per instrument (documented below).
+- **Multi-Channel WAV** — build or edit interleaved multi-channel WAVs from
+  independent stereo pairs (see [Multi-Channel WAV mixer](#multi-channel-wav-mixer)).
+
+The current tool lives in the URL hash (`#/stem-arranger`, `#/multichannel`),
+so tools are deep-linkable and the browser back/forward buttons move between
+them. Click the **Audio Tools** logo at any time to return to the picker.
+
+### Adding a tool
+
+Tools are data-driven from a single `TOOLS` registry near the top of the
+`<script>` in [`index.html`](index.html). A new tool is one registry entry
+(`id`, `name`, `tagline`, `icon`, `enter()`/`leave()`/`onSpace()` hooks) plus
+its own markup container — the landing grid, header switcher, hash router, and
+keyboard handling are all derived from the registry, so none of them need to be
+touched. This keeps the app extensible without depending on a single hardcoded
+mode switch.
 
 ## What it does
 
