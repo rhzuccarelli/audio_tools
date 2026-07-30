@@ -5,6 +5,8 @@ browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
 
+The current version is shown next to the logo in the header (**Rev 3.0**).
+
 ## Choosing a module
 
 The app opens on a **module-selection landing page** where you pick which tool
@@ -15,19 +17,31 @@ to work with:
 - **Multi-Channel WAV** — build or edit interleaved multi-channel WAVs from
   independent stereo pairs (see [Multi-Channel WAV mixer](#multi-channel-wav-mixer)).
 
-The current tool lives in the URL hash (`#/stem-arranger`, `#/multichannel`),
-so tools are deep-linkable and the browser back/forward buttons move between
-them. Click the **Audio Tools** logo at any time to return to the picker.
+Each tool is self-contained: once you're inside one, there is no shortcut to the
+others — return to the landing page (click the **Audio Tools** logo) to switch
+tools. The current tool lives in the URL hash (`#/stem-arranger`,
+`#/multichannel`), so tools are deep-linkable and the browser back/forward
+buttons move between them.
 
 ### Adding a tool
 
 Tools are data-driven from a single `TOOLS` registry near the top of the
 `<script>` in [`index.html`](index.html). A new tool is one registry entry
 (`id`, `name`, `tagline`, `icon`, `enter()`/`leave()`/`onSpace()` hooks) plus
-its own markup container — the landing grid, header switcher, hash router, and
-keyboard handling are all derived from the registry, so none of them need to be
-touched. This keeps the app extensible without depending on a single hardcoded
-mode switch.
+its own markup container — the landing grid, hash router, and keyboard handling
+are all derived from the registry, so none of them need to be touched. This
+keeps the app extensible without depending on a single hardcoded mode switch.
+
+## Version history
+
+The header shows the current revision. **Big changes bump the first digit,
+small changes bump the second.** Update the `Rev X.Y` label in the header (and
+this list) with every change.
+
+- **Rev 3.0** — Tools are now isolated: the in-app tool switcher was removed, so
+  switching tools goes back through the landing page.
+- **Rev 2.0** — Added the module-selection landing page and the `TOOLS` registry
+  (deep-linkable, hash-routed tools).
 
 ## What it does
 

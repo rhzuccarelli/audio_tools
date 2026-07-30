@@ -1076,37 +1076,6 @@ header {
 
 .crop-info .kept { color: var(--ink); font-weight: 700; }
 
-/* ========== MODE TABS ========== */
-.mode-tabs {
-  display: flex;
-  border: 1px solid var(--ink);
-}
-
-.mode-tab {
-  font-family: var(--font-mono);
-  background: var(--paper);
-  color: var(--ink);
-  border: none;
-  padding: 7px 13px;
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
-}
-
-.mode-tab + .mode-tab { border-left: 1px solid var(--ink); }
-
-.mode-tab.active {
-  background: var(--ink);
-  color: var(--ink-invert);
-}
-
-.mode-tab:hover:not(.active) {
-  background: var(--hairline);
-}
-
 /* ========== LANDING / MODULE SELECT ========== */
 /* The landing grid, the header switcher and the router are all generated
    from the TOOLS registry — adding a tool needs no changes here. */
@@ -1749,11 +1718,11 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 2.0</span>
+    <span class="logo-tag">Rev 3.0</span>
   </div>
   <div class="header-actions">
-    <!-- Tool switcher + landing grid are generated from the TOOLS registry in JS. -->
-    <div class="mode-tabs" id="tool-switcher" style="display:none"></div>
+    <!-- No cross-app switcher: inside a tool, use the logo to return to the
+         module picker. The landing grid is generated from the TOOLS registry. -->
     <button id="load-btn" class="btn btn-ghost" style="display:none">Load Folder</button>
   </div>
 </header>
@@ -3894,10 +3863,10 @@ $('#file-input').addEventListener('change', e => {
 // '#/<tool-id>' → that tool. Navigation just sets location.hash, so
 // deep-links and browser back/forward work for free.
 
-// Build the landing cards and header switcher from the registry.
+// Build the landing cards from the registry. There is no in-app tool
+// switcher: once inside a tool, the only way to another tool is back through
+// the landing page (via the logo).
 function buildFromRegistry() {
-  $('#tool-switcher').innerHTML = TOOLS.map(t =>
-    `<button class="mode-tab" data-tool="${t.id}">${t.name}</button>`).join('');
   $('#tool-grid').innerHTML = TOOLS.map(t =>
     `<button class="tool-card" data-tool="${t.id}">
        <span class="tool-card-icon">${t.icon}</span>
@@ -3907,20 +3876,12 @@ function buildFromRegistry() {
      </button>`).join('');
 }
 
-// Highlight the active tool in the header switcher.
-function syncSwitcher() {
-  $$('#tool-switcher .mode-tab').forEach(btn =>
-    btn.classList.toggle('active', btn.dataset.tool === currentTool));
-}
-
 function showLanding() {
   if (currentTool) TOOLS_BY_ID[currentTool].leave();
   currentTool = null;
   $('#landing').classList.add('active');
-  $('#tool-switcher').style.display = 'none';
   $('#load-btn').style.display = 'none';
   $('#home-link').classList.remove('is-home');
-  syncSwitcher();
 }
 
 function goToTool(id) {
@@ -3932,10 +3893,8 @@ function goToTool(id) {
     tool.enter();
   }
   $('#landing').classList.remove('active');
-  $('#tool-switcher').style.display = '';
   $('#load-btn').style.display = tool.showLoadBtn ? '' : 'none';
   $('#home-link').classList.add('is-home');
-  syncSwitcher();
 }
 
 // Resolve the current hash to a view.
