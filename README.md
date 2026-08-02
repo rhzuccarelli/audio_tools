@@ -5,7 +5,7 @@ browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
 
-The current version is shown next to the logo in the header (**Rev 3.2**).
+The current version is shown next to the logo in the header (**Rev 3.3**).
 
 ## Choosing a module
 
@@ -38,6 +38,11 @@ The header shows the current revision. **Big changes bump the first digit,
 small changes bump the second.** Update the `Rev X.Y` label in the header (and
 this list) with every change.
 
+- **Rev 3.3** — The Multi-Channel WAV mixer can now source each track's **left
+  and right channels independently**. Load two different mono files into one
+  track (one per channel), and **route channels between tracks** by dragging a
+  channel's L/R grip onto the L or R slot of any other track — e.g. copy the L
+  of track 6 into the R of track 3. Each channel has its own load/clear control.
 - **Rev 3.2** — Stem Arranger gained an **Export Multi-Track** option: instead
   of one WAV per instrument, render the whole arrangement to a single
   interleaved multi-channel WAV (each instrument on its own channel group, with
@@ -137,10 +142,23 @@ is bass, and so on.
 
 - **Set the pair count** (1-6) to size the project.
 - **Upload** a mono or stereo file into any individual pair without touching
-  the others.
+  the others (the strip's **Upload/Replace** button fills both channels from one
+  file — a mono file feeds both, a stereo file splits into L and R).
+- **Source each channel independently** — every track exposes a small **L** and
+  **R** row. Click the **＋** on a row to load a mono file into just that
+  channel, so a single track can hold two unrelated mono files (e.g. a mono kick
+  on L and a mono snare on R). The **✕** clears one channel; clearing both
+  empties the track. Channels of different lengths are padded with silence to
+  match.
+- **Route channels between tracks** — drag a channel's **L**/**R** grip and drop
+  it onto the L or R slot of any track (including another slot on the same
+  track) to copy that channel there. For example, drop track 6's L grip onto
+  track 3's R slot to copy it across. The copy is independent — editing or
+  clearing the source afterwards doesn't disturb the destination.
 - **Import** an existing multi-channel WAV (2-12 channels, even) to split it
   back into its stereo pairs for editing — replace just the pairs you want
-  (e.g. re-record pair 1) and re-export.
+  (e.g. re-record pair 1) and re-export. After importing you can also rearrange
+  its channels with the routing grips before exporting.
 - **Export** writes one interleaved WAV with all pairs combined; empty or
   shorter pairs are padded with silence.
 - Preview playback mixes every pair down to your stereo output — the

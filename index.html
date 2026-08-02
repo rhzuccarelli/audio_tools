@@ -1348,6 +1348,84 @@ header {
   color: var(--muted);
 }
 
+/* Per-channel (L/R) source matrix — independent mono slots + routing grips */
+.mc-chans {
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.mc-chan {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  min-height: 22px;
+}
+
+.mc-chan + .mc-chan { border-top: 1px solid var(--hairline); }
+
+.mc-chan.drop-target {
+  background: var(--hairline);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.mc-chan-grip {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  width: 15px;
+  text-align: center;
+  color: var(--ink);
+  cursor: grab;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 1px 0;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.mc-chan-grip.empty {
+  color: var(--muted);
+  cursor: default;
+  border-style: dashed;
+}
+
+.mc-chan-grip.dragging { background: var(--ink); color: var(--ink-invert); }
+
+.mc-chan-src {
+  flex: 1;
+  min-width: 0;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mc-chan-src.loaded { color: var(--ink); }
+
+.mc-chan-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+
+.mc-chan-btn.load:hover { color: var(--ink); }
+.mc-chan-btn.clear:hover:not(:disabled) { color: var(--danger); }
+.mc-chan-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.mc-strip.is-dim .mc-chans { opacity: 0.4; }
+
 /* Mute / Solo row */
 .mc-strip-ms {
   border-top: 1px solid var(--hairline);
@@ -1718,7 +1796,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 3.2</span>
+    <span class="logo-tag">Rev 3.3</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -3376,7 +3454,7 @@ async function exportMultiTrack() {
 // without touching the others; importing a multi-channel WAV splits it
 // back into its constituent pairs for editing.
 const mcState = {
-  tracks: [],            // [{ label, buffer: 2ch AudioBuffer|null, fileName, customLabel, muted }]
+  tracks: [],            // [{ label, buffer: 2ch AudioBuffer|null, channelNames: [L,R], fileName, customLabel, muted }]
   sampleRate: null,
   tempo: null,            // user-set/imported project tempo (BPM) — embedded on export
   detectedTempo: null,    // tempo read from an imported file's ACID chunk, if any
@@ -3388,7 +3466,7 @@ const mcState = {
   seekOffset: 0,         // seconds into the mix that playStartTime corresponds to
   rafId: null,
   totalDuration: 0,
-  uploadTarget: null,    // track index awaiting a file from #mc-track-input
+  uploadTarget: null,    // { index, ch } awaiting a file from #mc-track-input (ch null = whole pair)
   cursor: 0,             // playhead position (seconds) shown on the discs while stopped
 
   // ---- Metering (real analyser data drives the strip meters + master VU) ----
@@ -3655,7 +3733,7 @@ function mcAttachScrub(el, getDuration) {
 }
 
 function mcMakeTrack(i) {
-  return { label: `Track ${i + 1}`, buffer: null, fileName: null, customLabel: false, muted: false, soloed: false };
+  return { label: `Track ${i + 1}`, buffer: null, channelNames: [null, null], fileName: null, customLabel: false, muted: false, soloed: false };
 }
 
 function mcInit() {
@@ -3733,9 +3811,11 @@ async function mcImportFile(file) {
     mcState.tracks = pairs.map((pairBuf, i) => ({
       label: `Track ${i + 1}`,
       buffer: pairBuf,
+      channelNames: [`${file.name} (ch ${i * 2 + 1})`, `${file.name} (ch ${i * 2 + 2})`],
       fileName: file.name,
       customLabel: false,
       muted: false,
+      soloed: false,
     }));
     $('#mc-pair-count').value = pairs.length;
 
@@ -3775,8 +3855,14 @@ async function mcUploadTrackFile(index, file) {
     const stereo = mcUpmixToStereo(decoded);
     if (!mcState.sampleRate) mcState.sampleRate = stereo.sampleRate;
 
+    const mono = decoded.numberOfChannels === 1;
     track.buffer = stereo;
     track.fileName = file.name;
+    // A mono file feeds both channels from the same source; a stereo file
+    // gives L and R their own halves. Either way both slots are now filled.
+    track.channelNames = mono
+      ? [file.name, file.name]
+      : [`${file.name} (L)`, `${file.name} (R)`];
     if (!track.customLabel) track.label = file.name.replace(/\.[^.]+$/, '').toUpperCase();
 
     if (mcState.isPlaying) mcStop();
@@ -3787,14 +3873,117 @@ async function mcUploadTrackFile(index, file) {
   }
 }
 
+// ---------- Per-channel (L/R) sourcing & routing ----------
+// A track's stereo buffer can be assembled one channel at a time: load a
+// mono file into just L or just R, or copy a channel from another track.
+// The buffer stays the single 2-channel source of truth that playback,
+// metering and export already understand.
+
+// The mono samples currently sitting in channel `ch` (0=L, 1=R), or null.
+function mcGetChannelData(track, ch) {
+  if (!track || !track.buffer) return null;
+  return track.buffer.getChannelData(ch);
+}
+
+// Replace one channel of a track with mono `data` (or null to clear it),
+// rebuilding its 2-channel buffer. The two channels may differ in length —
+// the buffer is sized to the longer one and the shorter is zero-padded.
+function mcSetTrackChannel(index, ch, data, srcName) {
+  const track = mcState.tracks[index];
+  if (!track) return;
+  const ctx = ensureAudioCtx();
+
+  // A slot is "loaded" iff its channelNames entry is set — never by whether
+  // the buffer channel happens to hold data, since a cleared channel still
+  // leaves zero-padding behind and a real channel can be legitimately silent.
+  const cn = track.channelNames || [null, null];
+  const other = ch === 0 ? 1 : 0;
+  const otherData = cn[other] ? mcGetChannelData(track, other) : null;
+  const dataL = ch === 0 ? data : otherData;
+  const dataR = ch === 1 ? data : otherData;
+  cn[ch] = srcName || null;
+  track.channelNames = cn;
+
+  if (!dataL && !dataR) {
+    // Both channels empty — the track goes back to silence.
+    track.buffer = null;
+    track.fileName = null;
+    track.muted = false;
+    track.soloed = false;
+    if (mcState.isPlaying) mcStop();
+    renderMcTracks();
+    return;
+  }
+
+  const len = Math.max(dataL ? dataL.length : 0, dataR ? dataR.length : 0);
+  const sr = mcState.sampleRate || ctx.sampleRate;
+  const buf = ctx.createBuffer(2, len, sr);
+  if (dataL) buf.copyToChannel(dataL, 0);   // read from the old buffer, then
+  if (dataR) buf.copyToChannel(dataR, 1);   // replace it — the reads run first
+  track.buffer = buf;
+  track.fileName = null;                     // mixed sources: no single filename
+  if (!mcState.sampleRate) mcState.sampleRate = sr;
+
+  if (mcState.isPlaying) mcStop();
+  renderMcTracks();
+}
+
+// Load a mono (or stereo — its left is taken) file into a single L/R slot.
+async function mcUploadChannelFile(index, ch, file) {
+  const track = mcState.tracks[index];
+  if (!track) return;
+  try {
+    const ctx = ensureAudioCtx();
+    const decoded = await ctx.decodeAudioData(await file.arrayBuffer());
+    if (decoded.numberOfChannels > 2) {
+      toast(`${file.name} has ${decoded.numberOfChannels} channels — load a mono or stereo file into a channel`, 'error');
+      return;
+    }
+    const data = Float32Array.from(decoded.getChannelData(0));
+    const srcName = file.name.replace(/\.[^.]+$/, '');
+    // Adopt the file's name as the track label only if the track had no
+    // identity yet (still the default "Track N", nothing else loaded).
+    if (!track.customLabel && track.label === `Track ${index + 1}`) {
+      track.label = srcName.toUpperCase();
+    }
+    mcSetTrackChannel(index, ch, data, srcName);
+  } catch (err) {
+    console.warn('Channel upload failed', err);
+    toast(`Could not decode ${file.name}`, 'error');
+  }
+}
+
+// Copy one track's channel onto another track's channel (independent copy,
+// so editing/clearing one never disturbs the other).
+function mcCopyChannel(srcIndex, srcCh, dstIndex, dstCh) {
+  const srcTrack = mcState.tracks[srcIndex];
+  if (!srcTrack || !srcTrack.buffer) { toast('That channel has no audio to copy', 'error'); return; }
+  const data = Float32Array.from(srcTrack.buffer.getChannelData(srcCh));
+  const base = (srcTrack.channelNames && srcTrack.channelNames[srcCh])
+    || srcTrack.label || `Track ${srcIndex + 1}`;
+  const srcName = `${base} → from T${srcIndex + 1}${srcCh === 0 ? 'L' : 'R'}`;
+  mcSetTrackChannel(dstIndex, dstCh, data, srcName);
+  toast(`Copied Track ${srcIndex + 1} ${srcCh === 0 ? 'L' : 'R'} → Track ${dstIndex + 1} ${dstCh === 0 ? 'L' : 'R'}`, 'success');
+}
+
 function mcClearTrack(index) {
   const track = mcState.tracks[index];
   if (!track || !track.buffer) return;
   track.buffer = null;
+  track.channelNames = [null, null];
   track.fileName = null;
   track.muted = false;
+  track.soloed = false;
   if (mcState.isPlaying) mcStop();
   renderMcTracks();
+}
+
+// One-line source description for a track's status footer.
+function mcSourceSummary(track) {
+  const cn = track.channelNames || [null, null];
+  if (cn[0] && !cn[1]) return 'L only';
+  if (!cn[0] && cn[1]) return 'R only';
+  return null;
 }
 
 function mcTotalDuration() {
@@ -3850,9 +4039,11 @@ function renderMcTracks() {
     el.dataset.index = i;
     el.draggable = true;
 
-    const status = track.buffer
-      ? `${track.fileName || 'Loaded'} · ${fmtTime(track.buffer.duration)}`
-      : 'Empty — no audio';
+    let status = 'Empty — no audio';
+    if (track.buffer) {
+      const half = mcSourceSummary(track);
+      status = `${fmtTime(track.buffer.duration)}${half ? ` · ${half}` : ''}`;
+    }
 
     el.innerHTML = `
       <div class="mc-strip-head">
@@ -3881,6 +4072,20 @@ function renderMcTracks() {
         <div class="mc-strip-db">-∞</div>
         <div class="mc-strip-peak">Peak -∞</div>
       </div>
+      <div class="mc-chans">
+        ${[0, 1].map(ch => {
+          const name = (track.channelNames || [null, null])[ch];
+          const letter = ch === 0 ? 'L' : 'R';
+          const has = !!name;
+          return `
+        <div class="mc-chan" data-ch="${ch}">
+          <span class="mc-chan-grip${has ? '' : ' empty'}" draggable="${has ? 'true' : 'false'}" data-ch="${ch}" title="${has ? `Drag onto another channel to copy ${letter} there` : `${letter} channel is empty`}">${letter}</span>
+          <span class="mc-chan-src${has ? ' loaded' : ''}" title="${has ? name.replace(/"/g, '&quot;') : 'No audio'}">${has ? name.replace(/</g, '&lt;') : '—'}</span>
+          <button class="mc-chan-btn load" data-ch="${ch}" title="Load a mono file into the ${letter} channel">＋</button>
+          <button class="mc-chan-btn clear" data-ch="${ch}" title="Clear the ${letter} channel" ${has ? '' : 'disabled'}>✕</button>
+        </div>`;
+        }).join('')}
+      </div>
       <div class="mc-strip-ms">
         <button class="mc-ms-btn mute${track.muted ? ' active' : ''}" title="Mute this pair" ${track.buffer ? '' : 'disabled'}>M</button>
         <button class="mc-ms-btn solo${track.soloed ? ' active' : ''}" title="Solo this pair" ${track.buffer ? '' : 'disabled'}>S</button>
@@ -3888,7 +4093,7 @@ function renderMcTracks() {
       <div class="mc-strip-export">
         <button class="mc-strip-dragout${track.buffer ? '' : ' disabled'}" draggable="${track.buffer ? 'true' : 'false'}" title="${track.buffer ? 'Click to export this pair as a WAV, or drag it out of the browser onto your desktop (Chrome/Edge only)' : 'Load audio to enable'}">Export ⇲</button>
         <div class="mc-strip-actions">
-          <button class="mc-strip-upload" title="Load / replace this pair">${track.buffer ? 'Replace' : 'Upload'}</button>
+          <button class="mc-strip-upload" title="Load / replace both channels from one stereo (or mono) file">${track.buffer ? 'Replace' : 'Upload'}</button>
           <button class="mc-strip-clear" title="Clear this pair" ${track.buffer ? '' : 'disabled'}>✕</button>
         </div>
       </div>
@@ -3921,10 +4126,60 @@ function renderMcTracks() {
       renderMcTracks();
     });
     el.querySelector('.mc-strip-upload').addEventListener('click', () => {
-      mcState.uploadTarget = i;
+      mcState.uploadTarget = { index: i, ch: null };
       $('#mc-track-input').click();
     });
     el.querySelector('.mc-strip-clear').addEventListener('click', () => mcClearTrack(i));
+
+    // Per-channel (L/R) controls: load a mono file into one slot, clear one
+    // slot, drag a channel out to copy it, or drop a channel/file onto a slot.
+    // Every handler stops propagation so it doesn't also trigger the
+    // strip-level reorder or whole-pair file-drop wired up further down.
+    el.querySelectorAll('.mc-chan').forEach(row => {
+      const ch = parseInt(row.dataset.ch, 10);
+
+      row.querySelector('.mc-chan-btn.load').addEventListener('click', () => {
+        mcState.uploadTarget = { index: i, ch };
+        $('#mc-track-input').click();
+      });
+      row.querySelector('.mc-chan-btn.clear').addEventListener('click', () => mcSetTrackChannel(i, ch, null, null));
+
+      const grip = row.querySelector('.mc-chan-grip');
+      grip.addEventListener('dragstart', e => {
+        e.stopPropagation();
+        if (grip.classList.contains('empty')) { e.preventDefault(); return; }
+        e.dataTransfer.setData('text/mc-channel', `${i}:${ch}`);
+        e.dataTransfer.effectAllowed = 'copy';
+        grip.classList.add('dragging');
+      });
+      grip.addEventListener('dragend', e => { e.stopPropagation(); grip.classList.remove('dragging'); });
+
+      const canDrop = dt => dt.types.includes('text/mc-channel') || dt.types.includes('Files');
+      row.addEventListener('dragenter', e => {
+        if (!canDrop(e.dataTransfer)) return;
+        e.preventDefault(); e.stopPropagation();
+        row.classList.add('drop-target');
+      });
+      row.addEventListener('dragover', e => {
+        if (!canDrop(e.dataTransfer)) return;
+        e.preventDefault(); e.stopPropagation();
+        e.dataTransfer.dropEffect = 'copy';
+        row.classList.add('drop-target');
+      });
+      row.addEventListener('dragleave', e => { e.stopPropagation(); row.classList.remove('drop-target'); });
+      row.addEventListener('drop', e => {
+        if (!canDrop(e.dataTransfer)) return;
+        e.preventDefault(); e.stopPropagation();
+        row.classList.remove('drop-target');
+        if (e.dataTransfer.types.includes('text/mc-channel')) {
+          const [srcIndex, srcCh] = e.dataTransfer.getData('text/mc-channel').split(':').map(Number);
+          if (srcIndex === i && srcCh === ch) return;
+          mcCopyChannel(srcIndex, srcCh, i, ch);
+        } else if (e.dataTransfer.files.length > 0) {
+          mcUploadChannelFile(i, ch, e.dataTransfer.files[0]);
+        }
+      });
+    });
 
     // Reorder pairs by dragging a strip onto another
     el.addEventListener('dragstart', e => {
@@ -4240,8 +4495,10 @@ enableFileDropZone($('.mc-panel'), dataTransfer => {
   if (dataTransfer.files.length > 0) mcImportFile(dataTransfer.files[0]);
 }, 'drag-over-import');
 $('#mc-track-input').addEventListener('change', e => {
-  if (e.target.files.length > 0 && mcState.uploadTarget !== null) {
-    mcUploadTrackFile(mcState.uploadTarget, e.target.files[0]);
+  const target = mcState.uploadTarget;
+  if (e.target.files.length > 0 && target) {
+    if (target.ch === null) mcUploadTrackFile(target.index, e.target.files[0]);
+    else mcUploadChannelFile(target.index, target.ch, e.target.files[0]);
   }
   mcState.uploadTarget = null;
   e.target.value = '';
