@@ -1781,6 +1781,522 @@ header {
 
 .mc-deck-export .btn { width: 100%; padding: 9px 8px; font-size: 9px; }
 
+/* ========== MULTITRACK DECKS ==========
+   A rack of decks side by side, each deck one multi-channel WAV laid out as a
+   list of track rows. Deliberately its own .dd-* namespace rather than reusing
+   .mc-strip*: those are sized for one full-width rack of six tall strips, and
+   widening them to also serve a 340px deck column would put the shipped mixer
+   at risk. Generic pieces (.btn, .panel-header, .meta-*) are shared as-is. */
+.dd-app {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.dd-app.active { display: flex; }
+
+.dd-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  background: var(--paper);
+}
+
+.dd-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dd-hint {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---- The rack: decks left to right ---- */
+.dd-rack {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.dd-deck {
+  flex: 1 1 0;
+  min-width: 340px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  background: var(--paper);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.dd-deck.is-playing { border-left-color: var(--ink); }
+.dd-deck.drag-over-import { background: #e9e7e2; }
+
+/* ---- Deck header ---- */
+.dd-deck-head {
+  padding: 10px 14px 9px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.dd-deck-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dd-deck-name {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 5px;
+}
+
+.dd-deck-name:hover, .dd-deck-name:focus { border-color: var(--rule); outline: none; }
+
+.dd-deck-kill {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  padding: 3px 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dd-deck-kill:hover { color: var(--danger); }
+
+.dd-deck-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dd-deck-meta b {
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.dd-deck-src {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.dd-deck-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dd-deck-tools .btn { padding: 5px 9px; font-size: 9px; letter-spacing: 0.12em; }
+
+.dd-tempo {
+  width: 54px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 5px;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.dd-tempo::-webkit-outer-spin-button,
+.dd-tempo::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.dd-tempo:hover, .dd-tempo:focus { border-color: var(--ink); outline: none; }
+
+.dd-tempo-hint {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  text-decoration: underline dotted;
+}
+
+.dd-tempo-hint:hover { color: var(--ink); }
+
+/* ---- Transport (compact: no disc, no VU — three decks have to fit) ---- */
+.dd-transport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+
+.dd-tbtn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 6px 8px;
+  min-width: 28px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.dd-tbtn:hover:not(:disabled) { background: var(--ink); color: var(--ink-invert); }
+.dd-tbtn:disabled { opacity: 0.3; cursor: not-allowed; }
+.dd-tbtn.is-playing { background: var(--ink); color: var(--ink-invert); }
+
+.dd-scrub {
+  flex: 1;
+  min-width: 40px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.dd-scrub-track {
+  width: 100%;
+  height: 3px;
+  background: var(--panel-fill);
+  position: relative;
+}
+
+.dd-scrub-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: var(--ink);
+}
+
+.dd-scrub-head {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 2px;
+  height: 11px;
+  margin-top: -5.5px;
+  background: var(--ink);
+}
+
+.dd-pos {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dd-pos b { color: var(--ink); font-weight: 700; }
+
+/* ---- Track rows ---- */
+.dd-rows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+.dd-empty {
+  height: 100%;
+  min-height: 120px;
+  margin: 12px;
+  border: 1px dashed var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18px;
+  font-size: 10px;
+  line-height: 1.7;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dd-row {
+  border-bottom: 1px solid var(--hairline);
+  border-top: 2px solid transparent;
+  transition: background 0.12s ease;
+  cursor: grab;
+}
+
+.dd-row.is-soloed { background: #e9e7e2; }
+.dd-row.is-dim { opacity: 0.45; }
+.dd-row.dragging { opacity: 0.35; }
+.dd-row.drag-over-file { background: #e9e7e2; }
+
+/* Insertion caret — with insert semantics the user has to see *where* it lands */
+.dd-row.drop-before { border-top-color: var(--ink); }
+.dd-row.drop-after { box-shadow: inset 0 -2px 0 var(--ink); }
+
+.dd-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 6px;
+}
+
+.dd-row-grip {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.dd-row-num {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.dd-row-name {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 4px;
+}
+
+.dd-row-name:hover, .dd-row-name:focus { border-color: var(--rule); outline: none; }
+
+.dd-row-ch {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Horizontal L/R meter — the mixer's vertical .mc-meter can't fit in a row */
+.dd-meter {
+  width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dd-meter-bar {
+  height: 4px;
+  background: var(--panel-fill);
+  position: relative;
+  overflow: hidden;
+}
+
+.dd-meter-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: var(--ink);
+}
+
+.dd-meter-peak {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0%;
+  width: 1px;
+  background: var(--danger);
+}
+
+.dd-row-btns {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.dd-rbtn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-right: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1;
+  padding: 5px 6px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.dd-rbtn:last-child { border-right: 1px solid var(--rule); }
+.dd-rbtn:hover:not(:disabled) { color: var(--ink); }
+.dd-rbtn.active { background: var(--ink); color: var(--ink-invert); border-color: var(--ink); }
+.dd-rbtn.kill:hover:not(:disabled) { color: var(--danger); }
+.dd-rbtn:disabled { opacity: 0.3; cursor: not-allowed; }
+.dd-rbtn.dragging { background: var(--ink); color: var(--ink-invert); }
+
+/* L/R channel slots — same idiom as the mixer's .mc-chan rows */
+.dd-chans {
+  padding: 0 12px 7px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dd-chan {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.dd-chan.drop-target {
+  border-color: var(--ink);
+  background: #e9e7e2;
+}
+
+.dd-chan-grip {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: 2px 5px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.dd-chan-grip.empty { color: var(--muted); cursor: default; border-style: dashed; }
+.dd-chan-grip.dragging { background: var(--ink); color: var(--ink-invert); }
+
+.dd-chan-src {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-chan-src.loaded { color: var(--ink); }
+
+.dd-chan-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dd-chan-btn.load:hover { color: var(--ink); }
+.dd-chan-btn.clear:hover:not(:disabled) { color: var(--danger); }
+.dd-chan-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.dd-row-status {
+  padding: 0 12px 7px 30px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dd-row-status.loaded { color: var(--ink); }
+
+/* Tail: append target for both "Add track" clicks and cross-deck drops */
+.dd-tail {
+  padding: 10px 12px;
+  border-top: 1px solid transparent;
+}
+
+.dd-tail.drop-before { border-top-color: var(--ink); }
+
+.dd-add-track {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--rule);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 8px;
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+
+.dd-add-track:hover:not(:disabled) { color: var(--ink); border-color: var(--ink); }
+.dd-add-track:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ---- Deck footer: export ---- */
+.dd-deck-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+
+.dd-export-name {
+  flex: 1;
+  min-width: 0;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 6px 8px;
+}
+
+.dd-export-name:hover, .dd-export-name:focus { border-color: var(--ink); outline: none; }
+.dd-deck-foot .btn { padding: 7px 10px; font-size: 9px; letter-spacing: 0.12em; }
+.dd-deck-foot .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
 /* ========== MOBILE/NARROW ========== */
 @media (max-width: 800px) {
   .app { grid-template-columns: 1fr; grid-template-rows: 280px 1fr; }
@@ -1796,7 +2312,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 3.3</span>
+    <span class="logo-tag">Rev 4.0</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -1989,11 +2505,33 @@ header {
   </section>
 </div>
 
+<!-- Multitrack Decks -->
+<div class="dd-app" id="dd-app">
+  <section class="dd-panel">
+    <div class="panel-header">
+      <div class="panel-title">Multitrack Decks</div>
+      <div class="dd-head-actions">
+        <span class="dd-hint">Drag a track onto another deck to move it</span>
+        <button id="dd-add-deck" class="btn btn-ghost">Add Deck</button>
+      </div>
+    </div>
+    <!-- Decks are built by ddInit()/ddAddDeck(); each deck's shell is created
+         once and only its rows are re-rendered, so deck-level listeners never
+         stack up. -->
+    <div class="dd-rack" id="dd-rack"></div>
+  </section>
+</div>
+
 <!-- Hidden file input -->
 <input type="file" id="file-input" webkitdirectory directory multiple style="display:none" />
 <input type="file" id="song-input" accept=".json,application/json" style="display:none" />
 <input type="file" id="mc-import-input" accept="audio/wav,audio/x-wav,.wav" style="display:none" />
 <input type="file" id="mc-track-input" accept="audio/*" style="display:none" />
+<!-- One pair of inputs for every deck: the target lives in ddState.uploadTarget.
+     Per-deck inputs would be detached by a re-render while the OS picker is
+     open, and the change event would land on a dead node. -->
+<input type="file" id="dd-import-input" accept="audio/wav,audio/x-wav,.wav" style="display:none" />
+<input type="file" id="dd-file-input" accept="audio/*" style="display:none" />
 
 <!-- Loading overlay -->
 <div class="overlay" id="overlay">
@@ -2054,6 +2592,22 @@ const TOOLS = [
     leave() { mcStop(); $('#mc-app').classList.remove('active'); },
     onSpace() {
       if (mcState.tracks.some(t => t.buffer)) { if (mcState.isPlaying) mcStop(); else mcPlayAll(); }
+    },
+  },
+  {
+    id: 'multitrack-decks',
+    name: 'Multitrack Decks',
+    tagline: 'Open several multi-channel WAVs side by side and move tracks between them.',
+    cta: 'Open decks',
+    icon: '<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16"/><rect x="14" y="4" width="7" height="16"/><line x1="10.5" y1="9" x2="13.5" y2="9"/><path d="M12 7.5 13.5 9 12 10.5"/><line x1="13.5" y1="15" x2="10.5" y2="15"/><path d="M12 13.5 10.5 15 12 16.5"/></svg>',
+    showLoadBtn: false,
+    enter() { $('#dd-app').classList.add('active'); },
+    leave() { ddStop(); $('#dd-app').classList.remove('active'); },
+    onSpace() {
+      const deck = ddDeckById(ddState.playingDeckId) || ddFocusedDeck();
+      if (!deck) return;
+      if (ddState.playingDeckId === deck.id) ddStop();
+      else ddPlayDeck(deck, deck.cursor);
     },
   },
 ];
@@ -4390,6 +4944,1091 @@ async function mcExport() {
 }
 
 // ============================================================
+// MULTITRACK DECKS
+// ============================================================
+// A rack of decks. Each deck is one multi-channel WAV — imported from a file or
+// assembled from scratch — holding the same stereo-pair tracks the Multi-Channel
+// mixer uses. Tracks (and single L/R channels) are dragged between decks to
+// *move* them, so merging two files, or building a third out of pieces of both,
+// is direct manipulation.
+//
+// Written deck-scoped rather than reusing the mixer's mc* functions: those read
+// the mcState singleton and address their DOM by hardcoded IDs, so every one of
+// them would have to change signature. Only the mixer's genuinely stateless
+// helpers are borrowed — mcSplitToStereoPairs, mcUpmixToStereo,
+// mcMakeAnalyserPair, mcAnalyserPeak — along with the shared WAV/ACID codec and
+// UI helpers. Nothing in the mixer is modified.
+const DD_MAX_TRACKS = 6;   // 6 stereo pairs = 12 channels, matching the range
+                           // the Multi-Channel mixer builds and imports
+const DD_MAX_DECKS  = 4;
+// Browsers decode fewer channels than a WAV can carry: Chromium reads 10 but
+// refuses 12. Exporting 12 is still worth allowing — DAWs and hardware read it
+// fine — but a 12-channel file cannot be loaded back into a deck, so say so at
+// the moment it's exported instead of letting it fail on reopen.
+const DD_DECODE_CEILING = 10;
+
+let ddUidSeq = 1;
+
+const ddState = {
+  decks: [],              // ordered left to right in the rack
+  nextDeckId: 1,          // deck ids are stable across removals
+  playingDeckId: null,    // at most one deck may sound at a time
+  focusDeckId: null,      // last deck interacted with — what Space acts on
+  scheduledSources: [],   // live BufferSourceNodes (of the playing deck only)
+  playStartTime: 0,
+  seekOffset: 0,          // seconds into the deck that playStartTime maps to
+  masterBus: null,        // this tool's own GainNode → destination
+  animId: null,
+  uploadTarget: null,     // { deckId, index, ch } awaiting a file (ch null = pair)
+};
+
+// Same shape as the mixer's track, plus a uid (so a drag payload survives the
+// track moving decks) and autoLabel (so positional default names renumber but
+// file-derived and user-typed names never do).
+function ddMakeTrack() {
+  return {
+    uid: 'dt' + (ddUidSeq++),
+    label: 'Track',
+    autoLabel: true,
+    customLabel: false,
+    buffer: null,               // 2-channel AudioBuffer, or null
+    channelNames: [null, null], // authoritative "this slot is loaded" flag
+    fileName: null,
+    muted: false,
+    soloed: false,
+  };
+}
+
+function ddMakeDeck(name) {
+  const id = ddState.nextDeckId++;
+  return {
+    id,
+    name: name || `Deck ${String.fromCharCode(64 + id)}`,
+    tracks: [],
+    sampleRate: null,
+    tempo: null,
+    detectedTempo: null,
+    fileName: null,
+    exportName: '',
+    cursor: 0,
+    totalDuration: 0,
+    el: null,                  // deck root — the scope for every query
+    ui: null,                  // nodes the meta/position updaters repaint
+    rowMeterEls: [],           // per-track meter refs, cached each render
+    rowPeaks: [],              // per-track [peakHoldL, peakHoldR]
+    trackGains: new Map(),     // index → GainNode, while this deck plays
+    trackAnalysers: new Map(), // index → [analyserL, analyserR]
+  };
+}
+
+const ddDeckById = id => ddState.decks.find(d => d.id === id) || null;
+const ddEsc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+const ddSlug = s => String(s).replace(/[\\/:*?"<>|]+/g, '_').trim().replace(/\s+/g, '_').toLowerCase();
+
+function ddFocusedDeck() {
+  return ddDeckById(ddState.focusDeckId)
+    || ddState.decks.find(d => d.tracks.some(t => t.buffer))
+    || ddState.decks[0]
+    || null;
+}
+
+function ddDefaultExportName(deck) {
+  return deck.fileName || `${ddSlug(deck.name) || 'deck'}.wav`;
+}
+
+// Positional default names follow their slot; anything named by a file or by
+// the user travels with the track untouched.
+function ddRenumber(deck) {
+  deck.tracks.forEach((t, i) => { if (t.autoLabel) t.label = `Track ${i + 1}`; });
+}
+
+// ---------- Audio graph ----------
+// One bus for the whole tool (only one deck ever sounds). No master VU tap —
+// the compact per-deck transports have no VU faces to drive.
+function ddEnsureBus() {
+  const ctx = ensureAudioCtx();
+  if (!ddState.masterBus) {
+    const bus = ctx.createGain();
+    bus.connect(ctx.destination);
+    ddState.masterBus = bus;
+  }
+  return ddState.masterBus;
+}
+
+function ddAnySolo(deck) { return deck.tracks.some(t => t.soloed); }
+
+function ddAudible(deck, i) {
+  const t = deck.tracks[i];
+  if (!t || !t.buffer || t.muted) return false;
+  return !ddAnySolo(deck) || t.soloed;
+}
+
+// Push mute/solo into the live mix without interrupting it. Solo is scoped to
+// its own deck — a simplification the multi-deck model buys us.
+function ddApplyGains(deck) {
+  if (ddState.playingDeckId !== deck.id) return;
+  deck.tracks.forEach((t, i) => {
+    const g = deck.trackGains.get(i);
+    if (g) g.gain.value = ddAudible(deck, i) ? 1 : 0;
+  });
+}
+
+// ---------- Deck lifecycle ----------
+function ddInit() {
+  ddAddDeck({ silent: true });
+  ddAddDeck({ silent: true });
+  ddAddDeck({ silent: true, name: 'Build' });
+  ddState.focusDeckId = ddState.decks[0].id;
+  ddUpdateRackUI();
+}
+
+function ddAddDeck({ silent, name } = {}) {
+  if (ddState.decks.length >= DD_MAX_DECKS) {
+    if (!silent) toast(`Maximum of ${DD_MAX_DECKS} decks`, 'error');
+    return null;
+  }
+  const deck = ddMakeDeck(name);
+  deck.exportName = ddDefaultExportName(deck);
+  ddState.decks.push(deck);
+  ddBuildDeckShell(deck);
+  $('#dd-rack').appendChild(deck.el);
+  ddRenderRows(deck);
+  if (!silent) ddUpdateRackUI();
+  return deck;
+}
+
+function ddRemoveDeck(deck) {
+  if (ddState.decks.length <= 1) { toast('At least one deck is needed', 'error'); return; }
+  if (deck.tracks.some(t => t.buffer)
+      && !confirm(`Remove ${deck.name}? It still has audio loaded.`)) return;
+  if (ddState.playingDeckId === deck.id) ddStop();
+  ddState.decks = ddState.decks.filter(d => d !== deck);
+  if (ddState.focusDeckId === deck.id) ddState.focusDeckId = ddState.decks[0].id;
+  deck.el.remove();
+  ddUpdateRackUI();
+}
+
+function ddUpdateRackUI() {
+  const addBtn = $('#dd-add-deck');
+  if (addBtn) addBtn.disabled = ddState.decks.length >= DD_MAX_DECKS;
+  ddState.decks.forEach(d => {
+    if (d.ui) d.ui.kill.disabled = ddState.decks.length <= 1;
+  });
+}
+
+// ---------- Track & channel operations ----------
+// None of these render. A drop handler mutates both decks and then renders each
+// once at the end — rendering from inside a setter would tear the dragged node
+// out of the DOM while the browser is still finishing the drop.
+function ddGetChannelData(track, ch) {
+  if (!track || !track.buffer) return null;
+  return track.buffer.getChannelData(ch);
+}
+
+// Replace one channel of a track with mono `data` (null clears it), rebuilding
+// its 2-channel buffer. The channels may differ in length — the buffer is sized
+// to the longer one and the shorter is zero-padded. A slot counts as loaded iff
+// its channelNames entry is set, never by whether the buffer happens to hold
+// data: a cleared channel leaves zero-padding behind, and a real channel can be
+// legitimately silent.
+function ddSetTrackChannel(deck, index, ch, data, srcName) {
+  const track = deck.tracks[index];
+  if (!track) return;
+  const ctx = ensureAudioCtx();
+
+  const cn = track.channelNames || [null, null];
+  const other = ch === 0 ? 1 : 0;
+  const otherData = cn[other] ? ddGetChannelData(track, other) : null;
+  const dataL = ch === 0 ? data : otherData;
+  const dataR = ch === 1 ? data : otherData;
+  cn[ch] = srcName || null;
+  track.channelNames = cn;
+
+  if (!dataL && !dataR) {
+    // Both slots empty — the track goes back to silence but keeps its position,
+    // so the channel numbering of everything below it doesn't shift.
+    track.buffer = null;
+    track.fileName = null;
+    track.muted = false;
+    track.soloed = false;
+    return;
+  }
+
+  const len = Math.max(dataL ? dataL.length : 0, dataR ? dataR.length : 0);
+  const sr = deck.sampleRate || ctx.sampleRate;
+  const buf = ctx.createBuffer(2, len, sr);
+  if (dataL) buf.copyToChannel(dataL, 0);   // read from the old buffer, then
+  if (dataR) buf.copyToChannel(dataR, 1);   // replace it — the reads run first
+  track.buffer = buf;
+  track.fileName = null;                     // mixed sources: no single filename
+  if (!deck.sampleRate) deck.sampleRate = sr;
+}
+
+function ddAddTrack(deck) {
+  if (deck.tracks.length >= DD_MAX_TRACKS) {
+    toast(`A deck holds at most ${DD_MAX_TRACKS} pairs (${DD_MAX_TRACKS * 2} channels)`, 'error');
+    return;
+  }
+  deck.tracks.push(ddMakeTrack());
+  ddRenderRows(deck);
+}
+
+function ddClearTrack(deck, index) {
+  const track = deck.tracks[index];
+  if (!track || !track.buffer) return;
+  track.buffer = null;
+  track.channelNames = [null, null];
+  track.fileName = null;
+  track.muted = false;
+  track.soloed = false;
+  if (ddState.playingDeckId === deck.id) ddStop();
+  ddRenderRows(deck);
+}
+
+function ddRemoveTrack(deck, index) {
+  if (!deck.tracks[index]) return;
+  deck.tracks.splice(index, 1);
+  if (ddState.playingDeckId === deck.id) ddStop();
+  ddRenderRows(deck);
+}
+
+// Both decks are always at the AudioContext's rate (decodeAudioData resamples
+// to it), so this can't fire today — it's here so a future change that breaks
+// that assumption refuses the move instead of producing a wrong-speed file.
+function ddRatesClash(a, b) {
+  return !!(a.sampleRate && b.sampleRate && a.sampleRate !== b.sampleRate);
+}
+
+// Move a whole stereo pair. `to` is an insert position in dstDeck.tracks, so a
+// track drop can never overwrite anything — the source array shrinks and both
+// decks renumber.
+function ddMoveTrack(srcDeck, from, dstDeck, to) {
+  const track = srcDeck.tracks[from];
+  if (!track) return;
+
+  if (srcDeck === dstDeck) {
+    if (to === from || to === from + 1) return;   // dropped where it already is
+    srcDeck.tracks.splice(from, 1);
+    srcDeck.tracks.splice(from < to ? to - 1 : to, 0, track);
+    if (ddState.playingDeckId === srcDeck.id) ddStop();
+    ddRenderRows(srcDeck);
+    return;
+  }
+
+  // Guard before mutating anything, so a refused move leaves the source intact.
+  if (dstDeck.tracks.length >= DD_MAX_TRACKS) {
+    toast(`${dstDeck.name} is full — ${DD_MAX_TRACKS} pairs max`, 'error');
+    return;
+  }
+  if (ddRatesClash(srcDeck, dstDeck)) {
+    toast('Sample rates differ — cannot move between these decks', 'error');
+    return;
+  }
+
+  srcDeck.tracks.splice(from, 1);
+  dstDeck.tracks.splice(Math.max(0, Math.min(to, dstDeck.tracks.length)), 0, track);
+  if (track.buffer && !dstDeck.sampleRate) dstDeck.sampleRate = srcDeck.sampleRate;
+
+  let note = '';
+  if (srcDeck.tempo && !dstDeck.tempo) {
+    dstDeck.tempo = srcDeck.tempo;
+    note = ` · ${dstDeck.name} tempo set to ${dstDeck.tempo}`;
+  }
+
+  if (ddState.playingDeckId === srcDeck.id || ddState.playingDeckId === dstDeck.id) ddStop();
+  ddRenderRows(srcDeck);
+  ddRenderRows(dstDeck);
+  toast(`Moved ${track.label} → ${dstDeck.name}${note}`, 'success');
+}
+
+// Move a single L/R channel. The source slot is cleared but its track keeps its
+// position — removing it would renumber every channel below it mid-gesture.
+function ddMoveChannel(srcDeck, si, sch, dstDeck, di, dch) {
+  if (srcDeck === dstDeck && si === di && sch === dch) return;
+  const st = srcDeck.tracks[si];
+  const dt = dstDeck.tracks[di];
+  if (!st || !dt) return;
+  if (!st.buffer || !(st.channelNames || [])[sch]) {
+    toast('That channel has no audio to move', 'error');
+    return;
+  }
+  if (ddRatesClash(srcDeck, dstDeck)) {
+    toast('Sample rates differ — cannot move between these decks', 'error');
+    return;
+  }
+
+  // Snapshot the samples and the name up front: writing the destination rebuilds
+  // buffers, which would invalidate a live view into the source.
+  const data = Float32Array.from(st.buffer.getChannelData(sch));
+  const name = st.channelNames[sch];
+  const replaced = (dt.channelNames || [])[dch];
+
+  ddSetTrackChannel(dstDeck, di, dch, data, name);
+  ddSetTrackChannel(srcDeck, si, sch, null, null);
+
+  if (ddState.playingDeckId === srcDeck.id || ddState.playingDeckId === dstDeck.id) ddStop();
+  ddRenderRows(srcDeck);
+  if (dstDeck !== srcDeck) ddRenderRows(dstDeck);
+
+  const where = `${dstDeck.name} ${dt.label} ${dch === 0 ? 'L' : 'R'}`;
+  toast(replaced ? `Moved ${name} → ${where} · replaced ${replaced}` : `Moved ${name} → ${where}`, 'success');
+}
+
+// ---------- Loading files into a deck ----------
+async function ddUploadTrackFile(deck, index, file) {
+  const track = deck.tracks[index];
+  if (!track) return;
+  try {
+    const ctx = ensureAudioCtx();
+    const decoded = await ctx.decodeAudioData(await file.arrayBuffer());
+    if (decoded.numberOfChannels > 2) {
+      toast(`${file.name} has ${decoded.numberOfChannels} channels — drop it on the deck to import it`, 'error');
+      return;
+    }
+    const stereo = mcUpmixToStereo(decoded);
+    if (!deck.sampleRate) deck.sampleRate = stereo.sampleRate;
+
+    const mono = decoded.numberOfChannels === 1;
+    track.buffer = stereo;
+    track.fileName = file.name;
+    track.channelNames = mono
+      ? [file.name, file.name]
+      : [`${file.name} (L)`, `${file.name} (R)`];
+    if (!track.customLabel) {
+      track.label = file.name.replace(/\.[^.]+$/, '').toUpperCase();
+      track.autoLabel = false;
+    }
+    if (ddState.playingDeckId === deck.id) ddStop();
+    ddRenderRows(deck);
+  } catch (err) {
+    console.warn('Deck track upload failed', err);
+    toast(`Could not decode ${file.name}`, 'error');
+  }
+}
+
+async function ddUploadChannelFile(deck, index, ch, file) {
+  const track = deck.tracks[index];
+  if (!track) return;
+  try {
+    const ctx = ensureAudioCtx();
+    const decoded = await ctx.decodeAudioData(await file.arrayBuffer());
+    if (decoded.numberOfChannels > 2) {
+      toast(`${file.name} has ${decoded.numberOfChannels} channels — load a mono or stereo file into a channel`, 'error');
+      return;
+    }
+    const data = Float32Array.from(decoded.getChannelData(0));
+    const srcName = file.name.replace(/\.[^.]+$/, '');
+    if (!track.customLabel && track.autoLabel) {
+      track.label = srcName.toUpperCase();
+      track.autoLabel = false;
+    }
+    ddSetTrackChannel(deck, index, ch, data, srcName);
+    if (ddState.playingDeckId === deck.id) ddStop();
+    ddRenderRows(deck);
+  } catch (err) {
+    console.warn('Deck channel upload failed', err);
+    toast(`Could not decode ${file.name}`, 'error');
+  }
+}
+
+// The channel count declared in the WAV's fmt chunk. Read straight from the
+// bytes so it's still available when decodeAudioData refuses the file — the
+// browser gives no channel count with its error, and "couldn't decode" is a
+// useless thing to tell someone holding a file that is perfectly valid.
+function ddWavChannelCount(arrayBuffer) {
+  const chunk = findRiffChunk(arrayBuffer, 'fmt ');
+  if (!chunk || chunk.size < 4) return null;
+  return new DataView(arrayBuffer).getUint16(chunk.offset + 2, true);
+}
+
+// Import a multi-channel WAV into one deck, splitting it back into the stereo
+// pairs it was built from. Replaces that deck only — the others are untouched.
+async function ddImportFile(deck, file) {
+  if (!file) return;
+  if (deck.tracks.some(t => t.buffer)
+      && !confirm(`Importing will replace what's in ${deck.name}. Continue?`)) return;
+
+  showOverlay('Importing <em>WAV</em>', file.name);
+  let declaredChannels = null;
+  try {
+    const ctx = ensureAudioCtx();
+    const arrayBuffer = await file.arrayBuffer();
+    // Read the metadata chunks before decoding — decodeAudioData only returns
+    // raw PCM, discards chunks like these, and detaches the ArrayBuffer.
+    const detected = readAcidTempo(arrayBuffer);
+    declaredChannels = ddWavChannelCount(arrayBuffer);
+    const buffer = await ctx.decodeAudioData(arrayBuffer);
+    const ch = buffer.numberOfChannels;
+
+    if (ch < 2 || ch > DD_MAX_TRACKS * 2 || ch % 2 !== 0) {
+      hideOverlay();
+      toast(`Unsupported channel count (${ch}) — expected an even number from 2 to ${DD_MAX_TRACKS * 2}`, 'error');
+      return;
+    }
+
+    const pairs = mcSplitToStereoPairs(buffer);
+    deck.sampleRate = buffer.sampleRate;
+    deck.fileName = file.name;
+    deck.exportName = file.name;
+    deck.tracks = pairs.map((pairBuf, i) => {
+      const track = ddMakeTrack();
+      track.label = `Track ${i + 1}`;
+      track.buffer = pairBuf;
+      track.channelNames = [`${file.name} (ch ${i * 2 + 1})`, `${file.name} (ch ${i * 2 + 2})`];
+      track.fileName = file.name;
+      return track;
+    });
+
+    deck.detectedTempo = detected;
+    if (detected) deck.tempo = Math.round(detected * 100) / 100;
+
+    if (ddState.playingDeckId === deck.id) ddStop();
+    deck.cursor = 0;
+    hideOverlay();
+    ddRenderRows(deck);
+    toast(`${deck.name}: imported ${pairs.length}-pair (${ch}ch) WAV${detected ? ` · ${Math.round(detected)} BPM` : ''}`, 'success');
+  } catch (err) {
+    console.warn('Deck import failed', err);
+    hideOverlay();
+    // Browsers decode fewer channels than a WAV can hold — Chromium gives up
+    // above DD_DECODE_CEILING — so a file this tool legitimately exported can
+    // still be unreadable here. Say that, rather than implying it's corrupt.
+    toast(declaredChannels > DD_DECODE_CEILING
+      ? `${file.name} has ${declaredChannels} channels — this browser can't decode more than ${DD_DECODE_CEILING}. It's still a valid file for a DAW or hardware.`
+      : 'Could not decode that file', 'error');
+  }
+}
+
+// ---------- Export ----------
+function ddDeckExtraChunks(deck) {
+  return deck.tempo > 0 ? [buildAcidChunk(deck.tempo)] : [];
+}
+
+function ddDownloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// Interleave the deck's pairs into one N-channel WAV. Empty pairs stay silent;
+// shorter pairs are padded to the longest.
+function ddExportDeck(deck) {
+  const loaded = deck.tracks.filter(t => t.buffer);
+  if (loaded.length === 0) return;
+  if (ddState.playingDeckId === deck.id) ddStop();
+
+  const ctx = ensureAudioCtx();
+  const numChannels = deck.tracks.length * 2;
+  const totalSamples = Math.max(1, ...deck.tracks.map(t => t.buffer ? t.buffer.length : 0));
+
+  let combined;
+  try {
+    combined = ctx.createBuffer(numChannels, totalSamples, deck.sampleRate || ctx.sampleRate);
+  } catch (err) {
+    toast('Could not create a buffer for that many channels', 'error');
+    return;
+  }
+
+  deck.tracks.forEach((track, i) => {
+    if (!track.buffer) return;
+    combined.copyToChannel(track.buffer.getChannelData(0), i * 2);
+    combined.copyToChannel(track.buffer.getChannelData(1), i * 2 + 1);
+  });
+
+  let name = (deck.ui.exportName.value || ddDefaultExportName(deck)).trim();
+  if (!/\.wav$/i.test(name)) name += '.wav';
+  ddDownloadBlob(audioBufferToWav(combined, ddDeckExtraChunks(deck)), name);
+
+  const tempoNote = deck.tempo > 0 ? ` · ${deck.tempo} BPM embedded` : '';
+  // One toast, not two — toast() replaces whatever is on screen, so a second
+  // call would swallow the first.
+  const reopenNote = numChannels > DD_DECODE_CEILING
+    ? ` · note: ${numChannels}-channel files can't be loaded back into a deck (this browser decodes at most ${DD_DECODE_CEILING})`
+    : '';
+  toast(`Exported ${numChannels}-channel WAV from ${deck.name}${tempoNote}${reopenNote}`, 'success');
+}
+
+// ---------- Playback ----------
+function ddPlayDeck(deck, offsetSec = 0) {
+  if (!deck || !deck.tracks.some(t => t.buffer)) return;
+  ddStop();   // one deck at a time — scheduledSources is a single global list,
+              // so a second deck physically cannot sound
+  const ctx = ensureAudioCtx();
+  const bus = ddEnsureBus();
+  const startAt = ctx.currentTime + 0.08;
+  offsetSec = Math.max(0, Math.min(offsetSec, deck.totalDuration));
+
+  deck.tracks.forEach((track, i) => {
+    if (!track.buffer) return;
+    if (offsetSec >= track.buffer.duration) return;   // already past this pair's end
+    const src = ctx.createBufferSource();
+    src.buffer = track.buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = ddAudible(deck, i) ? 1 : 0;
+    src.connect(gain);
+    gain.connect(bus);
+    deck.trackAnalysers.set(i, mcMakeAnalyserPair(gain));   // post-gain, feeds the row meter
+    src.start(startAt, offsetSec);
+    ddState.scheduledSources.push(src);
+    deck.trackGains.set(i, gain);
+  });
+
+  ddState.playStartTime = startAt;
+  ddState.seekOffset = offsetSec;
+  ddState.playingDeckId = deck.id;
+  deck.cursor = offsetSec;
+  ddState.decks.forEach(d => { d.el.classList.toggle('is-playing', d.id === deck.id); });
+  ddState.decks.forEach(ddUpdateTransport);
+}
+
+// Halt playback, leaving the playhead where it was so Play resumes from there.
+function ddStop() {
+  const deck = ddDeckById(ddState.playingDeckId);
+  if (deck && ddState.masterBus) {
+    const elapsed = (ddState.masterBus.context.currentTime - ddState.playStartTime) + ddState.seekOffset;
+    deck.cursor = Math.max(0, Math.min(deck.totalDuration, elapsed));
+  }
+  ddState.scheduledSources.forEach(src => { try { src.stop(); } catch (e) {} });
+  ddState.scheduledSources = [];
+  ddState.playingDeckId = null;
+  ddState.seekOffset = 0;
+  if (deck) {
+    deck.trackGains.clear();
+    deck.trackAnalysers.clear();
+    deck.el.classList.remove('is-playing');
+    ddRenderPositions(deck);
+  }
+  ddState.decks.forEach(ddUpdateTransport);
+}
+
+// Explicit Stop: halt and rewind this deck only.
+function ddStopDeck(deck) {
+  if (ddState.playingDeckId === deck.id) ddStop();
+  deck.cursor = 0;
+  ddRenderPositions(deck);
+  ddUpdateTransport(deck);
+}
+
+function ddNudge(deck, delta) {
+  if (!deck.tracks.some(t => t.buffer)) return;
+  const target = Math.max(0, Math.min(deck.totalDuration, deck.cursor + delta));
+  deck.cursor = target;
+  ddRenderPositions(deck);
+  if (ddState.playingDeckId === deck.id) ddPlayDeck(deck, target);
+}
+
+// Linear scrub bar — the mixer's angular disc scrub reads mcState directly and
+// there is no disc here anyway.
+function ddAttachScrub(deck, el) {
+  el.addEventListener('pointerdown', e => {
+    if (!deck.totalDuration) return;
+    e.preventDefault();
+    const box = el.getBoundingClientRect();
+    const apply = ev => {
+      const ratio = Math.max(0, Math.min(1, (ev.clientX - box.left) / box.width));
+      deck.cursor = ratio * deck.totalDuration;
+      ddRenderPositions(deck);
+    };
+    apply(e);
+    const move = ev => apply(ev);
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      if (ddState.playingDeckId === deck.id) ddPlayDeck(deck, deck.cursor);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+}
+
+// ---------- Painting ----------
+function ddRenderPositions(deck) {
+  const ui = deck.ui;
+  if (!ui) return;
+  const total = deck.totalDuration;
+  const pct = (total > 0 ? Math.max(0, Math.min(1, deck.cursor / total)) * 100 : 0).toFixed(2) + '%';
+  ui.scrubFill.style.width = pct;
+  ui.scrubHead.style.left = pct;
+  ui.posCur.textContent = fmtTime(deck.cursor);
+  ui.posTot.textContent = fmtTime(total);
+}
+
+function ddUpdateTransport(deck) {
+  const ui = deck.ui;
+  if (!ui) return;
+  const playing = ddState.playingDeckId === deck.id;
+  const hasAudio = deck.tracks.some(t => t.buffer);
+  ui.play.textContent = playing ? '❙❙' : '▶';
+  ui.play.classList.toggle('is-playing', playing);
+  ui.play.disabled = !hasAudio;
+  ui.stop.disabled = !hasAudio;
+  ui.back.disabled = !hasAudio;
+  ui.fwd.disabled = !hasAudio;
+}
+
+function ddUpdateDeckMeta(deck) {
+  const ui = deck.ui;
+  if (!ui) return;
+  deck.totalDuration = deck.tracks.reduce((max, t) => t.buffer ? Math.max(max, t.buffer.duration) : max, 0);
+  const hasAudio = deck.tracks.some(t => t.buffer);
+  if (!hasAudio) deck.sampleRate = null;
+
+  ui.metaPairs.textContent = deck.tracks.length;
+  ui.metaPairsLabel.textContent = deck.tracks.length === 1 ? 'pair' : 'pairs';
+  ui.metaCh.textContent = deck.tracks.length * 2;
+  ui.metaDur.textContent = fmtTime(deck.totalDuration);
+  ui.src.textContent = deck.fileName || (hasAudio ? 'assembled' : 'empty');
+  ui.src.title = deck.fileName || '';
+  ui.tempo.value = deck.tempo || '';
+  // The input is the export name's display, deck.exportName is its truth —
+  // importing renames the deck's output, so push it back out here. (Its change
+  // handler writes the other way, so a name the user types is preserved.)
+  if (ui.exportName.value !== deck.exportName) ui.exportName.value = deck.exportName;
+  if (deck.detectedTempo) {
+    const rounded = Math.round(deck.detectedTempo * 100) / 100;
+    ui.tempoHint.textContent = `from file: ${rounded}`;
+  } else {
+    ui.tempoHint.textContent = '';
+  }
+  ui.export.disabled = !hasAudio;
+  ui.addTrack.disabled = deck.tracks.length >= DD_MAX_TRACKS;
+  ddUpdateTransport(deck);
+  ddRenderPositions(deck);
+}
+
+// Where an incoming track drop should be inserted, given the row it landed on.
+function ddDropIndex(rowEl, e, index) {
+  const box = rowEl.getBoundingClientRect();
+  return (e.clientY - box.top) > box.height / 2 ? index + 1 : index;
+}
+
+function ddPaintCaret(rowEl, e, index) {
+  rowEl.classList.remove('drop-before', 'drop-after');
+  rowEl.classList.add(ddDropIndex(rowEl, e, index) === index ? 'drop-before' : 'drop-after');
+}
+
+function ddClearCarets(deck) {
+  deck.el.querySelectorAll('.drop-before, .drop-after')
+    .forEach(el => el.classList.remove('drop-before', 'drop-after'));
+}
+
+// The deck shell is built once (ddBuildDeckShell) and only the rows are
+// rebuilt, so the deck-level import drop zone and header controls are never
+// re-wired and their listeners can't stack up.
+function ddRenderRows(deck) {
+  ddRenumber(deck);
+  const wrap = deck.ui.rows;
+  wrap.innerHTML = '';
+  deck.rowMeterEls = [];
+  deck.rowPeaks = deck.tracks.map((_, i) => deck.rowPeaks[i] || [0, 0]);
+
+  if (deck.tracks.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'dd-empty';
+    empty.textContent = 'Empty deck — import a multi-channel WAV, or drag tracks in from another deck';
+    wrap.appendChild(empty);
+  }
+
+  const anySolo = ddAnySolo(deck);
+
+  deck.tracks.forEach((track, i) => {
+    const row = document.createElement('div');
+    const dimmed = track.muted || (anySolo && !track.soloed);
+    row.className = 'dd-row'
+      + (track.soloed ? ' is-soloed' : '')
+      + (dimmed ? ' is-dim' : '');
+    row.dataset.index = i;
+    row.draggable = true;
+
+    const half = track.buffer
+      ? (track.channelNames[0] && !track.channelNames[1] ? ' · L only'
+        : (!track.channelNames[0] && track.channelNames[1] ? ' · R only' : ''))
+      : '';
+    const status = track.buffer ? `${fmtTime(track.buffer.duration)}${half}` : 'Empty — no audio';
+
+    row.innerHTML = `
+      <div class="dd-row-head">
+        <span class="dd-row-grip" title="Drag this track onto another deck to move it">⠿</span>
+        <span class="dd-row-num">${String(i + 1).padStart(2, '0')}</span>
+        <input class="dd-row-name" value="${ddEsc(track.label)}" spellcheck="false" title="Track name">
+        <span class="dd-row-ch">CH ${i * 2 + 1}–${i * 2 + 2}</span>
+        <div class="dd-meter">
+          <div class="dd-meter-bar"><div class="dd-meter-fill" data-ch="l"></div><div class="dd-meter-peak" data-ch="l"></div></div>
+          <div class="dd-meter-bar"><div class="dd-meter-fill" data-ch="r"></div><div class="dd-meter-peak" data-ch="r"></div></div>
+        </div>
+        <div class="dd-row-btns">
+          <button class="dd-rbtn mute${track.muted ? ' active' : ''}" title="Mute" ${track.buffer ? '' : 'disabled'}>M</button>
+          <button class="dd-rbtn solo${track.soloed ? ' active' : ''}" title="Solo" ${track.buffer ? '' : 'disabled'}>S</button>
+          <button class="dd-rbtn out" draggable="${track.buffer ? 'true' : 'false'}" ${track.buffer ? '' : 'disabled'}
+                  title="${track.buffer ? 'Click to export this pair as a WAV, or drag it out onto your desktop (Chrome/Edge)' : 'Load audio to enable'}">⇲</button>
+          <button class="dd-rbtn kill" title="Remove this track from the deck">✕</button>
+        </div>
+      </div>
+      <div class="dd-chans">
+        ${[0, 1].map(ch => {
+          const name = (track.channelNames || [null, null])[ch];
+          const letter = ch === 0 ? 'L' : 'R';
+          const has = !!name;
+          return `
+        <div class="dd-chan" data-ch="${ch}">
+          <span class="dd-chan-grip${has ? '' : ' empty'}" draggable="${has ? 'true' : 'false'}" data-ch="${ch}"
+                title="${has ? `Drag onto another channel slot to move ${letter} there` : `${letter} channel is empty`}">${letter}</span>
+          <span class="dd-chan-src${has ? ' loaded' : ''}" title="${has ? ddEsc(name) : 'No audio'}">${has ? ddEsc(name) : '—'}</span>
+          <button class="dd-chan-btn load" data-ch="${ch}" title="Load a mono file into the ${letter} channel">＋</button>
+          <button class="dd-chan-btn clear" data-ch="${ch}" title="Clear the ${letter} channel" ${has ? '' : 'disabled'}>✕</button>
+        </div>`;
+        }).join('')}
+      </div>
+      <div class="dd-row-status${track.buffer ? ' loaded' : ''}">${status}</div>
+    `;
+
+    // Cache meter refs so the rAF loop doesn't re-query every frame.
+    deck.rowMeterEls[i] = {
+      fillL: row.querySelector('.dd-meter-fill[data-ch="l"]'),
+      fillR: row.querySelector('.dd-meter-fill[data-ch="r"]'),
+      peakL: row.querySelector('.dd-meter-peak[data-ch="l"]'),
+      peakR: row.querySelector('.dd-meter-peak[data-ch="r"]'),
+    };
+
+    row.querySelector('.dd-row-name').addEventListener('change', e => {
+      track.label = e.target.value.trim() || `Track ${i + 1}`;
+      track.customLabel = true;
+      track.autoLabel = false;
+      e.target.value = track.label;
+    });
+    row.querySelector('.dd-rbtn.mute').addEventListener('click', () => {
+      track.muted = !track.muted;
+      ddApplyGains(deck);       // live-update the playing mix without interrupting it
+      ddRenderRows(deck);
+    });
+    row.querySelector('.dd-rbtn.solo').addEventListener('click', () => {
+      track.soloed = !track.soloed;
+      ddApplyGains(deck);
+      ddRenderRows(deck);
+    });
+    row.querySelector('.dd-rbtn.kill').addEventListener('click', () => ddRemoveTrack(deck, i));
+
+    // Export this single pair: click downloads it (every browser), or drag the
+    // handle straight out of the window onto the desktop (Chromium's
+    // "DownloadURL" convention — Firefox/Safari simply don't react).
+    const outBtn = row.querySelector('.dd-rbtn.out');
+    if (track.buffer) {
+      const safeName = (track.label || `Track ${i + 1}`).replace(/[\\/:*?"<>|]+/g, '_').trim() || `Track ${i + 1}`;
+      outBtn.addEventListener('click', () => {
+        ddDownloadBlob(audioBufferToWav(track.buffer, ddDeckExtraChunks(deck)), `${safeName}.wav`);
+      });
+      outBtn.addEventListener('dragstart', e => {
+        e.stopPropagation();    // don't also start the row's track drag
+        const blob = audioBufferToWav(track.buffer, ddDeckExtraChunks(deck));
+        const url = URL.createObjectURL(blob);
+        e.dataTransfer.setData('DownloadURL', `audio/wav:${safeName}.wav:${url}`);
+        e.dataTransfer.effectAllowed = 'copy';
+        outBtn.classList.add('dragging');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      });
+      outBtn.addEventListener('dragend', e => { e.stopPropagation(); outBtn.classList.remove('dragging'); });
+    }
+
+    // ---- Per-channel slots: load, clear, drag a channel out, drop one in ----
+    row.querySelectorAll('.dd-chan').forEach(chanRow => {
+      const ch = parseInt(chanRow.dataset.ch, 10);
+
+      chanRow.querySelector('.dd-chan-btn.load').addEventListener('click', () => {
+        ddState.uploadTarget = { deckId: deck.id, index: i, ch };
+        $('#dd-file-input').click();
+      });
+      chanRow.querySelector('.dd-chan-btn.clear').addEventListener('click', () => {
+        ddSetTrackChannel(deck, i, ch, null, null);
+        if (ddState.playingDeckId === deck.id) ddStop();
+        ddRenderRows(deck);
+      });
+
+      const grip = chanRow.querySelector('.dd-chan-grip');
+      grip.addEventListener('dragstart', e => {
+        e.stopPropagation();
+        if (grip.classList.contains('empty')) { e.preventDefault(); return; }
+        e.dataTransfer.setData('text/dd-channel', `${deck.id}:${i}:${ch}`);
+        e.dataTransfer.effectAllowed = 'move';
+        grip.classList.add('dragging');
+      });
+      grip.addEventListener('dragend', e => { e.stopPropagation(); grip.classList.remove('dragging'); });
+
+      const canDrop = dt => dt.types.includes('text/dd-channel') || dt.types.includes('Files');
+      chanRow.addEventListener('dragenter', e => {
+        if (!canDrop(e.dataTransfer)) return;
+        e.preventDefault(); e.stopPropagation();
+        chanRow.classList.add('drop-target');
+      });
+      chanRow.addEventListener('dragover', e => {
+        if (!canDrop(e.dataTransfer)) return;
+        e.preventDefault(); e.stopPropagation();
+        e.dataTransfer.dropEffect = e.dataTransfer.types.includes('Files') ? 'copy' : 'move';
+        chanRow.classList.add('drop-target');
+      });
+      chanRow.addEventListener('dragleave', e => { e.stopPropagation(); chanRow.classList.remove('drop-target'); });
+      chanRow.addEventListener('drop', e => {
+        if (!canDrop(e.dataTransfer)) return;
+        e.preventDefault(); e.stopPropagation();
+        chanRow.classList.remove('drop-target');
+        if (e.dataTransfer.types.includes('text/dd-channel')) {
+          const [srcDeckId, srcIndex, srcCh] = e.dataTransfer.getData('text/dd-channel').split(':').map(Number);
+          const srcDeck = ddDeckById(srcDeckId);
+          if (srcDeck) ddMoveChannel(srcDeck, srcIndex, srcCh, deck, i, ch);
+        } else if (e.dataTransfer.files.length > 0) {
+          ddUploadChannelFile(deck, i, ch, e.dataTransfer.files[0]);
+        }
+      });
+    });
+
+    // ---- The row itself: drag it to another deck (or reorder within this one) ----
+    row.addEventListener('dragstart', e => {
+      if (e.target.tagName === 'INPUT') { e.preventDefault(); return; }
+      e.dataTransfer.setData('text/dd-track', `${deck.id}:${i}`);
+      e.dataTransfer.effectAllowed = 'move';
+      row.classList.add('dragging');
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      ddState.decks.forEach(ddClearCarets);
+    });
+    row.addEventListener('dragover', e => {
+      if (!e.dataTransfer.types.includes('text/dd-track')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+      ddClearCarets(deck);
+      ddPaintCaret(row, e, i);
+    });
+    row.addEventListener('dragleave', e => {
+      if (!e.dataTransfer.types.includes('text/dd-track')) return;
+      row.classList.remove('drop-before', 'drop-after');
+    });
+    row.addEventListener('drop', e => {
+      if (!e.dataTransfer.types.includes('text/dd-track')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      ddClearCarets(deck);
+      const [srcDeckId, srcIndex] = e.dataTransfer.getData('text/dd-track').split(':').map(Number);
+      const srcDeck = ddDeckById(srcDeckId);
+      if (srcDeck) ddMoveTrack(srcDeck, srcIndex, deck, ddDropIndex(row, e, i));
+    });
+
+    // ---- An OS audio file dropped on the row loads/replaces the whole pair ----
+    row.addEventListener('dragenter', e => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.preventDefault(); e.stopPropagation();
+      row.classList.add('drag-over-file');
+    });
+    row.addEventListener('dragover', e => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.preventDefault(); e.stopPropagation();
+      e.dataTransfer.dropEffect = 'copy';
+    });
+    row.addEventListener('dragleave', e => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.stopPropagation();
+      row.classList.remove('drag-over-file');
+    });
+    row.addEventListener('drop', e => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.preventDefault(); e.stopPropagation();
+      row.classList.remove('drag-over-file');
+      if (e.dataTransfer.files.length > 0) ddUploadTrackFile(deck, i, e.dataTransfer.files[0]);
+    });
+
+    wrap.appendChild(row);
+  });
+
+  // Trailing "Add track" — also the append target for a cross-deck track drop.
+  const tail = document.createElement('div');
+  tail.className = 'dd-tail';
+  tail.innerHTML = `<button class="dd-add-track">＋ Add track</button>`;
+  const addBtn = tail.querySelector('.dd-add-track');
+  addBtn.addEventListener('click', () => ddAddTrack(deck));
+  tail.addEventListener('dragover', e => {
+    if (!e.dataTransfer.types.includes('text/dd-track')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    ddClearCarets(deck);
+    tail.classList.add('drop-before');
+  });
+  tail.addEventListener('dragleave', () => tail.classList.remove('drop-before'));
+  tail.addEventListener('drop', e => {
+    if (!e.dataTransfer.types.includes('text/dd-track')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    ddClearCarets(deck);
+    const [srcDeckId, srcIndex] = e.dataTransfer.getData('text/dd-track').split(':').map(Number);
+    const srcDeck = ddDeckById(srcDeckId);
+    if (srcDeck) ddMoveTrack(srcDeck, srcIndex, deck, deck.tracks.length);
+  });
+  wrap.appendChild(tail);
+
+  deck.ui.addTrack = addBtn;
+  ddUpdateDeckMeta(deck);
+}
+
+function ddBuildDeckShell(deck) {
+  const el = document.createElement('section');
+  el.className = 'dd-deck';
+  el.dataset.deck = deck.id;
+  el.innerHTML = `
+    <div class="dd-deck-head">
+      <div class="dd-deck-title">
+        <input class="dd-deck-name" value="${ddEsc(deck.name)}" spellcheck="false" title="Deck name">
+        <button class="dd-deck-kill" title="Remove this deck">✕</button>
+      </div>
+      <div class="dd-deck-meta">
+        <span><b class="dd-meta-pairs">0</b> <span class="dd-meta-pairs-label">pairs</span></span>
+        <span><b class="dd-meta-ch">0</b> ch</span>
+        <span><b class="dd-meta-dur">0:00</b></span>
+        <span class="dd-deck-src">empty</span>
+      </div>
+      <div class="dd-deck-tools">
+        <button class="btn btn-ghost dd-import">Import WAV</button>
+        <span class="dd-deck-meta"><span>Tempo</span></span>
+        <input class="dd-tempo" type="number" min="20" max="300" step="0.01" placeholder="—"
+               title="Deck tempo — embedded in the exported WAV as an ACID chunk">
+        <span class="dd-tempo-hint" title="Click to apply the tempo read from the imported file"></span>
+      </div>
+    </div>
+    <div class="dd-transport">
+      <button class="dd-tbtn dd-play" disabled title="Play / Pause this deck">▶</button>
+      <button class="dd-tbtn dd-stop" disabled title="Stop and rewind">■</button>
+      <button class="dd-tbtn dd-back" disabled title="Nudge back 5s">‹‹</button>
+      <button class="dd-tbtn dd-fwd" disabled title="Nudge forward 5s">››</button>
+      <div class="dd-scrub" title="Drag to scrub">
+        <div class="dd-scrub-track">
+          <div class="dd-scrub-fill"></div>
+          <div class="dd-scrub-head"></div>
+        </div>
+      </div>
+      <span class="dd-pos"><b class="dd-pos-cur">0:00</b> / <span class="dd-pos-tot">0:00</span></span>
+    </div>
+    <div class="dd-rows"></div>
+    <div class="dd-deck-foot">
+      <input class="dd-export-name" value="${ddEsc(deck.exportName)}" spellcheck="false" title="Export filename">
+      <button class="btn btn-primary dd-export" disabled>Export</button>
+    </div>
+  `;
+
+  deck.el = el;
+  deck.ui = {
+    kill:       el.querySelector('.dd-deck-kill'),
+    metaPairs:  el.querySelector('.dd-meta-pairs'),
+    metaPairsLabel: el.querySelector('.dd-meta-pairs-label'),
+    metaCh:     el.querySelector('.dd-meta-ch'),
+    metaDur:    el.querySelector('.dd-meta-dur'),
+    src:        el.querySelector('.dd-deck-src'),
+    tempo:      el.querySelector('.dd-tempo'),
+    tempoHint:  el.querySelector('.dd-tempo-hint'),
+    play:       el.querySelector('.dd-play'),
+    stop:       el.querySelector('.dd-stop'),
+    back:       el.querySelector('.dd-back'),
+    fwd:        el.querySelector('.dd-fwd'),
+    scrubFill:  el.querySelector('.dd-scrub-fill'),
+    scrubHead:  el.querySelector('.dd-scrub-head'),
+    posCur:     el.querySelector('.dd-pos-cur'),
+    posTot:     el.querySelector('.dd-pos-tot'),
+    rows:       el.querySelector('.dd-rows'),
+    exportName: el.querySelector('.dd-export-name'),
+    export:     el.querySelector('.dd-export'),
+    addTrack:   null,   // lives inside the rows, re-cached on every render
+  };
+
+  // Whatever you touch last is what Space plays.
+  el.addEventListener('pointerdown', () => { ddState.focusDeckId = deck.id; });
+
+  el.querySelector('.dd-deck-name').addEventListener('change', e => {
+    deck.name = e.target.value.trim() || `Deck ${deck.id}`;
+    e.target.value = deck.name;
+  });
+  deck.ui.kill.addEventListener('click', () => ddRemoveDeck(deck));
+
+  el.querySelector('.dd-import').addEventListener('click', () => {
+    ddState.uploadTarget = { deckId: deck.id, index: null, ch: null };
+    $('#dd-import-input').click();
+  });
+
+  deck.ui.tempo.addEventListener('change', e => {
+    const v = parseFloat(e.target.value);
+    deck.tempo = (!isNaN(v) && v > 0) ? v : null;
+    e.target.value = deck.tempo || '';
+  });
+  deck.ui.tempoHint.addEventListener('click', () => {
+    if (!deck.detectedTempo) return;
+    deck.tempo = Math.round(deck.detectedTempo * 100) / 100;
+    deck.ui.tempo.value = deck.tempo;
+  });
+
+  deck.ui.play.addEventListener('click', () => {
+    if (ddState.playingDeckId === deck.id) ddStop();
+    else ddPlayDeck(deck, deck.cursor);
+  });
+  deck.ui.stop.addEventListener('click', () => ddStopDeck(deck));
+  deck.ui.back.addEventListener('click', () => ddNudge(deck, -5));
+  deck.ui.fwd.addEventListener('click', () => ddNudge(deck, 5));
+  ddAttachScrub(deck, el.querySelector('.dd-scrub'));
+
+  deck.ui.exportName.addEventListener('change', e => { deck.exportName = e.target.value; });
+  deck.ui.export.addEventListener('click', () => ddExportDeck(deck));
+
+  // Drop a multi-channel WAV anywhere on the deck background to import it.
+  // Rows and channel slots stop propagation, so this only sees drops that
+  // didn't land on one of them.
+  enableFileDropZone(el, dataTransfer => {
+    if (dataTransfer.files.length > 0) ddImportFile(deck, dataTransfer.files[0]);
+  }, 'drag-over-import');
+
+  return el;
+}
+
+// Single always-on loop for the whole rack: advances the playing deck's
+// playhead and paints every deck's row meters (idle decks just decay to
+// silence). Skips all work while the tool is hidden and nothing is playing.
+function ddAnimate() {
+  ddState.animId = requestAnimationFrame(ddAnimate);
+
+  const app = document.getElementById('dd-app');
+  if ((!app || !app.classList.contains('active')) && ddState.playingDeckId === null) return;
+
+  const playing = ddDeckById(ddState.playingDeckId);
+  if (playing && ddState.masterBus) {
+    const elapsed = (ddState.masterBus.context.currentTime - ddState.playStartTime) + ddState.seekOffset;
+    if (elapsed >= playing.totalDuration) {
+      ddStopDeck(playing);
+    } else {
+      playing.cursor = Math.max(0, elapsed);
+      ddRenderPositions(playing);
+    }
+  }
+
+  ddState.decks.forEach(deck => {
+    const live = deck.id === ddState.playingDeckId;
+    deck.tracks.forEach((t, i) => {
+      const els = deck.rowMeterEls[i];
+      if (!els) return;
+      const an = live ? deck.trackAnalysers.get(i) : null;
+      const lv = an ? mcAnalyserPeak(an[0]) : 0;
+      const rv = an ? mcAnalyserPeak(an[1]) : 0;
+      const ph = deck.rowPeaks[i] || (deck.rowPeaks[i] = [0, 0]);
+      ph[0] = Math.max(lv, ph[0] - 0.006);
+      ph[1] = Math.max(rv, ph[1] - 0.006);
+      els.fillL.style.width = (lv * 100).toFixed(1) + '%';
+      els.fillR.style.width = (rv * 100).toFixed(1) + '%';
+      els.peakL.style.left = (ph[0] * 100).toFixed(1) + '%';
+      els.peakR.style.left = (ph[1] * 100).toFixed(1) + '%';
+    });
+  });
+}
+
+// ============================================================
 // EVENT WIRING
 // ============================================================
 $('#load-btn').addEventListener('click', () => $('#file-input').click());
@@ -4530,6 +6169,35 @@ $$('#mc-vu-l .mc-vu-face, #mc-vu-r .mc-vu-face').forEach(face => { face.innerHTM
 mcInit();
 // Always-on metering + playhead loop for the multi-channel mixer.
 mcAnimate();
+
+// ---------- Multitrack decks wiring ----------
+// One pair of file inputs serves every deck; ddState.uploadTarget says which
+// deck/track/channel the picked file belongs to.
+$('#dd-add-deck').addEventListener('click', () => ddAddDeck());
+
+$('#dd-import-input').addEventListener('change', e => {
+  const target = ddState.uploadTarget;
+  ddState.uploadTarget = null;
+  const file = e.target.files[0];
+  e.target.value = '';
+  const deck = target && ddDeckById(target.deckId);
+  if (file && deck) ddImportFile(deck, file);
+});
+
+$('#dd-file-input').addEventListener('change', e => {
+  const target = ddState.uploadTarget;
+  ddState.uploadTarget = null;
+  const file = e.target.files[0];
+  e.target.value = '';
+  const deck = target && ddDeckById(target.deckId);
+  if (!file || !deck) return;   // the deck may have been removed mid-pick
+  if (target.ch === null) ddUploadTrackFile(deck, target.index, file);
+  else ddUploadChannelFile(deck, target.index, target.ch, file);
+});
+
+ddInit();
+// Always-on metering + playhead loop for the deck rack.
+ddAnimate();
 
 $('#play-btn').addEventListener('click', () => {
   if (state.isPlaying) stop();
