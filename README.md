@@ -16,12 +16,14 @@ to work with:
   per instrument (documented below).
 - **Multi-Channel WAV** — build or edit interleaved multi-channel WAVs from
   independent stereo pairs (see [Multi-Channel WAV mixer](#multi-channel-wav-mixer)).
+- **Multitrack Decks** — open several multi-channel WAVs side by side and move
+  tracks between them (see [Multitrack Decks](#multitrack-decks)).
 
 Each tool is self-contained: once you're inside one, there is no shortcut to the
 others — return to the landing page (click the **Audio Tools** logo) to switch
 tools. The current tool lives in the URL hash (`#/stem-arranger`,
-`#/multichannel`), so tools are deep-linkable and the browser back/forward
-buttons move between them.
+`#/multichannel`, `#/multitrack-decks`), so tools are deep-linkable and the
+browser back/forward buttons move between them.
 
 ### Adding a tool
 
@@ -38,6 +40,12 @@ The header shows the current revision. **Big changes bump the first digit,
 small changes bump the second.** Update the `Rev X.Y` label in the header (and
 this list) with every change.
 
+- **Rev 4.0** — New **Multitrack Decks** tool: open several multi-channel WAVs
+  **side by side as decks** and **drag tracks from one into another**, so you can
+  merge two files or assemble a brand-new one out of pieces of both. Drags
+  **move** rather than copy — the source deck gives the track up — and single
+  **L/R channels** can be dragged between decks too. Each deck has its own
+  import, tempo, transport and export.
 - **Rev 3.3** — The Multi-Channel WAV mixer can now source each track's **left
   and right channels independently**. Load two different mono files into one
   track (one per channel), and **route channels between tracks** by dragging a
@@ -163,6 +171,59 @@ is bass, and so on.
   shorter pairs are padded with silence.
 - Preview playback mixes every pair down to your stereo output — the
   interleaving itself only exists in the exported file.
+
+## Multitrack Decks
+
+The Multi-Channel WAV mixer edits **one** file at a time — importing replaces
+whatever was open. **Multitrack Decks** opens several at once, side by side, so
+you can move tracks between them.
+
+Each **deck** is one multi-channel WAV: import a file into it, or start empty and
+build one up. Decks sit next to each other in a rack, and the workspace opens
+with three — two to load files into, and a **Build** deck to assemble a new file
+out of pieces of the other two. Add or remove decks freely (up to 4).
+
+### Moving tracks between decks
+
+- **Drag a track row onto another deck** to move it there. Drop it between two
+  rows to choose where it lands — a line shows the insertion point.
+- **Drags move, they don't copy.** The source deck gives the track up and
+  renumbers its remaining channels, so the file you're taking tracks *out* of
+  stays gap-free. (This is the opposite of the Multi-Channel mixer's channel
+  grips, which copy.)
+- **Drag a single L or R channel** by its grip onto any channel slot in any deck
+  to move just that channel — e.g. take the L of a track in deck B and drop it
+  onto the R slot of a track in the Build deck. The source slot empties but its
+  track keeps its position, so nothing below it renumbers.
+- Dragging a row **within** a deck reorders it, which changes the channel order
+  of that deck's exported file.
+- A deck holds at most **6 stereo pairs (12 channels)**; a drop onto a full deck
+  is refused and the source keeps its track.
+
+### Per deck
+
+- **Import WAV** — load a multi-channel WAV (2–12 channels, even) into that deck
+  only. Its ACID tempo is picked up automatically, and its filename becomes the
+  deck's export name.
+- **Transport** — play/pause, stop, nudge ±5s and a scrub bar, with live meters
+  on each track row. Only one deck plays at a time: starting one stops the
+  others. **M**/**S** mute and solo within that deck.
+- **Export** — writes that deck's pairs as one interleaved WAV with the deck's
+  tempo embedded. The **⇲** button on a row exports that single pair on its own
+  (or drag it onto your desktop, in Chrome/Edge).
+- A row's **＋** loads a mono file into one channel; **✕** clears it. You can
+  also drop audio files straight onto a deck, a row, or a single channel slot.
+
+### Limits worth knowing
+
+- **12-channel files can't be re-opened in the browser.** Browsers decode fewer
+  channels than a WAV can carry — Chromium reads 10 but refuses 12. A 6-pair
+  deck still *exports* a valid 12-channel file that DAWs and hardware read fine,
+  and the app tells you at export time that it won't load back in. Keep a deck
+  at 5 pairs or fewer if you need to reopen its output here.
+- **Everything ends up at 48 kHz.** The app decodes through a single 48 kHz
+  audio context, so a 44.1 kHz file is resampled on load and exports are always
+  24-bit/48 kHz — which is also why tracks can always move between decks.
 
 ## Notes
 
