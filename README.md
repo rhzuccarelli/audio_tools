@@ -5,7 +5,7 @@ browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
 
-The current version is shown next to the logo in the header (**Rev 3.3**).
+The current version is shown next to the logo in the header (**Rev 4.1**).
 
 ## Choosing a module
 
@@ -40,6 +40,13 @@ The header shows the current revision. **Big changes bump the first digit,
 small changes bump the second.** Update the `Rev X.Y` label in the header (and
 this list) with every change.
 
+- **Rev 4.1** — The Multi-Channel WAV mixer can now export a **stereo bounce of a
+  chosen region**: instead of the full interleaved multi-channel file, mix every
+  audible pair down to one stereo WAV over an **In/Out region**. The region can be
+  typed in **seconds** or **snapped to whole bars** (using the project tempo and a
+  beats-per-bar setting), and the **In/Out** points can be dropped straight from
+  the playhead. Mute/solo decide which pairs go into the bounce, so it captures
+  exactly what the preview transport plays.
 - **Rev 4.0** — New **Multitrack Decks** tool: open several multi-channel WAVs
   **side by side as decks** and **drag tracks from one into another**, so you can
   merge two files or assemble a brand-new one out of pieces of both. Drags
@@ -169,8 +176,22 @@ is bass, and so on.
   its channels with the routing grips before exporting.
 - **Export** writes one interleaved WAV with all pairs combined; empty or
   shorter pairs are padded with silence.
+- **Stereo bounce** exports a *stereo mixdown* of a **chosen region** instead of
+  the full interleaved file — every audible pair summed to one stereo pair, the
+  same downmix the preview transport plays. Set the region with the **In** and
+  **Out** fields (the **⤓** button drops each marker at the current playhead),
+  and choose whether the region is measured in **Time** (seconds) or **Bars**:
+  - **Time** — In/Out are seconds; the bounce is exactly that slice.
+  - **Bars** — In/Out are bar numbers (needs a tempo). Pick the **beats/bar**,
+    and the region snaps to whole bar lines so the bounce is always a whole
+    number of bars. The project tempo is embedded in the bounced WAV.
+
+  Mute and solo decide which pairs are included, so you can bounce just the
+  drums (solo them) or everything-but-one (mute it). The readout under the
+  fields shows the resolved span before you commit.
 - Preview playback mixes every pair down to your stereo output — the
-  interleaving itself only exists in the exported file.
+  interleaving itself only exists in the interleaved export (the stereo bounce
+  is already a stereo file).
 
 ## Multitrack Decks
 

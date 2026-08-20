@@ -1781,6 +1781,158 @@ header {
 
 .mc-deck-export .btn { width: 100%; padding: 9px 8px; font-size: 9px; }
 
+/* ---- Stereo bounce block (region-limited stereo mixdown) ---- */
+.mc-bounce {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mc-bounce-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mc-bounce-title {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Segmented Time / Bars toggle */
+.mc-seg {
+  display: flex;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+
+.mc-seg-btn {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  background: var(--paper);
+  color: var(--muted);
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.mc-seg-btn + .mc-seg-btn { border-left: 1px solid var(--rule); }
+.mc-seg-btn:hover:not(:disabled):not(.is-on) { color: var(--ink); }
+.mc-seg-btn.is-on { background: var(--ink); color: var(--ink-invert); }
+.mc-seg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.mc-bounce-bpb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mc-bounce-bpb[hidden] { display: none; }
+
+.mc-bounce-lbl {
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.mc-bounce-select {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 6px;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.mc-bounce-select:hover { border-color: var(--ink); }
+.mc-bounce-select:focus { outline: none; border-color: var(--ink); }
+
+.mc-bounce-region {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mc-bounce-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mc-bounce-field .mc-bounce-lbl { width: 26px; flex-shrink: 0; }
+
+.mc-bounce-num {
+  flex: 1;
+  min-width: 0;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 7px;
+  text-align: right;
+  transition: border-color 0.12s;
+  -moz-appearance: textfield;
+}
+.mc-bounce-num::-webkit-inner-spin-button,
+.mc-bounce-num::-webkit-outer-spin-button { -webkit-appearance: none; }
+.mc-bounce-num:hover { border-color: var(--ink); }
+.mc-bounce-num:focus { outline: none; border-color: var(--ink); }
+.mc-bounce-num:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.mc-bounce-unit {
+  width: 24px;
+  flex-shrink: 0;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mc-bounce-set {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.mc-bounce-set:hover:not(:disabled) { background: var(--ink); color: var(--ink-invert); border-color: var(--ink); }
+.mc-bounce-set:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.mc-bounce-readout {
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-align: center;
+  padding: 2px 0;
+  min-height: 12px;
+}
+
 /* ========== MULTITRACK DECKS ==========
    A rack of decks side by side, each deck one multi-channel WAV laid out as a
    list of track rows. Deliberately its own .dd-* namespace rather than reusing
@@ -2312,7 +2464,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 4.0</span>
+    <span class="logo-tag">Rev 4.1</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -2498,6 +2650,53 @@ header {
         <div class="mc-deck-export">
           <input id="mc-export-name" class="mc-export-name" type="text" value="multichannel_mix.wav" spellcheck="false" title="Export filename">
           <button id="mc-export-btn" class="btn btn-primary" disabled>Export Multi-Channel WAV</button>
+
+          <!-- Stereo bounce: mix every audible pair down to a stereo WAV, but
+               only over a chosen region. The region can be entered in seconds
+               or snapped to whole bars (needs a tempo). -->
+          <div class="mc-bounce">
+            <div class="mc-bounce-head">
+              <span class="mc-bounce-title">Stereo Bounce</span>
+              <div class="mc-seg" id="mc-bounce-snap" role="group" aria-label="Snap region to">
+                <button type="button" class="mc-seg-btn is-on" data-snap="time">Time</button>
+                <button type="button" class="mc-seg-btn" data-snap="bars" title="Snap the region to whole bars (needs a tempo)">Bars</button>
+              </div>
+            </div>
+
+            <div class="mc-bounce-bpb" id="mc-bounce-bpb-row" hidden>
+              <span class="mc-bounce-lbl">Beats / Bar</span>
+              <select id="mc-bounce-bpb" class="mc-bounce-select" title="Beats per bar — used to work out bar length">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="12">12</option>
+              </select>
+            </div>
+
+            <div class="mc-bounce-region">
+              <div class="mc-bounce-field">
+                <span class="mc-bounce-lbl">In</span>
+                <input id="mc-bounce-in" class="mc-bounce-num" type="number" min="0" step="0.1" value="0">
+                <span class="mc-bounce-unit" id="mc-bounce-in-unit">s</span>
+                <button type="button" id="mc-bounce-in-set" class="mc-bounce-set" title="Set In from the playhead">⤓</button>
+              </div>
+              <div class="mc-bounce-field">
+                <span class="mc-bounce-lbl">Out</span>
+                <input id="mc-bounce-out" class="mc-bounce-num" type="number" min="0" step="0.1" value="0">
+                <span class="mc-bounce-unit" id="mc-bounce-out-unit">s</span>
+                <button type="button" id="mc-bounce-out-set" class="mc-bounce-set" title="Set Out from the playhead">⤓</button>
+              </div>
+            </div>
+
+            <div class="mc-bounce-readout" id="mc-bounce-readout">—</div>
+
+            <input id="mc-bounce-name" class="mc-export-name" type="text" value="stereo_bounce.wav" spellcheck="false" title="Bounce filename">
+            <button id="mc-bounce-btn" class="btn btn-primary" disabled title="Mix every audible pair down to a stereo WAV over the chosen region">Bounce Region · Stereo</button>
+          </div>
         </div>
       </div>
       <div class="mc-strips" id="mc-tracks"></div>
@@ -4023,6 +4222,13 @@ const mcState = {
   uploadTarget: null,    // { index, ch } awaiting a file from #mc-track-input (ch null = whole pair)
   cursor: 0,             // playhead position (seconds) shown on the discs while stopped
 
+  // ---- Stereo bounce (region-limited mixdown) ----
+  bounceIn: 0,           // region start (seconds)
+  bounceOut: 0,          // region end (seconds)
+  bounceSnap: 'time',    // 'time' = free seconds, 'bars' = snap to whole bars
+  bounceBeatsPerBar: 4,  // beats per bar, used to size a bar when snapping
+  bounceTotal: -1,       // last totalDuration the region was reset to (see updateMcMeta)
+
   // ---- Metering (real analyser data drives the strip meters + master VU) ----
   masterBus: null,       // GainNode every pair feeds; also tapped for the master VU
   masterAnalysers: null, // [analyserL, analyserR] on the master bus
@@ -4572,6 +4778,20 @@ function updateMcMeta() {
   $('#mc-export-btn').disabled = !hasContent;
   $('#mc-nudge-back').disabled = !hasContent;
   $('#mc-nudge-fwd').disabled = !hasContent;
+
+  // Whenever the mix length changes (import, upload, clear, pair count) reset
+  // the bounce region to span the whole file; edits that don't change the
+  // length leave a hand-set region alone.
+  if (mcState.totalDuration !== mcState.bounceTotal) {
+    mcState.bounceTotal = mcState.totalDuration;
+    mcState.bounceIn = 0;
+    mcState.bounceOut = mcState.totalDuration;
+  } else {
+    // Keep the region inside the current length just in case.
+    mcState.bounceOut = Math.min(mcState.bounceOut, mcState.totalDuration);
+    mcState.bounceIn = Math.min(mcState.bounceIn, mcState.bounceOut);
+  }
+  mcSyncBounceUI();
 }
 
 function renderMcTracks() {
@@ -4941,6 +5161,232 @@ async function mcExport() {
 
   const tempoNote = mcState.tempo > 0 ? ` · ${mcState.tempo} BPM embedded` : '';
   toast(`Exported ${numChannels}-channel WAV (${loaded.length} pair${loaded.length === 1 ? '' : 's'} loaded)${tempoNote}`, 'success');
+}
+
+// ---------- Stereo bounce ----------
+// Unlike the multi-channel export (every pair on its own channel), a bounce
+// sums every *audible* pair down to a single stereo pair — exactly the mixdown
+// the preview transport plays — but only over a chosen region. The region can
+// be typed in seconds or snapped to whole bars (bars need a tempo).
+
+// Seconds one bar lasts at the current tempo + beats/bar, or 0 if no tempo.
+function mcSecondsPerBar() {
+  const tempo = mcState.tempo;
+  const bpb = mcState.bounceBeatsPerBar;
+  if (!(tempo > 0) || !(bpb > 0)) return 0;
+  return (bpb * 60) / tempo;
+}
+
+// Can we snap to bars right now? Only with a usable tempo.
+function mcCanSnapBars() {
+  return mcSecondsPerBar() > 0;
+}
+
+// Resolve the region to concrete { start, end } seconds, clamped to the mix and
+// snapped to bar boundaries when in bars mode.
+function mcResolveBounceRegion() {
+  const total = mcState.totalDuration;
+  let start = Math.max(0, Math.min(mcState.bounceIn, total));
+  let end   = Math.max(0, Math.min(mcState.bounceOut, total));
+  if (mcState.bounceSnap === 'bars' && mcCanSnapBars()) {
+    const spb = mcSecondsPerBar();
+    // Land both edges on bar lines. Round to the nearest bar, but keep the end
+    // inside the file by dropping to the last whole bar rather than spilling
+    // past it — so a bounce is always a whole number of bars.
+    start = Math.round(start / spb) * spb;
+    end   = Math.round(end / spb) * spb;
+    if (end > total) end = Math.floor(total / spb) * spb;
+    if (end <= start) end = start + spb;   // never collapse: at least one bar
+    start = Math.max(0, Math.min(start, total));
+    end   = Math.min(end, total);
+  }
+  return { start, end };
+}
+
+// Refresh the In/Out inputs, units, readout and button-enabled state from the
+// stored region. Called on every meta update and whenever a control changes.
+function mcSyncBounceUI() {
+  const inEl  = $('#mc-bounce-in');
+  const outEl = $('#mc-bounce-out');
+  if (!inEl || !outEl) return;
+
+  const bars = mcState.bounceSnap === 'bars';
+  const canBars = mcCanSnapBars();
+  const spb = mcSecondsPerBar();
+  const { start, end } = mcResolveBounceRegion();
+  const total = mcState.totalDuration;
+  const hasContent = mcState.tracks.some(t => t.buffer);
+
+  // Bars mode needs a tempo; the toggle button reflects that.
+  const barsBtn = document.querySelector('#mc-bounce-snap [data-snap="bars"]');
+  if (barsBtn) {
+    barsBtn.disabled = !canBars;
+    barsBtn.title = canBars
+      ? 'Snap the region to whole bars'
+      : 'Set a tempo to snap the region to bars';
+  }
+  $('#mc-bounce-bpb-row').hidden = !bars;
+
+  // Input units + values follow the mode.
+  const inUnit  = $('#mc-bounce-in-unit');
+  const outUnit = $('#mc-bounce-out-unit');
+  if (bars && canBars) {
+    if (inUnit)  inUnit.textContent  = 'bar';
+    if (outUnit) outUnit.textContent = 'bar';
+    inEl.step = '1'; outEl.step = '1'; inEl.min = '1'; outEl.min = '1';
+    // Bar numbers are 1-based; end is the bar line the region runs *to*.
+    inEl.value  = String(Math.round(start / spb) + 1);
+    outEl.value = String(Math.round(end / spb) + 1);
+  } else {
+    if (inUnit)  inUnit.textContent  = 's';
+    if (outUnit) outUnit.textContent = 's';
+    inEl.step = '0.1'; outEl.step = '0.1'; inEl.min = '0'; outEl.min = '0';
+    inEl.value  = (Math.round(start * 10) / 10).toString();
+    outEl.value = (Math.round(end * 10) / 10).toString();
+  }
+
+  // Readout: always show the resolved time span; add bar count in bars mode.
+  const readout = $('#mc-bounce-readout');
+  if (readout) {
+    if (!hasContent) {
+      readout.textContent = '—';
+    } else {
+      const dur = Math.max(0, end - start);
+      let txt = `${fmtBounceTime(start)} → ${fmtBounceTime(end)} · ${dur.toFixed(2)}s`;
+      if (bars && canBars) {
+        const nBars = Math.max(0, Math.round((end - start) / spb));
+        txt = `${nBars} bar${nBars === 1 ? '' : 's'} · ${txt}`;
+      }
+      readout.textContent = txt;
+    }
+  }
+
+  const usable = hasContent && end > start;
+  const btn = $('#mc-bounce-btn');
+  if (btn) btn.disabled = !usable;
+  inEl.disabled = !hasContent;
+  outEl.disabled = !hasContent;
+  $('#mc-bounce-in-set').disabled = !hasContent;
+  $('#mc-bounce-out-set').disabled = !hasContent;
+}
+
+// mm:ss.d for the bounce readout (finer than the transport's fmtTime).
+function fmtBounceTime(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`;
+}
+
+// Read a typed In/Out value (seconds or bar number) back into stored seconds.
+function mcSetBounceEdge(edge, rawValue) {
+  const bars = mcState.bounceSnap === 'bars' && mcCanSnapBars();
+  const spb = mcSecondsPerBar();
+  let sec;
+  if (bars) {
+    const bar = Math.max(1, Math.round(parseFloat(rawValue) || 1));
+    sec = (bar - 1) * spb;
+  } else {
+    sec = Math.max(0, parseFloat(rawValue) || 0);
+  }
+  sec = Math.max(0, Math.min(sec, mcState.totalDuration));
+  if (edge === 'in') {
+    mcState.bounceIn = sec;
+    if (mcState.bounceOut < mcState.bounceIn) mcState.bounceOut = mcState.bounceIn;
+  } else {
+    mcState.bounceOut = sec;
+    if (mcState.bounceIn > mcState.bounceOut) mcState.bounceIn = mcState.bounceOut;
+  }
+  mcSyncBounceUI();
+}
+
+// The live playhead: the moving position while playing, else the scrub cursor.
+function mcPlayheadPosition() {
+  if (mcState.isPlaying && mcState.playingIndex === null && mcState.masterBus) {
+    const ctx = mcState.masterBus.context;
+    return (ctx.currentTime - mcState.playStartTime) + mcState.seekOffset;
+  }
+  return mcState.cursor;
+}
+
+// Drop an In/Out marker at the current playhead (disc/scrub cursor).
+function mcSetBounceFromPlayhead(edge) {
+  if (!mcState.tracks.some(t => t.buffer)) return;
+  const pos = Math.max(0, Math.min(mcPlayheadPosition(), mcState.totalDuration));
+  if (edge === 'in') {
+    mcState.bounceIn = pos;
+    if (mcState.bounceOut < mcState.bounceIn) mcState.bounceOut = mcState.totalDuration;
+  } else {
+    mcState.bounceOut = pos;
+    if (mcState.bounceIn > mcState.bounceOut) mcState.bounceIn = 0;
+  }
+  mcSyncBounceUI();
+}
+
+async function mcBounce() {
+  const audibleTracks = mcState.tracks.filter((t, i) => t.buffer && mcAudible(i));
+  if (audibleTracks.length === 0) { toast('Nothing audible to bounce (check mute/solo)', 'error'); return; }
+  if (mcState.isPlaying) mcStop();
+
+  const ctx = ensureAudioCtx();
+  const sr = mcState.sampleRate || ctx.sampleRate;
+  const { start, end } = mcResolveBounceRegion();
+  if (!(end > start)) { toast('Bounce region is empty', 'error'); return; }
+
+  const startSample = Math.round(start * sr);
+  const length = Math.round((end - start) * sr);
+  if (length <= 0) { toast('Bounce region is too short', 'error'); return; }
+
+  let out;
+  try {
+    out = ctx.createBuffer(2, length, sr);
+  } catch (err) {
+    toast('Could not create the bounce buffer', 'error');
+    return;
+  }
+  const outL = out.getChannelData(0);
+  const outR = out.getChannelData(1);
+
+  // Sum every audible pair at unity gain — the same mixdown the transport
+  // monitors. audioBufferToWav clamps, so overlapping pairs can't wrap.
+  let included = 0;
+  mcState.tracks.forEach((track, i) => {
+    if (!track.buffer || !mcAudible(i)) return;
+    included++;
+    const bl = track.buffer.getChannelData(0);
+    const br = track.buffer.getChannelData(1);
+    const n = track.buffer.length;
+    for (let j = 0; j < length; j++) {
+      const s = startSample + j;
+      if (s >= n) break;      // this pair ended before the region does
+      outL[j] += bl[s];
+      outR[j] += br[s];
+    }
+  });
+
+  const extraChunks = mcState.tempo > 0 ? [buildAcidChunk(mcState.tempo)] : [];
+  const blob = audioBufferToWav(out, extraChunks);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  let name = ($('#mc-bounce-name').value || 'stereo_bounce.wav').trim();
+  if (!/\.wav$/i.test(name)) name += '.wav';
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+  const totalPairs = mcState.tracks.filter(t => t.buffer).length;
+  const pairNote = included < totalPairs ? `${included} of ${totalPairs} pairs` : `${included} pair${included === 1 ? '' : 's'}`;
+  let regionNote;
+  if (mcState.bounceSnap === 'bars' && mcCanSnapBars()) {
+    const nBars = Math.round((end - start) / mcSecondsPerBar());
+    regionNote = `${nBars} bar${nBars === 1 ? '' : 's'}`;
+  } else {
+    regionNote = `${(end - start).toFixed(2)}s`;
+  }
+  toast(`Bounced stereo · ${regionNote} · ${pairNote}`, 'success');
 }
 
 // ============================================================
@@ -6118,6 +6564,10 @@ $('#mc-tempo-input').addEventListener('change', e => {
   const v = parseFloat(e.target.value);
   mcState.tempo = (!isNaN(v) && v > 0) ? v : null;
   e.target.value = mcState.tempo || '';
+  // Bar length (and whether Bars snapping is even available) depends on tempo.
+  if (!mcCanSnapBars() && mcState.bounceSnap === 'bars') mcState.bounceSnap = 'time';
+  mcSyncBounceSnapButtons();
+  mcSyncBounceUI();
 });
 $('#mc-pair-count').addEventListener('change', e => mcSetPairCount(parseInt(e.target.value, 10)));
 $('#mc-import-btn').addEventListener('click', () => $('#mc-import-input').click());
@@ -6148,6 +6598,36 @@ $('#mc-play-btn').addEventListener('click', () => {
 });
 $('#mc-stop-btn').addEventListener('click', mcStop);
 $('#mc-export-btn').addEventListener('click', mcExport);
+
+// ---- Stereo bounce controls ----
+// Reflect the active snap mode on the segmented Time/Bars toggle.
+function mcSyncBounceSnapButtons() {
+  document.querySelectorAll('#mc-bounce-snap .mc-seg-btn').forEach(btn => {
+    btn.classList.toggle('is-on', btn.dataset.snap === mcState.bounceSnap);
+  });
+}
+document.querySelectorAll('#mc-bounce-snap .mc-seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.snap;
+    if (mode === 'bars' && !mcCanSnapBars()) {
+      toast('Set a tempo first to snap to bars', 'error');
+      return;
+    }
+    mcState.bounceSnap = mode;
+    mcSyncBounceSnapButtons();
+    mcSyncBounceUI();
+  });
+});
+$('#mc-bounce-bpb').addEventListener('change', e => {
+  const v = parseInt(e.target.value, 10);
+  mcState.bounceBeatsPerBar = v > 0 ? v : 4;
+  mcSyncBounceUI();
+});
+$('#mc-bounce-in').addEventListener('change', e => mcSetBounceEdge('in', e.target.value));
+$('#mc-bounce-out').addEventListener('change', e => mcSetBounceEdge('out', e.target.value));
+$('#mc-bounce-in-set').addEventListener('click', () => mcSetBounceFromPlayhead('in'));
+$('#mc-bounce-out-set').addEventListener('click', () => mcSetBounceFromPlayhead('out'));
+$('#mc-bounce-btn').addEventListener('click', mcBounce);
 
 // Nudge the playhead ±5s; if playing, restart from the new position.
 function mcNudge(delta) {
