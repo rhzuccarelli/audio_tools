@@ -5,7 +5,7 @@ browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
 
-The current version is shown next to the logo in the header (**Rev 5.0**).
+The current version is shown next to the logo in the header (**Rev 5.1**).
 
 ## Choosing a module
 
@@ -41,6 +41,11 @@ The header shows the current revision. **Big changes bump the first digit,
 small changes bump the second.** Update the `Rev X.Y` label in the header (and
 this list) with every change.
 
+- **Rev 5.1** — The Stem Arranger's reference can now be a **TP-7**: plug it in
+  over USB and the app's **Play** starts the TP-7's own playback (MIDI Start +
+  clock), so it plays the reference track while you hear the stems through it.
+  A new **Output** picker sends the app's audio to any output device, such as
+  the TP-7. See [Using a TP-7 as the reference](#using-a-tp-7-as-the-reference).
 - **Rev 5.0** — **Stem Arranger MK2**, a redesign of the Stem Arranger:
   - **Horizontal timeline** — the arrangement is a row of blocks whose widths
     match their durations, on a bar ruler with a playhead. Click the ruler or
@@ -141,6 +146,12 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
   hear it alongside the song. Mute it, set its volume, and nudge its **offset**
   (0.1 s per click, 1 s with Shift). The **Monitor** switch picks what you hear:
   **Song**, **Both**, or **Ref** only. Exports never include the reference.
+- **TP-7 as the reference** — instead of a file, start the reference on a
+  connected TP-7 from the app's transport (see
+  [Using a TP-7 as the reference](#using-a-tp-7-as-the-reference)).
+- **Output device** — the **Output** picker in the arrangement bar sends the
+  app's audio to any output (e.g. the TP-7 over USB). Chrome/Edge only; the
+  choice applies to every tool.
 - **Live preview** — play/pause, stop, seek (click the ruler, lanes or progress
   bar), play a single block, and follow the playhead across the timeline, all
   synced via the Web Audio API.
@@ -181,6 +192,38 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
    for a single multi-channel WAV with every instrument on its own channel.
 9. Click **Save Project** (or **Save Bundle**) to save the song to a `.json`
    file, and **Load Song** to reopen a saved song later.
+
+## Using a TP-7 as the reference
+
+The reference lane can play from a **TP-7** instead of an audio file: the app's
+**Play** starts the TP-7's own playback over USB MIDI, and the stems play out of
+the TP-7 too, so you hear both on the device.
+
+1. Connect the TP-7 to the computer over USB-C and open the app in **Chrome or
+   Edge** (Web MIDI and output selection aren't available in Safari/Firefox).
+2. On the TP-7, set the **MIDI menu to sync** (TP-7 OS 1.13 or later), then load
+   the reference track and cue it at its start.
+3. In the Reference panel, switch the source to **TP-7** and click **Connect**.
+   The TP-7's MIDI port is picked automatically, and if the TP-7 shows up as an
+   audio output, **Output** switches to it (otherwise pick it there).
+4. Press **Play** from **0:00**. The app sends MIDI **Start** timed to the first
+   note of the stems, then MIDI **clock** at the project tempo; **Pause**,
+   **Stop** or the end of the song send MIDI **Stop**.
+5. If the two drift apart at the start, nudge **Sync** (±5 ms per click, ±50 ms
+   with Shift; positive starts the TP-7 later).
+
+The **Monitor** switch still applies: **Song** leaves the TP-7 off, **Both**
+plays the stems and starts the TP-7, **Ref** starts the TP-7 with the stems
+silent. The TP-7 mode and its Sync setting are saved with the song.
+
+Limits:
+
+- The TP-7 can't be told to jump to a position over MIDI, so it only starts when
+  the song plays from **0:00**. Seeking, resuming after a pause, or playing a
+  single block plays the stems only.
+- The TP-7 never reports its state back, so if you operate it by hand the app
+  can't tell. Re-cue it at the start before pressing Play.
+- How the TP-7 follows MIDI start/stop and clock depends on its firmware.
 
 ## Multi-Channel WAV mixer
 

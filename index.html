@@ -706,6 +706,10 @@ header {
 }
 .sa-bar .panel-title { padding-right: 6px; }
 
+.sa-output { margin-left: auto; border-left: 1px solid var(--rule); }
+.sa-output .bpb-select { max-width: 200px; }
+.sa-output + .sa-zoom { margin-left: 0; }
+
 .sa-zoom {
   margin-left: auto;
   display: flex;
@@ -754,7 +758,7 @@ header {
 }
 
 .sa-label-ref {
-  height: 104px;
+  height: 132px;
   flex-shrink: 0;
   padding: 10px 16px 10px 26px;
   display: flex;
@@ -804,7 +808,41 @@ header {
   gap: 6px;
 }
 .sa-ref-row input[type=range] { flex: 1; min-width: 0; accent-color: var(--ink); }
-.sa-label-ref.is-empty .sa-ref-row { opacity: 0.35; }
+.sa-label-ref.is-empty .sa-ref-row.only-file { opacity: 0.35; }
+
+/* The panel shows the File controls or the TP-7 controls, never both */
+.sa-label-ref.src-tp7 .only-file,
+.sa-label-ref:not(.src-tp7) .only-tp7 { display: none; }
+
+/* Small segmented switch (File | TP-7) — same look as the Monitor switch */
+.sa-seg { display: flex; padding-left: 1px; }
+.sa-seg button {
+  flex: 1;
+  font-family: var(--font-mono);
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  margin-left: -1px;
+  padding: 3px 6px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.sa-seg button.on { background: var(--ink); color: var(--ink-invert); }
+.sa-seg button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.sa-tp7-port {
+  width: 100%;
+  min-width: 0;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  padding: 2px 4px;
+}
+.sa-tp7-port:disabled { opacity: 0.35; }
 
 .sa-ref-off-label {
   font-size: 9px;
@@ -978,7 +1016,7 @@ header {
 
 /* ---- Reference lane ---- */
 .sa-ref-lane {
-  height: 104px;
+  height: 132px;
   position: relative;
   padding: 10px 0;
 }
@@ -993,6 +1031,24 @@ header {
 }
 .sa-ref-box.dim { opacity: 0.35; }
 .sa-ref-box canvas { display: block; width: 100%; height: 100%; }
+
+/* TP-7 lane: the reference plays on the device, so there's no waveform —
+   a hatched box from bar 1 shows where it starts. */
+.sa-ref-box.tp7 {
+  left: 0;
+  border-style: dashed;
+  background: repeating-linear-gradient(135deg, var(--hairline) 0 6px, transparent 6px 12px);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.sa-ref-box.tp7 .tag { background: var(--paper); border: 1px solid var(--ink); padding: 3px 8px; overflow: hidden; text-overflow: ellipsis; }
+.sa-ref-box.tp7.live .tag { background: var(--ink); color: var(--ink-invert); }
 
 .sa-ref-empty {
   position: absolute;
@@ -2639,7 +2695,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 5.0</span>
+    <span class="logo-tag">Rev 5.1</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -2714,6 +2770,11 @@ header {
         <div class="meta-value" id="meta-reference">—</div>
       </div>
     </div>
+    <!-- Output device (AudioContext.setSinkId) — shown only where supported -->
+    <div class="bpb-control sa-output" id="sa-output" style="display:none">
+      <span class="bpb-label">Output</span>
+      <select id="output-select" class="bpb-select" title="Where the app's audio plays — e.g. the TP-7 over USB"></select>
+    </div>
     <div class="sa-zoom">
       <span class="bpm-label">Zoom</span>
       <div class="crop-stepper">
@@ -2735,14 +2796,33 @@ header {
       <div class="sa-label-ref is-empty" id="ref-panel">
         <div class="sa-ref-title-row">
           <div class="panel-title sa-ref-title">Reference</div>
-          <button class="sa-mini-btn" id="ref-import-btn" title="Import an audio file to listen to alongside the song">Import</button>
+          <button class="sa-mini-btn only-file" id="ref-import-btn" title="Import an audio file to listen to alongside the song">Import</button>
+          <button class="sa-mini-btn only-tp7" id="tp7-connect-btn" title="Connect to the TP-7 over USB MIDI">Connect</button>
         </div>
-        <div class="sa-ref-name" id="ref-name">No reference loaded</div>
-        <div class="sa-ref-row">
+        <div class="sa-seg" id="ref-source" title="Play the reference from an audio file, or start it on a TP-7 over USB MIDI">
+          <button data-source="file" class="on">File</button>
+          <button data-source="tp7" id="ref-source-tp7">TP-7</button>
+        </div>
+        <!-- File reference -->
+        <div class="sa-ref-name only-file" id="ref-name">No reference loaded</div>
+        <div class="sa-ref-row only-file">
           <button class="sa-m-btn" id="ref-mute-btn" title="Mute reference" disabled>M</button>
           <input type="range" id="ref-vol" min="0" max="100" value="80" title="Reference volume" disabled>
         </div>
-        <div class="sa-ref-row">
+        <!-- TP-7 reference (Web MIDI start/stop + clock) -->
+        <select class="sa-tp7-port only-tp7" id="tp7-port" title="MIDI output the TP-7 is on" disabled>
+          <option value="">Not connected</option>
+        </select>
+        <div class="sa-ref-name only-tp7" id="tp7-status">Not connected</div>
+        <div class="sa-ref-row only-tp7">
+          <span class="sa-ref-off-label" title="Shift the TP-7's start against the stems to line them up by ear">Sync</span>
+          <div class="sa-ref-stepper">
+            <button class="step-btn" id="tp7-sync-dec" title="TP-7 earlier (Shift = 50 ms)">◀</button>
+            <div class="crop-val-display" id="tp7-sync-val">+0 ms</div>
+            <button class="step-btn" id="tp7-sync-inc" title="TP-7 later (Shift = 50 ms)">▶</button>
+          </div>
+        </div>
+        <div class="sa-ref-row only-file">
           <span class="sa-ref-off-label">Offset</span>
           <div class="sa-ref-stepper">
             <button class="step-btn" id="ref-off-dec" title="Nudge earlier (Shift = 1s)" disabled>◀</button>
@@ -3073,6 +3153,18 @@ const state = {
   monitor: 'both',            // 'mix' (song only) | 'both' | 'ref' (reference only)
   reference: null,            // { name, buffer, peaks, duration, gain 0..100, muted, offset (s) }
   pendingReference: null,     // reference settings from a project file, applied when that file is re-imported
+  refSource: 'file',          // 'file' (imported audio) | 'tp7' (started on a TP-7 over USB MIDI)
+  tp7: {
+    access: null,             // MIDIAccess once connected
+    outputId: null,           // chosen MIDI output port id
+    wantName: null,           // port name from a song file, matched on connect
+    syncMs: 0,                // TP-7 start relative to the stems (+ = later)
+    running: false,           // Start sent and clock running
+    clockTimer: null,         // look-ahead clock scheduler (setInterval)
+    nextClock: 0,             // performance.now() time of the next clock tick
+    clockMs: 0                // ms between clock ticks (24 per quarter note)
+  },
+  outputDeviceId: '',         // audio output device id ('' = system default)
   songBus: null,              // GainNode every stem feeds while playing (silenced by monitor 'ref')
   refGainNode: null,          // GainNode the reference feeds while playing
   liveGains: new Map(),       // block id → Map(stem → GainNode) while playing, so mix edits are live
@@ -3299,6 +3391,10 @@ function ensureAudioCtx() {
       state.audioCtx = new AC({ sampleRate: 48000 });
     } catch (err) {
       state.audioCtx = new AC();
+    }
+    // Restore the output device picked earlier (e.g. the TP-7).
+    if (state.outputDeviceId && state.audioCtx.setSinkId) {
+      state.audioCtx.setSinkId(state.outputDeviceId).catch(() => {});
     }
   }
   if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
@@ -3691,8 +3787,9 @@ function getSectionDuration(section, loop) {
 //     is re-encoded to WAV (audioBufferToWav) and base64'd, so it reopens with
 //     no stems folder present.
 // Version 2 adds each block's stem `mix` and the `reference` track (name,
-// offset, volume, mute; a bundle also embeds its audio). Version 1 files load
-// with unity mixes and no reference.
+// offset, volume, mute; a bundle also embeds its audio), plus `refSource`
+// ('file' | 'tp7') and the TP-7's `tp7: { syncMs, outputName }`. Version 1
+// files load with unity mixes, no reference and the File source.
 const SONG_FORMAT = 'stem-arranger-song';
 const SONG_VERSION = 2;
 
@@ -3730,6 +3827,8 @@ async function serializeSong({ includeAudio }) {
       mix: b.mix || {}
     })),
     reference: null,
+    refSource: state.refSource,
+    tp7: { syncMs: state.tp7.syncMs, outputName: tp7Output()?.name || state.tp7.wantName || null },
     audio: null
   };
 
@@ -3879,6 +3978,14 @@ async function importSong(file) {
       mix: sanitizeMix(b.mix)
     }));
 
+    // TP-7 reference settings; the MIDI port is matched by name on connect.
+    if (song.refSource === 'tp7' || song.refSource === 'file') state.refSource = song.refSource;
+    if (song.tp7 && typeof song.tp7 === 'object') {
+      const sync = Number(song.tp7.syncMs);
+      state.tp7.syncMs = isFinite(sync) ? Math.max(-TP7_SYNC_LIMIT, Math.min(TP7_SYNC_LIMIT, Math.round(sync))) : 0;
+      if (song.tp7.outputName) state.tp7.wantName = String(song.tp7.outputName);
+    }
+
     // Restore the reference: decode an embedded one, otherwise remember its
     // settings until the same file is imported again.
     const songRef = song.reference && typeof song.reference === 'object' && song.reference.name ? song.reference : null;
@@ -4001,21 +4108,27 @@ function blockStartTime(id) {
   return t;
 }
 
+// The imported reference file, when it's the active reference source (in
+// TP-7 mode the reference plays on the device instead and adds no length).
+function fileReference() {
+  return state.refSource === 'file' ? state.reference : null;
+}
+
 // Where the reference ends on the timeline (offset > 0 starts it later).
 function referenceEnd() {
-  const r = state.reference;
+  const r = fileReference();
   return r ? r.offset + r.duration : 0;
 }
 
 // The transport runs to the end of the song, or of the reference when it's
 // audible — the song length meta itself never counts the reference.
 function transportTotal() {
-  const refEnd = state.reference && state.monitor !== 'mix' ? referenceEnd() : 0;
+  const refEnd = fileReference() && state.monitor !== 'mix' ? referenceEnd() : 0;
   return Math.max(state.totalDuration, refEnd);
 }
 
 function canPlay() {
-  return state.arrangement.length > 0 || (!!state.reference && state.monitor !== 'mix');
+  return state.arrangement.length > 0 || (!!fileReference() && state.monitor !== 'mix');
 }
 
 function renderArrangement() {
@@ -4036,7 +4149,8 @@ function renderArrangement() {
   $('#meta-blocks').textContent      = state.arrangement.length;
   $('#meta-duration').textContent    = fmtTime(state.totalDuration);
   $('#meta-instruments').textContent = state.instruments.size;
-  $('#meta-reference').textContent   = state.reference ? fmtTime(state.reference.duration) : '—';
+  $('#meta-reference').textContent   = state.refSource === 'tp7' ? 'TP-7'
+                                     : state.reference ? fmtTime(state.reference.duration) : '—';
   $('#zoom-val').textContent         = `${pps} px/s`;
   $('#zoom-out-btn').disabled        = pps <= PPS_MIN;
   $('#zoom-in-btn').disabled         = pps >= PPS_MAX;
@@ -4103,6 +4217,15 @@ function renderSongLane() {
 
 function renderReferenceLane() {
   const lane = $('#sa-ref-lane');
+  if (state.refSource === 'tp7') {
+    const width = Math.max(280, state.totalDuration * state.pps);
+    const dim   = state.monitor === 'mix';
+    lane.innerHTML = `
+      <div class="sa-ref-box tp7${dim ? ' dim' : ''}${state.tp7.running ? ' live' : ''}" style="width:${width}px">
+        <span class="tag" title="The reference plays on the TP-7, started from bar 1 by MIDI">TP-7 · starts at bar 1</span>
+      </div>`;
+    return;
+  }
   const ref  = state.reference;
   if (!ref) {
     lane.innerHTML = `
@@ -4143,10 +4266,14 @@ function drawReferenceWave(canvas, ref) {
   }
 }
 
-// Label-column controls for the reference (mute, volume, offset).
+// Label-column controls for the reference (mute, volume, offset), or for
+// the TP-7 when that's the reference source.
 function renderReferenceControls() {
   const ref = state.reference;
   $('#ref-panel').classList.toggle('is-empty', !ref);
+  $('#ref-panel').classList.toggle('src-tp7', state.refSource === 'tp7');
+  $$('#ref-source button').forEach(b => b.classList.toggle('on', b.dataset.source === state.refSource));
+  renderTp7Controls();
   $('#ref-import-btn').textContent = ref ? 'Replace' : 'Import';
   const pending = state.pendingReference;
   const nameEl = $('#ref-name');
@@ -4251,6 +4378,8 @@ function setMonitor(mode) {
   if (mode === state.monitor) return;
   const before = transportTotal();
   state.monitor = mode;
+  // Song only → the TP-7 stops. It never starts mid-song (it can't seek).
+  if (mode === 'mix') tp7Stop();
   $$('#sa-monitor button').forEach(b => b.classList.toggle('on', b.dataset.monitor === mode));
   applyMonitorGains();
   renderReferenceLane();
@@ -4264,9 +4393,244 @@ function setMonitor(mode) {
 function applyMonitorGains() {
   if (state.songBus) state.songBus.gain.value = state.monitor === 'ref' ? 0 : 1;
   if (state.refGainNode) {
-    const r = state.reference;
+    const r = fileReference();
     state.refGainNode.gain.value = (!r || r.muted || state.monitor === 'mix') ? 0 : r.gain / 100;
   }
+}
+
+// ============================================================
+// TP-7 REFERENCE (Web MIDI transport)
+// ============================================================
+// Instead of an audio file, the reference can play on a TP-7 connected over
+// USB: Play from 0:00 sends MIDI Start, then MIDI clock at the project tempo;
+// any stop/pause/restart sends MIDI Stop. The TP-7 follows this with its MIDI
+// menu set to sync. It can't be sent to a position and never reports its
+// state, so it only starts with the song from the top.
+const MIDI_START = 0xFA;
+const MIDI_STOP  = 0xFC;
+const MIDI_CLOCK = 0xF8;
+const TP7_SYNC_LIMIT = 500; // ms either way
+
+function midiSupported() {
+  return typeof navigator.requestMIDIAccess === 'function';
+}
+
+function tp7Output() {
+  const { access, outputId } = state.tp7;
+  return access && outputId ? access.outputs.get(outputId) || null : null;
+}
+
+async function tp7Connect() {
+  if (!midiSupported()) {
+    toast('This browser has no Web MIDI — use Chrome or Edge', 'error');
+    return;
+  }
+  if (!state.tp7.access) {
+    try {
+      state.tp7.access = await navigator.requestMIDIAccess();
+    } catch (err) {
+      console.warn('MIDI access refused', err);
+      toast('MIDI access was refused', 'error');
+      return;
+    }
+    // Plugging/unplugging the TP-7 updates the port list.
+    state.tp7.access.onstatechange = () => { tp7RefreshOutputs(); renderTp7Controls(); };
+  }
+  tp7RefreshOutputs();
+  renderTp7Controls();
+  const out = tp7Output();
+  if (!out) { toast('No MIDI output found — plug in the TP-7', 'error'); return; }
+  toast(`Connected to ${out.name}`, 'success');
+  autoSelectTp7Output();
+}
+
+// Keep the chosen port if it's still there; otherwise prefer the port named
+// in a loaded song, then anything called TP-7, then the first port.
+function tp7RefreshOutputs() {
+  const outs = state.tp7.access ? [...state.tp7.access.outputs.values()] : [];
+  if (!outs.some(o => o.id === state.tp7.outputId)) {
+    const pick = (state.tp7.wantName && outs.find(o => o.name === state.tp7.wantName))
+      || outs.find(o => /tp-?7/i.test(o.name))
+      || outs[0];
+    state.tp7.outputId = pick ? pick.id : null;
+    if (!pick && state.tp7.running) tp7Stop();
+  }
+}
+
+// timing: the TP-7's Start is timestamped to land when the stems' first
+// sample leaves the speakers, shifted by the Sync setting.
+function tp7Start(ctx, startAt) {
+  const out = tp7Output();
+  if (!out) return;
+  tp7Stop();
+  const ts = ctx.getOutputTimestamp ? ctx.getOutputTimestamp() : null;
+  let at = ts && ts.performanceTime
+    ? ts.performanceTime + (startAt - ts.contextTime) * 1000                 // already includes output latency
+    : performance.now() + (startAt - ctx.currentTime + (ctx.outputLatency || ctx.baseLatency || 0)) * 1000;
+  at = Math.max(performance.now(), at + state.tp7.syncMs);
+
+  const t = state.tp7;
+  t.clockMs   = 60000 / ((effectiveTempo() || 120) * 24);
+  t.nextClock = at;
+  t.running   = true;
+  try {
+    out.send([MIDI_START], at);
+  } catch (err) {
+    console.warn('MIDI send failed', err);
+    t.running = false;
+    toast('Could not send to the TP-7', 'error');
+    return;
+  }
+  // Look-ahead clock: every 25 ms, queue the ticks due in the next 100 ms.
+  const pump = () => {
+    const o = tp7Output();
+    if (!o || !t.running) return;
+    const horizon = performance.now() + 100;
+    while (t.nextClock < horizon) {
+      o.send([MIDI_CLOCK], Math.max(performance.now(), t.nextClock));
+      t.nextClock += t.clockMs;
+    }
+  };
+  pump();
+  t.clockTimer = setInterval(pump, 25);
+}
+
+function tp7Stop() {
+  const t = state.tp7;
+  if (t.clockTimer) clearInterval(t.clockTimer);
+  t.clockTimer = null;
+  if (!t.running) return;
+  t.running = false;
+  const out = tp7Output();
+  if (!out) return;
+  try {
+    if (out.clear) out.clear(); // drop clock ticks still queued
+  } catch (e) {}
+  try { out.send([MIDI_STOP]); } catch (e) {}
+}
+
+function setRefSource(src) {
+  if (src === state.refSource) return;
+  if (src === 'tp7' && !midiSupported()) {
+    toast('This browser has no Web MIDI — use Chrome or Edge', 'error');
+    return;
+  }
+  if (state.isPlaying) stop();
+  state.refSource = src;
+  renderArrangement();
+}
+
+function nudgeTp7Sync(delta) {
+  state.tp7.syncMs = Math.max(-TP7_SYNC_LIMIT, Math.min(TP7_SYNC_LIMIT, state.tp7.syncMs + delta));
+  renderTp7Controls();
+}
+
+function renderTp7Controls() {
+  const t = state.tp7;
+  const srcBtn = $('#ref-source-tp7');
+  if (srcBtn) {
+    srcBtn.disabled = !midiSupported();
+    srcBtn.title = midiSupported() ? 'Start the reference on a TP-7 over USB MIDI' : 'Needs Web MIDI (Chrome or Edge)';
+  }
+
+  const outs = t.access ? [...t.access.outputs.values()] : [];
+  const sel = $('#tp7-port');
+  sel.innerHTML = outs.length
+    ? outs.map(o => `<option value="${escHtml(o.id)}"${o.id === t.outputId ? ' selected' : ''}>${escHtml(o.name)}</option>`).join('')
+    : `<option value="">${t.access ? 'No MIDI outputs' : 'Not connected'}</option>`;
+  sel.disabled = outs.length === 0;
+  $('#tp7-connect-btn').textContent = t.access ? 'Rescan' : 'Connect';
+
+  let status;
+  if (!midiSupported())       status = 'Web MIDI needs Chrome or Edge';
+  else if (!t.access)         status = 'Not connected';
+  else if (!tp7Output())      status = 'Plug in the TP-7';
+  else if (t.running)         status = 'Playing on TP-7';
+  else if (state.monitor === 'mix') status = 'Monitor is Song — TP-7 stays off';
+  else if (state.isPlaying)   status = 'TP-7 starts only from 0:00';
+  else                        status = 'Ready · TP-7 MIDI set to sync';
+  const statusEl = $('#tp7-status');
+  statusEl.textContent = status;
+  statusEl.title = status;
+
+  $('#tp7-sync-val').textContent = `${t.syncMs < 0 ? '−' : '+'}${Math.abs(t.syncMs)} ms`;
+}
+
+// ============================================================
+// AUDIO OUTPUT DEVICE
+// ============================================================
+// Pick where the app's audio plays (e.g. the TP-7 as a USB audio interface).
+// The AudioContext is shared by every tool, so the choice applies app-wide.
+const OUTPUT_LABELS = '__labels';
+const OUTPUT_STORE_KEY = 'audioTools.outputDevice';
+
+function outputPickerSupported() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  return !!(AC && 'setSinkId' in AC.prototype && navigator.mediaDevices?.enumerateDevices);
+}
+
+async function listOutputDevices() {
+  try {
+    return (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audiooutput' && d.deviceId && d.deviceId !== 'default');
+  } catch (err) {
+    return [];
+  }
+}
+
+async function refreshOutputDevices() {
+  if (!outputPickerSupported()) return;
+  const devices = await listOutputDevices();
+  const unlabelled = devices.length === 0 || devices.some(d => !d.label);
+  const sel = $('#output-select');
+  sel.innerHTML = `<option value="">System default</option>`
+    + devices.map((d, i) => `<option value="${escHtml(d.deviceId)}">${escHtml(d.label || `Output ${i + 1}`)}</option>`).join('')
+    + (unlabelled ? `<option value="${OUTPUT_LABELS}">Show device names…</option>` : '');
+  sel.value = devices.some(d => d.deviceId === state.outputDeviceId) ? state.outputDeviceId : '';
+}
+
+async function setOutputDevice(id) {
+  if (id === OUTPUT_LABELS) {
+    // Device names stay hidden until the page has audio-device permission.
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop());
+    } catch (err) {
+      toast('Allow audio-device access to see output names', 'error');
+    }
+    await refreshOutputDevices();
+    return;
+  }
+  try {
+    await ensureAudioCtx().setSinkId(id);
+    state.outputDeviceId = id;
+    try { localStorage.setItem(OUTPUT_STORE_KEY, id); } catch (e) {}
+    const label = $('#output-select').selectedOptions[0]?.textContent || 'System default';
+    toast(`Audio output: ${label}`, 'success');
+  } catch (err) {
+    console.warn('setSinkId failed', err);
+    toast('Could not switch the audio output', 'error');
+  }
+  await refreshOutputDevices();
+}
+
+// After connecting the TP-7 over MIDI, send the audio there too if the
+// output is still the system default and a TP-7 output is visible.
+async function autoSelectTp7Output() {
+  if (!outputPickerSupported() || state.outputDeviceId) return;
+  const tp7 = (await listOutputDevices()).find(d => /tp-?7/i.test(d.label));
+  if (tp7) {
+    await refreshOutputDevices();
+    $('#output-select').value = tp7.deviceId;
+    await setOutputDevice(tp7.deviceId);
+  }
+}
+
+function initOutputPicker() {
+  if (!outputPickerSupported()) return;
+  try { state.outputDeviceId = localStorage.getItem(OUTPUT_STORE_KEY) || ''; } catch (e) {}
+  $('#sa-output').style.display = '';
+  refreshOutputDevices();
+  navigator.mediaDevices.addEventListener?.('devicechange', refreshOutputDevices);
 }
 
 // ============================================================
@@ -4404,7 +4768,13 @@ function play(offsetSec = state.cursor, { stopAt = null, soloId = null } = {}) {
   if (stopAt === null && offsetSec >= total - 0.05) offsetSec = 0; // at the end → from the top
   offsetSec = Math.max(0, Math.min(offsetSec, total));
   const endAt   = stopAt ?? total;
-  const startAt = ctx.currentTime + 0.08;
+
+  // The TP-7 can't seek, so it only starts with the song from the top.
+  const startTp7 = state.refSource === 'tp7' && !!tp7Output() && offsetSec === 0
+    && stopAt === null && soloId === null && state.monitor !== 'mix';
+  // A negative Sync means the TP-7 should start first: delay the stems instead.
+  const tp7Lead = startTp7 ? Math.max(0, -state.tp7.syncMs) / 1000 : 0;
+  const startAt = ctx.currentTime + 0.08 + tp7Lead;
 
   state.songBus = ctx.createGain();
   state.songBus.connect(ctx.destination);
@@ -4437,7 +4807,7 @@ function play(offsetSec = state.cursor, { stopAt = null, soloId = null } = {}) {
   }
 
   // Reference: starts at `offset` on the timeline; skipped outside [0, dur).
-  const ref = state.reference;
+  const ref = fileReference();
   if (ref) {
     state.refGainNode = ctx.createGain();
     state.refGainNode.connect(ctx.destination);
@@ -4452,6 +4822,7 @@ function play(offsetSec = state.cursor, { stopAt = null, soloId = null } = {}) {
     }
   }
   applyMonitorGains();
+  if (startTp7) tp7Start(ctx, startAt);
 
   state.playStartTime  = startAt;
   state.seekOffset     = offsetSec;
@@ -4495,7 +4866,9 @@ function restartPlayback() {
 }
 
 // Stop every source and tear down the graph without touching the cursor.
+// Also stops the TP-7 — any restart mid-song leaves it stopped.
 function haltPlayback() {
+  tp7Stop();
   state.scheduledSources.forEach(src => {
     try { src.stop(); } catch (e) {}
   });
@@ -4554,6 +4927,9 @@ function updateTransportUI() {
   if (partBtn) {
     partBtn.textContent = state.isPlaying && state.playingBlockId === state.editBlockId ? '⏸ Pause part' : '▶ Play part';
   }
+  renderTp7Controls();
+  const tp7Box = $('#sa-ref-lane .sa-ref-box.tp7');
+  if (tp7Box) tp7Box.classList.toggle('live', state.tp7.running);
   renderPlayhead(currentPlayTime());
 }
 
@@ -7503,6 +7879,24 @@ $('#ref-vol').addEventListener('input', e => {
 });
 $('#ref-off-dec').addEventListener('click', e => nudgeReferenceOffset(e.shiftKey ? -1 : -0.1));
 $('#ref-off-inc').addEventListener('click', e => nudgeReferenceOffset(e.shiftKey ? 1 : 0.1));
+
+// Reference source (File | TP-7) and the TP-7's MIDI controls.
+$$('#ref-source button').forEach(btn => {
+  btn.addEventListener('click', () => setRefSource(btn.dataset.source));
+});
+$('#tp7-connect-btn').addEventListener('click', tp7Connect);
+$('#tp7-port').addEventListener('change', e => {
+  if (state.tp7.running) stop();
+  state.tp7.outputId = e.target.value || null;
+  renderTp7Controls();
+});
+$('#tp7-sync-dec').addEventListener('click', e => nudgeTp7Sync(e.shiftKey ? -50 : -5));
+$('#tp7-sync-inc').addEventListener('click', e => nudgeTp7Sync(e.shiftKey ? 50 : 5));
+
+// Audio output device (e.g. the TP-7 as a USB audio interface).
+$('#output-select').addEventListener('change', e => setOutputDevice(e.target.value));
+initOutputPicker();
+renderTp7Controls();
 
 // Block editor pop-up. Backdrop click or Esc closes it.
 $('#block-editor').addEventListener('click', e => {
