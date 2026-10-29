@@ -5,14 +5,15 @@ browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
 
-The current version is shown next to the logo in the header (**Rev 4.1**).
+The current version is shown next to the logo in the header (**Rev 5.0**).
 
 ## Choosing a module
 
 The app opens on a **module-selection landing page** where you pick which tool
 to work with:
 
-- **Stem Arranger** — sequence loops into a full song and export one clean WAV
+- **Stem Arranger MK2** — sequence loops on a timeline into a full song, mix
+  stems per block, compare against a reference track, and export one clean WAV
   per instrument (documented below).
 - **Multi-Channel WAV** — build or edit interleaved multi-channel WAVs from
   independent stereo pairs (see [Multi-Channel WAV mixer](#multi-channel-wav-mixer)).
@@ -40,6 +41,22 @@ The header shows the current revision. **Big changes bump the first digit,
 small changes bump the second.** Update the `Rev X.Y` label in the header (and
 this list) with every change.
 
+- **Rev 5.0** — **Stem Arranger MK2**, a redesign of the Stem Arranger:
+  - **Horizontal timeline** — the arrangement is a row of blocks whose widths
+    match their durations, on a bar ruler with a playhead. Click the ruler or
+    lanes to seek, and zoom from 4 to 40 px/s.
+  - **Loop strip** — the left Sections list became a horizontal strip of loop
+    cards grouped by section family. Click a card to append it, or drag it onto
+    the song to insert it anywhere.
+  - **Block editor pop-up** — the ✂ button (or a double-click) opens a dialog
+    with the trim controls and a new **per-block stem mix**: volume and mute for
+    every stem, applied to that block only. The mix is heard live, used by
+    **Export Stems** / **Export Multi-Track**, and saved in song files.
+  - **Reference track** — import an audio file into a lane under the song to
+    listen to side by side while placing loops, with mute, volume, a time
+    offset and a **Song / Both / Ref** monitor switch. The reference is never
+    exported; its placement is saved with the song (a bundle embeds its audio).
+  - Play now pauses and resumes from the playhead; Stop returns to the top.
 - **Rev 4.1** — The Multi-Channel WAV mixer can now export a **stereo bounce of a
   chosen region**: instead of the full interleaved multi-channel file, mix every
   audible pair down to one stereo WAV over an **In/Out region**. The region can be
@@ -106,16 +123,27 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
 ## Features
 
 - **Load a folder of stems** directly from disk (uses the directory file picker).
-- **Section library** grouped by section, colour-coded, with per-loop stem and
-  duration info.
-- **Build an arrangement** by clicking loops to append them; drag blocks to
-  reorder; swap loop variations per block.
+- **Loop strip** — every loop as a card, grouped by section family and
+  colour-coded, with its bar count, length, stems and tempo.
+- **Build an arrangement** on a horizontal timeline: click a loop card to
+  append it or drag it onto the song lane to place it; drag blocks to reorder;
+  swap loop variations per block. Block widths follow their durations on a bar
+  ruler; zoom in and out with the **Zoom** stepper.
 - **BPM & time signature** — tempo is auto-detected from bar counts in filenames
   (median across loops) and can be overridden; beats-per-bar is configurable.
-- **Per-block trimming** — crop start/end by beats or whole bars with a visual
-  beat timeline.
-- **Live preview** — play, pause, stop, seek, and see the current block
-  highlighted, all synced via the Web Audio API.
+- **Block editor** — ✂ (or double-click a block) opens a pop-up for that block:
+  - **Trimming** — crop start/end by beats (Shift = whole bars) with a visual
+    beat timeline.
+  - **Stem mix** — a volume slider and mute per stem, for this block only
+    (`MUTE ALL` and `RESET` included). Blocks with a changed mix show a `MIX`
+    tag; trimmed blocks show `✂`.
+- **Reference track** — import or drop an audio file onto the reference lane to
+  hear it alongside the song. Mute it, set its volume, and nudge its **offset**
+  (0.1 s per click, 1 s with Shift). The **Monitor** switch picks what you hear:
+  **Song**, **Both**, or **Ref** only. Exports never include the reference.
+- **Live preview** — play/pause, stop, seek (click the ruler, lanes or progress
+  bar), play a single block, and follow the playhead across the timeline, all
+  synced via the Web Audio API.
 - **Export stems** — renders each instrument to its own WAV
   (`INSTRUMENT_arrangement.wav`) covering the whole song using an
   `OfflineAudioContext`.
@@ -127,10 +155,13 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
   rebuild it from scratch next time, then **Load Song** to bring it back. Two
   save formats:
   - **Save Project** — a small, human-readable text file holding the
-    arrangement, trims, section order, and tempo. Re-load the same stems folder,
+    arrangement, trims, per-block stem mixes, section order, tempo, and the
+    reference track's name and placement (re-import the same reference file to
+    restore it). Re-load the same stems folder,
     then load this file, and everything snaps back into place.
   - **Save Bundle** — a larger, self-contained file with the decoded audio
-    embedded, so the song reopens exactly as-is with no stems folder needed.
+    (reference included) embedded, so the song reopens exactly as-is with no
+    stems folder needed.
 
     **Load Song** accepts either format and detects which one it is
     automatically.
@@ -139,13 +170,16 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
 
 1. Open `index.html` in your browser.
 2. Click **Load Stems Folder** and pick your `Stems/` directory.
-3. Click loops in the left panel to add them to the arrangement.
-4. Reorder, swap variations, and trim blocks as needed.
-5. Set the BPM and beats/bar if the auto-detected values need adjusting.
-6. Press play (or Space) to preview.
-7. Click **Export Stems** for one WAV per instrument, or **Export Multi-Track**
+3. Click loop cards in the strip at the bottom to add them to the song, or drag
+   them onto the song lane.
+4. Reorder blocks by dragging; open a block's editor (✂) to swap its loop
+   variation, trim it, or change its stem mix.
+5. Optionally import a reference track to compare against while you arrange.
+6. Set the BPM and beats/bar if the auto-detected values need adjusting.
+7. Press play (or Space) to preview.
+8. Click **Export Stems** for one WAV per instrument, or **Export Multi-Track**
    for a single multi-channel WAV with every instrument on its own channel.
-8. Click **Save Project** (or **Save Bundle**) to save the song to a `.json`
+9. Click **Save Project** (or **Save Bundle**) to save the song to a `.json`
    file, and **Load Song** to reopen a saved song later.
 
 ## Multi-Channel WAV mixer

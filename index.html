@@ -155,8 +155,7 @@ header {
   transition: background 0.12s ease;
 }
 
-.empty-state.drag-over-import,
-.library.drag-over-import {
+.empty-state.drag-over-import {
   background: var(--hairline);
   box-shadow: inset 0 0 0 2px var(--ink);
 }
@@ -199,27 +198,20 @@ header {
 .folder-hint .h { color: var(--ink); font-weight: 700; }
 .folder-hint .a { color: var(--ink); font-weight: 700; }
 
-/* ========== MAIN APP ========== */
+/* ========== MAIN APP (Stem Arranger MK2) ========== */
+/* One column, top → bottom: arrangement bar, timeline (ruler + song lane +
+   reference lane), loop strip, transport. Scrolls as a whole on short screens. */
 .app {
   display: none;
-  grid-template-columns: 340px 1fr;
+  flex-direction: column;
   flex: 1;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   min-height: 0;
 }
 
 .app.active {
-  display: grid;
-}
-
-/* ========== LIBRARY (LEFT) ========== */
-.library {
-  border-right: 1px solid var(--rule);
-  overflow-y: auto;
-  background: var(--paper);
   display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .panel-header {
@@ -263,117 +255,7 @@ header {
   text-transform: uppercase;
 }
 
-.section-group {
-  border-bottom: 1px solid var(--rule);
-}
-
-.section-group-header {
-  padding: 16px 26px 8px;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-/* repurposed as the ■ ink square */
-.section-color-dot {
-  width: 7px;
-  height: 7px;
-  flex-shrink: 0;
-  background: var(--ink) !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-.section-group-name {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-
-.section-group-count {
-  margin-left: auto;
-  font-size: 9.5px;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.loop-list {
-  padding-bottom: 8px;
-}
-
-/* Data row — a click target, inverts on hover */
-.loop-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 26px;
-  cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
-  border-bottom: 1px solid var(--hairline);
-}
-
-.loop-item:hover {
-  background: var(--ink);
-  color: var(--ink-invert);
-}
-
-.loop-item-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.loop-item-name {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--ink);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.loop-item:hover .loop-item-name { color: var(--ink-invert); }
-
-.loop-item-stems {
-  font-size: 9.5px;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  margin-top: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-}
-
-.loop-item:hover .loop-item-stems { color: var(--muted-on-ink); }
-
-.loop-item-add {
-  opacity: 0;
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: 0.2em;
-  transition: opacity 0.15s;
-  flex-shrink: 0;
-}
-
-.loop-item:hover .loop-item-add {
-  opacity: 1;
-  color: var(--ink-invert);
-}
-
-/* ========== ARRANGEMENT (RIGHT) ========== */
-.arrangement {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  background: var(--paper);
-}
-
+/* ========== ARRANGEMENT BAR ========== */
 .arrangement-meta {
   display: flex;
   gap: 28px;
@@ -404,200 +286,6 @@ header {
   color: var(--ink);
 }
 
-.timeline {
-  flex: 1;
-  overflow-y: auto;
-  padding: 22px 26px;
-  min-height: 0;
-}
-
-.timeline-empty {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  color: var(--muted);
-  font-size: 11px;
-  text-align: center;
-  border: 1px solid var(--rule);
-  padding: 40px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.timeline-empty-icon {
-  font-family: var(--font-grot);
-  font-size: 48px;
-  font-weight: 800;
-  color: var(--rule);
-}
-
-/* Arrangement block — a full-width data row */
-.arrangement-block {
-  display: flex;
-  align-items: stretch;
-  background: var(--paper);
-  border: none;
-  border-bottom: 1px solid var(--hairline);
-  border-left-width: 0;
-  transition: background 0.12s ease, color 0.12s ease;
-  cursor: grab;
-}
-
-.arrangement-block:hover {
-  background: var(--hairline);
-}
-
-.arrangement-block.dragging {
-  opacity: 0.3;
-  cursor: grabbing;
-}
-
-.arrangement-block.drag-over {
-  box-shadow: inset 0 2px 0 var(--ink);
-}
-
-/* the signature "highlighted active row" — full-bleed ink bar */
-.arrangement-block.playing {
-  background: var(--ink);
-  color: var(--ink-invert);
-  border-bottom-color: transparent;
-}
-
-.block-index {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--muted);
-  padding: 11px 14px 11px 0;
-  display: flex;
-  align-items: center;
-  min-width: 40px;
-  font-variant-numeric: tabular-nums;
-}
-
-.arrangement-block.playing .block-index {
-  color: var(--ink-invert);
-}
-
-.block-content {
-  flex: 1;
-  padding: 11px 0;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-
-.block-section {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: inherit;
-}
-
-.block-loop-select {
-  background: var(--paper);
-  color: var(--ink);
-  border: 1px solid var(--rule);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 5px 9px;
-  cursor: pointer;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  transition: border-color 0.12s;
-}
-
-.block-loop-select:hover {
-  border-color: var(--ink);
-}
-
-.block-loop-select:focus {
-  outline: none;
-  border-color: var(--ink);
-}
-
-.arrangement-block.playing .block-loop-select {
-  background: var(--ink);
-  color: var(--ink-invert);
-  border-color: var(--muted-on-ink);
-}
-
-.block-stems {
-  font-size: 9.5px;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
-  text-transform: uppercase;
-}
-
-.arrangement-block.playing .block-stems {
-  color: var(--muted-on-ink);
-}
-
-.block-duration {
-  font-size: 11px;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.05em;
-  flex-shrink: 0;
-}
-
-.arrangement-block.playing .block-duration {
-  color: var(--ink-invert);
-}
-
-.block-play {
-  border: none;
-  padding: 0 14px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 12px;
-  transition: color 0.12s, background 0.12s;
-  font-family: var(--font-mono);
-}
-
-.block-play:hover {
-  color: var(--ink);
-}
-
-.arrangement-block.playing .block-play {
-  color: var(--ink-invert);
-}
-
-.block-remove {
-  border: none;
-  padding: 0 16px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  transition: color 0.12s, background 0.12s;
-}
-
-.block-remove:hover {
-  color: var(--danger);
-}
-
-.arrangement-block.playing .block-remove {
-  color: var(--muted-on-ink);
-}
-
-.arrangement-block.playing .block-remove:hover {
-  color: var(--ink-invert);
-}
-
 /* ========== TRANSPORT ========== */
 .transport {
   border-top: 1px solid var(--rule);
@@ -605,6 +293,8 @@ header {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
   background: var(--paper);
 }
 
@@ -660,6 +350,7 @@ header {
 
 .transport-progress {
   flex: 1;
+  min-width: 40px;
   height: 2px;
   background: var(--panel-fill);
   position: relative;
@@ -809,22 +500,12 @@ header {
   white-space: nowrap;
 }
 
-.loop-item:hover .loop-item-bpm {
-  color: var(--ink-invert);
-  border-color: var(--muted-on-ink);
-}
-
 /* A loop whose own length disagrees with the project tempo */
 .loop-item-bpm.warn {
   color: var(--danger);
   border-color: var(--danger);
   cursor: help;
 }
-.loop-item:hover .loop-item-bpm.warn {
-  color: var(--danger);
-  border-color: var(--danger);
-}
-
 /* BPM input in arrangement header */
 .bpm-control {
   display: flex;
@@ -906,69 +587,7 @@ header {
 .bpb-select:hover { border-color: var(--ink); }
 .bpb-select:focus { outline: none; border-color: var(--ink); }
 
-/* ========== CROP PANEL ========== */
-.block-wrapper {
-  margin-bottom: 0;
-}
-
-/* remove margin from block itself since wrapper carries it */
-.block-wrapper .arrangement-block {
-  margin-bottom: 0;
-}
-
-/* trimmed duration: bold ink instead of a colour */
-.arrangement-block.trimmed .block-duration {
-  color: var(--ink);
-  font-weight: 700;
-}
-.arrangement-block.playing.trimmed .block-duration {
-  color: var(--ink-invert);
-}
-
-.block-crop {
-  border: none;
-  padding: 0 14px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 12px;
-  transition: color 0.12s, background 0.12s;
-  font-family: var(--font-mono);
-  letter-spacing: 0.05em;
-}
-
-.block-crop:hover {
-  color: var(--ink);
-}
-
-.block-crop.active {
-  color: var(--ink);
-}
-
-.arrangement-block.playing .block-crop {
-  color: var(--muted-on-ink);
-}
-
-.arrangement-block.playing .block-crop:hover,
-.arrangement-block.playing .block-crop.active {
-  color: var(--ink-invert);
-}
-
-.crop-panel {
-  display: none;
-  border: 1px solid var(--rule);
-  border-top: none;
-  border-left-color: var(--rule) !important; /* keep monochrome; JS sets an inline colour */
-  background: var(--paper);
-  padding: 14px 20px 14px 40px;
-}
-
-.crop-panel.open {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
+/* ========== TRIM CONTROLS (block editor) ========== */
 /* Left & right trim controls */
 .crop-side {
   display: flex;
@@ -1050,7 +669,7 @@ header {
 .crop-timeline {
   display: flex;
   gap: 1px;
-  height: 10px;
+  height: 30px;
 }
 
 .crop-seg {
@@ -1060,8 +679,8 @@ header {
 
 .seg-active { background: var(--ink); }
 .seg-muted  { background: var(--panel-fill); }
-/* bar-boundary segments stay monochrome, lighter so you can count bars */
-.seg-bar.seg-active { background: var(--muted); }
+/* bar-boundary segments take the section accent so you can count bars */
+.seg-bar.seg-active { background: hsl(var(--h, 0), 65%, 40%); }
 
 .crop-info {
   font-size: 9.5px;
@@ -1075,6 +694,563 @@ header {
 }
 
 .crop-info .kept { color: var(--ink); font-weight: 700; }
+
+/* ========== STEM ARRANGER MK2 ========== */
+/* Section colours come from hueForSection() via a --h custom property set on
+   each block / family / dialog:
+     fill   hsl(h,60%,72%)   band  hsl(h,65%,50%)   label  hsl(h,65%,60%)
+     accent hsl(h,65%,40%)   tint  hsl(h,40%,84%)                          */
+.sa-bar {
+  padding: 14px 26px;
+  justify-content: flex-start;
+}
+.sa-bar .panel-title { padding-right: 6px; }
+
+.sa-zoom {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sa-zoom .crop-val-display { min-width: 70px; }
+
+/* ---- Timeline: label column + horizontally scrolling lanes ---- */
+.sa-timeline {
+  flex: 1 0 auto;
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.sa-labels {
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+}
+
+.sa-label-ruler {
+  height: 30px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.sa-label-song {
+  height: 150px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--hairline);
+  padding: 12px 16px 12px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sa-hint {
+  font-size: 9.5px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
+.sa-label-ref {
+  height: 104px;
+  flex-shrink: 0;
+  padding: 10px 16px 10px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sa-ref-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Hollow square: the reference is for listening, not part of the song */
+.sa-ref-title::before {
+  background: transparent;
+  border: 1px solid var(--ink);
+}
+
+.sa-mini-btn {
+  font-family: var(--font-mono);
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 3px 7px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.sa-mini-btn:hover { background: var(--ink); color: var(--ink-invert); }
+
+.sa-ref-name {
+  font-size: 9.5px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sa-ref-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sa-ref-row input[type=range] { flex: 1; min-width: 0; accent-color: var(--ink); }
+.sa-label-ref.is-empty .sa-ref-row { opacity: 0.35; }
+
+.sa-ref-off-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sa-ref-stepper {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+.sa-ref-stepper .step-btn { width: 20px; height: 20px; font-size: 11px; }
+.sa-ref-stepper .crop-val-display { min-width: 56px; height: 20px; font-size: 10px; padding: 0 4px; }
+
+/* M (mute) toggle — filled with ink when muted */
+.sa-m-btn {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sa-m-btn.on { background: var(--ink); color: var(--ink-invert); }
+.sa-m-btn:disabled { cursor: not-allowed; }
+
+.sa-lanes {
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+}
+
+.sa-lanes-inner {
+  position: relative;
+  min-width: 100%;
+  height: 100%;
+}
+
+.sa-ruler {
+  height: 30px;
+  border-bottom: 1px solid var(--hairline);
+  position: relative;
+  cursor: pointer;
+}
+.sa-tick { position: absolute; bottom: 0; width: 1px; height: 5px; background: var(--rule); }
+.sa-tick.major { height: 12px; background: var(--muted); }
+.sa-tick-label {
+  position: absolute;
+  top: 5px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* ---- Song lane ---- */
+.sa-song-lane {
+  height: 150px;
+  border-bottom: 1px solid var(--hairline);
+  padding: 14px 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.sa-block {
+  flex-shrink: 0;
+  padding-right: 3px;
+  cursor: grab;
+}
+.sa-block.dragging { opacity: 0.3; }
+.sa-block.drop-before { box-shadow: inset 3px 0 0 var(--ink), -3px 0 0 var(--ink); }
+
+.sa-block-inner {
+  height: 100%;
+  background: hsl(var(--h), 60%, 72%);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-top: 6px solid hsl(var(--h), 65%, 50%);
+  padding: 7px 8px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  min-width: 0;
+  transition: transform 0.12s;
+}
+.sa-block-inner:hover { transform: translateY(-3px); }
+.sa-block.playing .sa-block-inner {
+  background: var(--ink);
+  color: var(--ink-invert);
+  border-top-color: var(--ink);
+}
+
+.sa-block-top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.sa-block-num { font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sa-tag { font-size: 9px; border: 1px solid currentColor; padding: 0 3px; }
+.sa-tag-mix { font-size: 8.5px; letter-spacing: 0.1em; }
+
+.sa-block-mid { min-width: 0; }
+.sa-block-section {
+  font-family: var(--font-grot);
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sa-block-loop {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 5px mini trim strip: kept beats ink, trimmed beats the section tint */
+.sa-block-strip { display: flex; gap: 1px; height: 5px; }
+.sa-block-strip > div { flex: 1; background: var(--ink); }
+.sa-block-strip > div.off { background: hsl(var(--h), 40%, 84%); }
+.sa-block.playing .sa-block-strip > div { background: var(--ink-invert); }
+.sa-block.playing .sa-block-strip > div.off { background: #5a5650; }
+
+.sa-block-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  margin-right: -4px;
+}
+.sa-block-actions button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 5px;
+  font-family: var(--font-mono);
+}
+.sa-block-actions button[data-action="play"] { font-size: 11px; }
+.sa-block-actions button[data-action="remove"]:hover { color: var(--danger); }
+
+.sa-endzone {
+  flex: 1;
+  min-width: 160px;
+  margin-right: 26px;
+  border: 1px dashed var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 16px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.sa-endzone.drop-target { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--ink); }
+
+/* ---- Reference lane ---- */
+.sa-ref-lane {
+  height: 104px;
+  position: relative;
+  padding: 10px 0;
+}
+
+.sa-ref-box {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  border: 1px solid var(--ink);
+  background: #e6e4df; /* between --paper and --hairline */
+  overflow: hidden;
+}
+.sa-ref-box.dim { opacity: 0.35; }
+.sa-ref-box canvas { display: block; width: 100%; height: 100%; }
+
+.sa-ref-empty {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  right: 26px;
+  border: 1px dashed var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  cursor: pointer;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sa-ref-empty:hover,
+.sa-ref-lane.drag-over-import .sa-ref-empty { border-color: var(--ink); color: var(--ink); }
+.sa-ref-empty .plus { font-family: var(--font-grot); font-size: 26px; font-weight: 800; }
+.sa-ref-lane.drag-over-import { background: var(--hairline); }
+
+.sa-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: var(--ink);
+  pointer-events: none;
+  z-index: 1;
+}
+.sa-playhead::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -5px;
+  width: 12px;
+  height: 10px;
+  background: var(--ink);
+}
+
+/* ---- Loop strip ---- */
+.sa-loops {
+  border-top: 1px solid var(--rule);
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+.sa-loops.drag-over-import {
+  background: var(--hairline);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.sa-loops .panel-header {
+  position: static;
+  padding: 12px 26px;
+  border-bottom: 1px solid var(--hairline);
+  justify-content: flex-start;
+}
+.sa-loops-hint { margin-left: auto; }
+
+.sa-loop-strip {
+  overflow-x: auto;
+  padding: 14px 26px 18px;
+  display: flex;
+  gap: 22px;
+}
+
+.sa-family {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.sa-family-label {
+  height: 30px;
+  background: hsl(var(--h), 65%, 60%);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  min-width: 0;
+}
+.sa-family-name {
+  font-family: var(--font-grot);
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sa-family-count {
+  margin-left: auto;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sa-family-cards { display: flex; gap: 8px; }
+
+.sa-loop-card {
+  width: 158px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-top: 6px solid hsl(var(--h), 65%, 60%);
+  padding: 9px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.sa-loop-card:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); }
+
+.sa-loop-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.sa-loop-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+.sa-loop-meta {
+  font-size: 9.5px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+.sa-loop-add {
+  width: 20px;
+  height: 20px;
+  background: var(--ink);
+  color: var(--ink-invert);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.sa-loop-stems { display: flex; flex-wrap: wrap; gap: 3px; }
+.sa-loop-stems span { font-size: 8.5px; letter-spacing: 0.06em; border: 1px solid var(--rule); padding: 1px 4px; }
+.sa-loop-card .loop-item-bpm { align-self: flex-start; }
+
+/* ---- Monitor (Song / Both / Ref) ---- */
+.sa-monitor { display: flex; align-items: center; flex-shrink: 0; }
+.sa-monitor button {
+  font-family: var(--font-mono);
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  margin-left: -1px;
+  padding: 7px 10px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.sa-monitor button.on { background: var(--ink); color: var(--ink-invert); }
+
+/* ========== BLOCK EDITOR POP-UP ========== */
+.sa-editor-overlay { padding: 24px; }
+
+.sa-editor {
+  width: 760px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 8px 8px 0 hsl(var(--h), 65%, 50%);
+}
+
+.sa-ed-head {
+  background: hsl(var(--h), 60%, 72%);
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.sa-ed-num { font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sa-ed-section {
+  font-family: var(--font-grot);
+  font-size: 30px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.sa-ed-loop {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 5px 9px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.sa-ed-dur { margin-left: auto; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sa-ed-close {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+.sa-ed-close:hover { background: var(--ink); color: var(--ink-invert); }
+
+.sa-ed-section-body {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sa-ed-section-body + .sa-ed-section-body { border-top: 1px solid var(--rule); }
+.sa-ed-section-body.stems { gap: 12px; }
+
+.sa-ed-row-head { display: flex; align-items: center; gap: 10px; }
+.sa-ed-row-head .panel-meta:last-child { margin-left: auto; }
+.sa-ed-trim { display: flex; align-items: center; gap: 14px; }
+.sa-ed-trim .crop-timeline { flex: 1; min-width: 60px; }
+
+.sa-ghost-sm { padding: 5px 10px; font-size: 9.5px; letter-spacing: 0.14em; }
+.sa-ed-row-head .sa-ghost-sm:first-of-type { margin-left: auto; }
+
+.sa-stem-row {
+  display: grid;
+  grid-template-columns: 90px 30px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.sa-stem-name { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; }
+.sa-stem-row .sa-m-btn { width: 26px; height: 26px; font-size: 10px; }
+.sa-stem-row input[type=range] { width: 100%; accent-color: hsl(var(--h), 65%, 40%); }
+.sa-stem-row.muted input[type=range] { opacity: 0.35; }
+.sa-stem-db { font-size: 10.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.sa-stem-row.muted .sa-stem-db { color: var(--muted); }
+.sa-ed-empty { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+.sa-ed-foot {
+  border-top: 1px solid var(--rule);
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sa-ed-foot .btn-primary { margin-left: auto; }
 
 /* ========== LANDING / MODULE SELECT ========== */
 /* The landing grid, the header switcher and the router are all generated
@@ -2451,8 +2627,7 @@ header {
 
 /* ========== MOBILE/NARROW ========== */
 @media (max-width: 800px) {
-  .app { grid-template-columns: 1fr; grid-template-rows: 280px 1fr; }
-  .library { border-right: none; border-bottom: 1px solid var(--rule); }
+  .sa-label-song, .sa-label-ref { padding-left: 16px; }
   .arrangement-meta { gap: 16px; }
   .header-actions .btn { padding: 7px 11px; }
 }
@@ -2464,7 +2639,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 4.1</span>
+    <span class="logo-tag">Rev 5.0</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -2501,69 +2676,126 @@ header {
 └── Bridge/</div>
 </div>
 
-<!-- App -->
+<!-- App: Stem Arranger MK2 -->
 <div class="app" id="app">
-  <!-- Library -->
-  <aside class="library">
+  <!-- Arrangement bar -->
+  <div class="panel-header sa-bar">
+    <div class="panel-title">Arrangement</div>
+    <div class="bpm-control">
+      <span class="bpm-label">BPM</span>
+      <input id="bpm-input" class="bpm-input" type="number" min="20" max="300" step="0.01" placeholder="—" title="Project tempo — applied to every loop and used for bar/beat trim calculations">
+      <span class="bpm-detected" id="bpm-detected" title="Click to apply the auto-detected project tempo"></span>
+    </div>
+    <div class="bpb-control">
+      <span class="bpb-label">Beats / Bar</span>
+      <select id="beats-per-bar" class="bpb-select">
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+        <option value="6">6</option>
+        <option value="8">8</option>
+      </select>
+    </div>
+    <div class="arrangement-meta">
+      <div class="meta-item">
+        <div class="meta-label">Blocks</div>
+        <div class="meta-value" id="meta-blocks">0</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Length</div>
+        <div class="meta-value accent" id="meta-duration">0:00</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Stems</div>
+        <div class="meta-value" id="meta-instruments">0</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Reference</div>
+        <div class="meta-value" id="meta-reference">—</div>
+      </div>
+    </div>
+    <div class="sa-zoom">
+      <span class="bpm-label">Zoom</span>
+      <div class="crop-stepper">
+        <button class="step-btn" id="zoom-out-btn" title="Zoom out">−</button>
+        <div class="crop-val-display" id="zoom-val">12 px/s</div>
+        <button class="step-btn" id="zoom-in-btn" title="Zoom in">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline: labels | ruler + song lane + reference lane -->
+  <div class="sa-timeline">
+    <div class="sa-labels">
+      <div class="sa-label-ruler"></div>
+      <div class="sa-label-song">
+        <div class="panel-title">Song</div>
+        <div class="sa-hint">Drag blocks to reorder.<br>✂ trims &amp; mixes a block.</div>
+      </div>
+      <div class="sa-label-ref is-empty" id="ref-panel">
+        <div class="sa-ref-title-row">
+          <div class="panel-title sa-ref-title">Reference</div>
+          <button class="sa-mini-btn" id="ref-import-btn" title="Import an audio file to listen to alongside the song">Import</button>
+        </div>
+        <div class="sa-ref-name" id="ref-name">No reference loaded</div>
+        <div class="sa-ref-row">
+          <button class="sa-m-btn" id="ref-mute-btn" title="Mute reference" disabled>M</button>
+          <input type="range" id="ref-vol" min="0" max="100" value="80" title="Reference volume" disabled>
+        </div>
+        <div class="sa-ref-row">
+          <span class="sa-ref-off-label">Offset</span>
+          <div class="sa-ref-stepper">
+            <button class="step-btn" id="ref-off-dec" title="Nudge earlier (Shift = 1s)" disabled>◀</button>
+            <div class="crop-val-display" id="ref-off-val">+0.0s</div>
+            <button class="step-btn" id="ref-off-inc" title="Nudge later (Shift = 1s)" disabled>▶</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sa-lanes" id="sa-lanes">
+      <div class="sa-lanes-inner" id="sa-lanes-inner">
+        <div class="sa-ruler" id="sa-ruler"></div>
+        <div class="sa-song-lane" id="sa-song-lane"></div>
+        <div class="sa-ref-lane" id="sa-ref-lane"></div>
+        <div class="sa-playhead" id="sa-playhead"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loop strip (grouped by section family) -->
+  <section class="sa-loops" id="sa-loops">
     <div class="panel-header">
-      <div class="panel-title">Sections</div>
+      <div class="panel-title">Loops</div>
       <div class="panel-meta" id="sections-meta">—</div>
+      <div class="panel-meta sa-loops-hint">Click to append · drag onto the song to place</div>
     </div>
-    <div id="sections-list"></div>
-  </aside>
-
-  <!-- Arrangement -->
-  <section class="arrangement">
-    <div class="panel-header">
-      <div class="panel-title">Arrangement</div>
-      <div class="bpm-control">
-        <span class="bpm-label">BPM</span>
-        <input id="bpm-input" class="bpm-input" type="number" min="20" max="300" step="0.01" placeholder="—" title="Project tempo — applied to every loop and used for bar/beat trim calculations">
-        <span class="bpm-detected" id="bpm-detected" title="Click to apply the auto-detected project tempo"></span>
-      </div>
-      <div class="bpb-control">
-        <span class="bpb-label">Beats / Bar</span>
-        <select id="beats-per-bar" class="bpb-select">
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4" selected>4</option>
-          <option value="6">6</option>
-          <option value="8">8</option>
-        </select>
-      </div>
-      <div class="arrangement-meta">
-        <div class="meta-item">
-          <div class="meta-label">Blocks</div>
-          <div class="meta-value" id="meta-blocks">0</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Length</div>
-          <div class="meta-value accent" id="meta-duration">0:00</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Stems</div>
-          <div class="meta-value" id="meta-instruments">0</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="timeline" id="timeline"></div>
-
-    <div class="transport">
-      <button id="play-btn" class="transport-btn" disabled title="Play / Pause">▶</button>
-      <button id="stop-btn" class="transport-btn" title="Stop">■</button>
-      <div class="transport-time" id="transport-time">0:00 / 0:00</div>
-      <div class="transport-progress" id="transport-progress">
-        <div class="transport-progress-bar" id="transport-progress-bar"></div>
-      </div>
-      <button id="clear-btn" class="btn btn-ghost">Clear</button>
-      <button id="load-song-btn" class="btn btn-ghost" title="Open a saved song file (.json)">Load Song</button>
-      <button id="save-project-btn" class="btn btn-ghost" disabled title="Save a small text file with the arrangement — re-load the same stems folder to reopen it">Save Project</button>
-      <button id="save-bundle-btn" class="btn btn-ghost" disabled title="Save a self-contained file with the audio embedded — reopens with no stems folder needed">Save Bundle</button>
-      <button id="export-btn" class="btn btn-primary" disabled title="Download one WAV per instrument">Export Stems</button>
-      <button id="export-multitrack-btn" class="btn btn-primary" disabled title="Download one interleaved multi-channel WAV with every instrument on its own channel">Export Multi-Track</button>
-    </div>
+    <div class="sa-loop-strip" id="sections-list"></div>
   </section>
+
+  <div class="transport">
+    <button id="play-btn" class="transport-btn" disabled title="Play / Pause">▶</button>
+    <button id="stop-btn" class="transport-btn" title="Stop">■</button>
+    <div class="transport-time" id="transport-time">0:00 / 0:00</div>
+    <div class="sa-monitor" id="sa-monitor" title="What you hear: the song, both, or the reference only">
+      <button data-monitor="mix">Song</button>
+      <button data-monitor="both" class="on">Both</button>
+      <button data-monitor="ref">Ref</button>
+    </div>
+    <div class="transport-progress" id="transport-progress">
+      <div class="transport-progress-bar" id="transport-progress-bar"></div>
+    </div>
+    <button id="clear-btn" class="btn btn-ghost">Clear</button>
+    <button id="load-song-btn" class="btn btn-ghost" title="Open a saved song file (.json)">Load Song</button>
+    <button id="save-project-btn" class="btn btn-ghost" disabled title="Save a small text file with the arrangement — re-load the same stems folder to reopen it">Save Project</button>
+    <button id="save-bundle-btn" class="btn btn-ghost" disabled title="Save a self-contained file with the audio embedded — reopens with no stems folder needed">Save Bundle</button>
+    <button id="export-btn" class="btn btn-primary" disabled title="Download one WAV per instrument">Export Stems</button>
+    <button id="export-multitrack-btn" class="btn btn-primary" disabled title="Download one interleaved multi-channel WAV with every instrument on its own channel">Export Multi-Track</button>
+  </div>
+</div>
+
+<!-- Block editor pop-up (trim + per-block stem mix) -->
+<div class="overlay sa-editor-overlay" id="block-editor">
+  <div class="sa-editor" id="block-editor-dialog" role="dialog" aria-modal="true"></div>
 </div>
 
 <!-- Multi-Channel Mixer -->
@@ -2724,6 +2956,7 @@ header {
 <!-- Hidden file input -->
 <input type="file" id="file-input" webkitdirectory directory multiple style="display:none" />
 <input type="file" id="song-input" accept=".json,application/json" style="display:none" />
+<input type="file" id="ref-input" accept="audio/*" style="display:none" />
 <input type="file" id="mc-import-input" accept="audio/wav,audio/x-wav,.wav" style="display:none" />
 <input type="file" id="mc-track-input" accept="audio/*" style="display:none" />
 <!-- One pair of inputs for every deck: the target lives in ddState.uploadTarget.
@@ -2762,8 +2995,8 @@ header {
 const TOOLS = [
   {
     id: 'stem-arranger',
-    name: 'Stem Arranger',
-    tagline: 'Sequence loops into a full song and export one clean WAV per instrument.',
+    name: 'Stem Arranger MK2',
+    tagline: 'Sequence loops on a timeline, mix stems per block, check against a reference, and export one clean WAV per instrument.',
     cta: 'Arrange stems',
     icon: '<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="13" y2="12"/><line x1="4" y1="17" x2="17" y2="17"/></svg>',
     showLoadBtn: true,
@@ -2773,11 +3006,13 @@ const TOOLS = [
     },
     leave() {
       stop();
+      closeBlockEditor();
       $('#empty-state').style.display = 'none';
       $('#app').classList.remove('active');
     },
     onSpace() {
-      if (state.arrangement.length > 0) { if (state.isPlaying) stop(); else play(); }
+      if (state.isPlaying) pause();
+      else if (canPlay()) play();
     },
   },
   {
@@ -2818,7 +3053,7 @@ const state = {
   loopMeta: {},               // { section: { loop: { bars, rawBPM } } }
   sectionOrder: [],
   instruments: new Set(),
-  arrangement: [],            // [{ id, section, loop, trimStart, trimEnd, cropOpen }]
+  arrangement: [],            // [{ id, section, loop, trimStart, trimEnd, mix: { [stem]: { vol, mute } } }]
   bpm: null,                  // user-entered BPM — overrides detection when set
   detectedTempo: null,        // single tempo auto-detected for the whole project
   beatsPerBar: 4,
@@ -2827,8 +3062,22 @@ const state = {
   scheduledSources: [],
   playStartTime: 0,
   seekOffset: 0,              // seconds into the arrangement that playStartTime corresponds to
+  stopAt: 0,                  // timeline second the current playback ends at
+  cursor: 0,                  // playhead position (seconds) while stopped or paused
   rafId: null,
-  totalDuration: 0
+  totalDuration: 0,           // song length (arrangement only — never the reference)
+
+  // ---- MK2 ----
+  pps: 12,                    // timeline zoom, px per second
+  editBlockId: null,          // block whose editor pop-up is open
+  monitor: 'both',            // 'mix' (song only) | 'both' | 'ref' (reference only)
+  reference: null,            // { name, buffer, peaks, duration, gain 0..100, muted, offset (s) }
+  pendingReference: null,     // reference settings from a project file, applied when that file is re-imported
+  songBus: null,              // GainNode every stem feeds while playing (silenced by monitor 'ref')
+  refGainNode: null,          // GainNode the reference feeds while playing
+  liveGains: new Map(),       // block id → Map(stem → GainNode) while playing, so mix edits are live
+  drag: null,                 // { type: 'block', id } | { type: 'loop', section, loop } during a drag
+  dropIdx: null               // insertion index shown while dragging over the song lane
 };
 
 // ============================================================
@@ -2862,6 +3111,48 @@ function hueForSection(name) {
 function sectionColor(section) {
   const h = hueForSection(section);
   return `hsl(${h}, 65%, 60%)`;
+}
+
+// Names come from folder/file names, so escape them before they go into markup.
+function escHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ---------- Per-block stem mix ----------
+// block.mix = { [stem]: { vol: 0..100, mute } }. 80 is unity (0 dB); a stem
+// with no entry plays at unity, so older song files load unchanged.
+const MIX_UNITY = 80;
+
+function stemMix(block, stem) {
+  return block.mix?.[stem] || { vol: MIX_UNITY, mute: false };
+}
+
+function stemGain(block, stem) {
+  const m = stemMix(block, stem);
+  return m.mute ? 0 : m.vol / MIX_UNITY;
+}
+
+function isBlockMixed(block) {
+  return Object.values(block.mix || {}).some(m => m.mute || m.vol !== MIX_UNITY);
+}
+
+function fmtMixDb(m) {
+  if (m.mute) return 'MUTED';
+  if (m.vol <= 0) return '−∞ dB';
+  const db = 20 * Math.log10(m.vol / MIX_UNITY);
+  return `${db > 0.05 ? '+' : ''}${db.toFixed(1)} dB`;
+}
+
+// Keep only well-formed { vol, mute } entries from a loaded song file.
+function sanitizeMix(mix) {
+  const out = {};
+  if (!mix || typeof mix !== 'object') return out;
+  for (const [stem, m] of Object.entries(mix)) {
+    if (!m || typeof m !== 'object') continue;
+    const vol = Number(m.vol);
+    out[stem] = { vol: isFinite(vol) ? Math.max(0, Math.min(100, vol)) : MIX_UNITY, mute: !!m.mute };
+  }
+  return out;
 }
 
 function parseInstrument(filename) {
@@ -3248,33 +3539,18 @@ async function loadFolder(files) {
 }
 
 // ============================================================
-// LIBRARY RENDER
+// LOOP STRIP RENDER
 // ============================================================
+// One column per section family: a coloured family label spanning a row of
+// loop cards. Cards append on click and can be dragged onto the song lane.
 function renderLibrary() {
-  const lib = $('#sections-list');
-  lib.innerHTML = '';
+  const eff = effectiveTempo();
 
-  for (const section of state.sectionOrder) {
-    const loops = Object.keys(state.stems[section]).sort();
-    const color = sectionColor(section);
+  $('#sections-list').innerHTML = state.sectionOrder.map(section => {
+    const loops = Object.keys(state.stems[section] || {}).sort();
 
-    const group = document.createElement('div');
-    group.className = 'section-group';
-    group.innerHTML = `
-      <div class="section-group-header">
-        <div class="section-color-dot" style="background:${color}; color:${color};"></div>
-        <div class="section-group-name">${section}</div>
-        <div class="section-group-count">${loops.length} ${loops.length === 1 ? 'loop' : 'loops'}</div>
-      </div>
-      <div class="loop-list"></div>
-    `;
-
-    const list = group.querySelector('.loop-list');
-    const eff  = effectiveTempo();
-    for (const loop of loops) {
+    const cards = loops.map(loop => {
       const stems = Object.keys(state.stems[section][loop]).sort();
-      const maxDur = getSectionDuration(section, loop);
-      const meta   = state.loopMeta[section]?.[loop];
 
       // Every loop shows the one project tempo. If a loop's own length
       // disagrees (likely a wrong bar tag), flag it instead of showing a
@@ -3290,39 +3566,87 @@ function renderLibrary() {
         }
       }
 
-      const item = document.createElement('div');
-      item.className = 'loop-item';
-      item.innerHTML = `
-        <div class="loop-item-info">
-          <div class="loop-item-name">${loop}${meta?.bars ? ` <span style="color:var(--text-3);font-size:10px">· ${meta.bars} bars</span>` : ''}</div>
-          <div class="loop-item-stems" title="${stems.join(' · ')}">${stems.join(' · ')} — ${fmtTime(maxDur)}</div>
+      return `
+        <div class="sa-loop-card" draggable="true" data-section="${escHtml(section)}" data-loop="${escHtml(loop)}" title="Click to add to the end of the song">
+          <div class="sa-loop-top">
+            <div>
+              <div class="sa-loop-name">${escHtml(loop)}</div>
+              <div class="sa-loop-meta">${loopBarsLabel(section, loop)} · ${fmtTime(getSectionDuration(section, loop))}</div>
+            </div>
+            <div class="sa-loop-add">+</div>
+          </div>
+          <div class="sa-loop-stems">${stems.map(s => `<span>${escHtml(s)}</span>`).join('')}</div>
+          ${bpmBadge}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="sa-family" style="--h:${hueForSection(section)}">
+        <div class="sa-family-label">
+          <span class="sa-family-name">${escHtml(section)}</span>
+          <span class="sa-family-count">${loops.length} ${loops.length === 1 ? 'loop' : 'loops'}</span>
         </div>
-        ${bpmBadge}
-        <div class="loop-item-add">+ ADD</div>
-      `;
-      item.addEventListener('click', () => addToArrangement(section, loop));
-      list.appendChild(item);
-    }
+        <div class="sa-family-cards">${cards}</div>
+      </div>`;
+  }).join('');
 
-    lib.appendChild(group);
-  }
-
-  $('#sections-meta').textContent = `${state.sectionOrder.length} · ${state.instruments.size} STEMS`;
+  const n = state.sectionOrder.length;
+  $('#sections-meta').textContent = `${n} section${n === 1 ? '' : 's'} · ${state.instruments.size} stems`;
 }
 
 // ============================================================
 // ARRANGEMENT MANAGEMENT
 // ============================================================
+function makeBlock(section, loop) {
+  return { id: uid(), section, loop, trimStart: 0, trimEnd: 0, mix: {} };
+}
+
 function addToArrangement(section, loop) {
-  state.arrangement.push({ id: uid(), section, loop, trimStart: 0, trimEnd: 0, cropOpen: false });
+  state.arrangement.push(makeBlock(section, loop));
   renderArrangement();
-  // Scroll to bottom of timeline
-  const tl = $('#timeline');
-  tl.scrollTop = tl.scrollHeight;
+  // Bring the end of the song (where the block landed) into view.
+  const lanes = $('#sa-lanes');
+  const endX = state.totalDuration * state.pps;
+  if (endX > lanes.scrollLeft + lanes.clientWidth - 160) {
+    lanes.scrollLeft = Math.max(0, endX - lanes.clientWidth + 200);
+  }
+}
+
+// Finish a drag on the song lane: move a block, or insert a dragged loop card,
+// at insertion index `idx` (0 = before the first block, length = the end).
+function moveOrInsert(idx) {
+  const d = state.drag;
+  state.drag = null;
+  setDropIdx(null);
+  if (!d || idx == null) return;
+  if (d.type === 'block') {
+    const fi = state.arrangement.findIndex(b => b.id === d.id);
+    if (fi === -1) return;
+    const target = idx > fi ? idx - 1 : idx;
+    if (target === fi) return;
+    const [moved] = state.arrangement.splice(fi, 1);
+    state.arrangement.splice(target, 0, moved);
+  } else {
+    if (!state.stems[d.section]?.[d.loop]) return;
+    state.arrangement.splice(idx, 0, makeBlock(d.section, d.loop));
+  }
+  if (state.isPlaying) pause();
+  renderArrangement();
+}
+
+// Show the insertion bar on the block the drop will land before (or on the
+// trailing drop zone). Toggles classes only — re-rendering mid-drag would
+// detach the element being dragged.
+function setDropIdx(idx) {
+  state.dropIdx = idx;
+  $$('#sa-song-lane .sa-block').forEach((el, i) => el.classList.toggle('drop-before', i === idx));
+  const zone = $('#sa-endzone');
+  if (zone) zone.classList.toggle('drop-target', idx === state.arrangement.length);
 }
 
 function removeFromArrangement(id) {
   state.arrangement = state.arrangement.filter(b => b.id !== id);
+  if (state.editBlockId === id) closeBlockEditor();
   if (state.isPlaying) stop();
   renderArrangement();
 }
@@ -3338,12 +3662,14 @@ function changeLoop(id, newLoop) {
   }
   if (state.isPlaying) stop();
   renderArrangement();
+  if (state.editBlockId === id) renderBlockEditor();
 }
 
 function clearArrangement() {
   if (state.arrangement.length === 0) return;
   if (!confirm('Clear the entire arrangement?')) return;
   state.arrangement = [];
+  closeBlockEditor();
   stop();
   renderArrangement();
 }
@@ -3364,8 +3690,11 @@ function getSectionDuration(section, loop) {
 //   • Bundle  (includeAudio=true)  — self-contained; each decoded AudioBuffer
 //     is re-encoded to WAV (audioBufferToWav) and base64'd, so it reopens with
 //     no stems folder present.
+// Version 2 adds each block's stem `mix` and the `reference` track (name,
+// offset, volume, mute; a bundle also embeds its audio). Version 1 files load
+// with unity mixes and no reference.
 const SONG_FORMAT = 'stem-arranger-song';
-const SONG_VERSION = 1;
+const SONG_VERSION = 2;
 
 // base64 <-> ArrayBuffer, chunked so large buffers don't blow the call stack.
 function arrayBufferToBase64(buf) {
@@ -3395,13 +3724,26 @@ async function serializeSong({ includeAudio }) {
     beatsPerBar: state.beatsPerBar,
     sectionOrder: [...state.sectionOrder],
     loopMeta: state.loopMeta,
-    // Drop cropOpen — it's disposable UI state, rebuilt on import.
     arrangement: state.arrangement.map(b => ({
       id: b.id, section: b.section, loop: b.loop,
-      trimStart: b.trimStart, trimEnd: b.trimEnd
+      trimStart: b.trimStart, trimEnd: b.trimEnd,
+      mix: b.mix || {}
     })),
+    reference: null,
     audio: null
   };
+
+  // The reference is for listening only — exports never include it — but its
+  // placement is part of the song. A project keeps the settings (re-import the
+  // same file to restore them); a bundle embeds the audio too.
+  const ref = state.reference || state.pendingReference;
+  if (ref) {
+    song.reference = { name: ref.name, offset: ref.offset, gain: ref.gain, muted: ref.muted, audio: null };
+    if (includeAudio && state.reference) {
+      updateOverlay(0, `Encoding reference ${ref.name}`);
+      song.reference.audio = arrayBufferToBase64(await audioBufferToWav(state.reference.buffer).arrayBuffer());
+    }
+  }
 
   if (includeAudio) {
     // Count buffers first so the overlay can show real progress.
@@ -3525,16 +3867,39 @@ async function importSong(file) {
     // Project file: keep whatever stems are already loaded.
     rebuildInstrumentSet();
 
-    // Restore the arrangement. Regenerate ids so they're unique, and re-add
-    // the disposable cropOpen flag.
+    // Restore the arrangement. Regenerate ids so they're unique; files saved
+    // before per-block mixes existed load at unity gain.
+    closeBlockEditor();
     state.arrangement = song.arrangement.map(b => ({
       id: uid(),
       section: b.section,
       loop: b.loop,
       trimStart: b.trimStart || 0,
       trimEnd: b.trimEnd || 0,
-      cropOpen: false
+      mix: sanitizeMix(b.mix)
     }));
+
+    // Restore the reference: decode an embedded one, otherwise remember its
+    // settings until the same file is imported again.
+    const songRef = song.reference && typeof song.reference === 'object' && song.reference.name ? song.reference : null;
+    if (songRef) {
+      const settings = {
+        offset: Number(songRef.offset) || 0,
+        gain: isFinite(songRef.gain) ? Math.max(0, Math.min(100, Number(songRef.gain))) : 80,
+        muted: !!songRef.muted
+      };
+      if (songRef.audio) {
+        const ctx = ensureAudioCtx();
+        updateOverlay(1, `Decoding reference ${songRef.name}`);
+        const buffer = await ctx.decodeAudioData(base64ToArrayBuffer(songRef.audio));
+        setReference(songRef.name, buffer, settings);
+      } else if (state.reference && state.reference.name === songRef.name) {
+        Object.assign(state.reference, settings);
+      } else {
+        state.reference = null;
+        state.pendingReference = { name: songRef.name, ...settings };
+      }
+    }
 
     // Warn if any block points at stems that aren't loaded (project file
     // opened without the matching folder).
@@ -3564,7 +3929,7 @@ async function importSong(file) {
 }
 
 // ============================================================
-// CROP LOGIC
+// TRIM LOGIC
 // ============================================================
 function updateTrim(id, side, delta) {
   const block = state.arrangement.find(b => b.id === id);
@@ -3575,52 +3940,9 @@ function updateTrim(id, side, delta) {
   } else {
     block.trimEnd = Math.max(0, Math.min(block.trimEnd + delta, maxBeats - block.trimStart - 1));
   }
-  if (state.isPlaying) stop();
-  refreshCropUI(id);
-  updateArrangementMeta();
-}
-
-function refreshCropUI(id) {
-  const block = state.arrangement.find(b => b.id === id);
-  if (!block) return;
-
-  const maxBeats  = loopTotalBeats(block.section, block.loop);
-  const keptBeats = maxBeats - block.trimStart - block.trimEnd;
-  const keptDur   = getBlockDuration(block);
-  const isTrimmed = block.trimStart > 0 || block.trimEnd > 0;
-
-  const blockEl = document.querySelector(`.arrangement-block[data-id="${id}"]`);
-  if (blockEl) {
-    const durEl = blockEl.querySelector('.block-duration');
-    if (durEl) durEl.textContent = fmtTime(keptDur);
-    blockEl.classList.toggle('trimmed', isTrimmed);
-  }
-
-  const startLabel = document.getElementById(`cv-s-${id}`);
-  const endLabel   = document.getElementById(`cv-e-${id}`);
-  if (startLabel) startLabel.textContent = formatBeats(block.trimStart);
-  if (endLabel)   endLabel.textContent   = formatBeats(block.trimEnd,   block.section, block.loop);
-
-  const btnSm = document.querySelector(`.step-btn[data-id="${id}"][data-side="start"][data-d="-1"]`);
-  const btnSp = document.querySelector(`.step-btn[data-id="${id}"][data-side="start"][data-d="1"]`);
-  const btnEm = document.querySelector(`.step-btn[data-id="${id}"][data-side="end"][data-d="-1"]`);
-  const btnEp = document.querySelector(`.step-btn[data-id="${id}"][data-side="end"][data-d="1"]`);
-  if (btnSm) btnSm.disabled = block.trimStart <= 0;
-  if (btnSp) btnSp.disabled = keptBeats <= 1;
-  if (btnEm) btnEm.disabled = block.trimEnd <= 0;
-  if (btnEp) btnEp.disabled = keptBeats <= 1;
-
-  const timelineEl = document.getElementById(`ctl-${id}`);
-  if (timelineEl) timelineEl.innerHTML = buildTimeline(block, maxBeats);
-
-  const infoEl = document.getElementById(`ci-${id}`);
-  if (infoEl) {
-    if (!isTrimmed) {
-      infoEl.innerHTML = `Full loop · ${loopBarsLabel(block.section, block.loop)} · ${fmtTime(getSectionDuration(block.section, block.loop))}`;
-    } else {
-      infoEl.innerHTML = `<span class="kept">${formatBeats(keptBeats)}</span> kept · ${fmtTime(keptDur)}`;
-    }
-  }
+  if (state.isPlaying) pause();
+  renderArrangement();
+  if (state.editBlockId === id) renderBlockEditor();
 }
 
 function buildTimeline(block, totalBeats) {
@@ -3637,10 +3959,18 @@ function buildTimeline(block, totalBeats) {
   return html;
 }
 
-function updateArrangementMeta() {
-  state.totalDuration = state.arrangement.reduce((sum, b) => sum + getBlockDuration(b), 0);
-  $('#meta-duration').textContent  = fmtTime(state.totalDuration);
-  $('#transport-time').textContent = `0:00 / ${fmtTime(state.totalDuration)}`;
+// The 5px strip on a song-lane block: up to 32 segments, trimmed ones tinted.
+function buildMiniStrip(block) {
+  const totalBeats = loopTotalBeats(block.section, block.loop);
+  const segCount   = Math.max(1, Math.min(Math.round(totalBeats), 32));
+  const ratio      = totalBeats / segCount;
+  let html = '';
+  for (let i = 0; i < segCount; i++) {
+    const beatPos = i * ratio;
+    const off = beatPos < block.trimStart || beatPos >= totalBeats - block.trimEnd;
+    html += off ? '<div class="off"></div>' : '<div></div>';
+  }
+  return html;
 }
 
 // Show the single detected project tempo as a hint the user can click to apply
@@ -3658,285 +3988,601 @@ function updateBPMDetectedHint() {
   };
 }
 
-function renderArrangement() {
-  const tl = $('#timeline');
-
-  if (state.arrangement.length === 0) {
-    tl.innerHTML = `
-      <div class="timeline-empty">
-        <div class="timeline-empty-icon">∅</div>
-        <div>Click any loop on the left to add it here.<br>Drag blocks to reorder.</div>
-      </div>
-    `;
-  } else {
-    tl.innerHTML = '';
-    state.arrangement.forEach((block, idx) => {
-      const color     = sectionColor(block.section);
-      const loops     = Object.keys(state.stems[block.section] || {}).sort();
-      const stemKeys  = Object.keys(state.stems[block.section]?.[block.loop] || {}).sort();
-      const dur       = getBlockDuration(block);
-      const maxBeats  = loopTotalBeats(block.section, block.loop);
-      const isTrimmed = block.trimStart > 0 || block.trimEnd > 0;
-
-      const wrapper = document.createElement('div');
-      wrapper.className = 'block-wrapper';
-
-      const el = document.createElement('div');
-      el.className = 'arrangement-block' + (isTrimmed ? ' trimmed' : '');
-      el.dataset.id = block.id;
-      el.draggable  = true;
-      el.style.borderLeftColor = color;
-
-      el.innerHTML = `
-        <div class="block-index">${String(idx + 1).padStart(2, '0')}</div>
-        <div class="block-content">
-          <div class="block-section">${block.section}</div>
-          <select class="block-loop-select" title="Change loop variation">
-            ${loops.map(l => `<option value="${l}" ${l === block.loop ? 'selected' : ''}>${l}</option>`).join('')}
-          </select>
-          <div class="block-stems">${stemKeys.join(' · ')}</div>
-          <div class="block-duration">${fmtTime(dur)}</div>
-        </div>
-        <button class="block-play" title="Play this part on its own">${state.playingBlockId === block.id ? '⏸' : '▶'}</button>
-        <button class="block-crop${block.cropOpen ? ' active' : ''}" data-id="${block.id}" title="Trim start/end (Shift+click = 1 bar)">✂</button>
-        <button class="block-remove" title="Remove">✕</button>
-      `;
-
-      const panel = document.createElement('div');
-      panel.className = 'crop-panel' + (block.cropOpen ? ' open' : '');
-      panel.style.borderLeftColor = color;
-
-      const keptBeats = maxBeats - block.trimStart - block.trimEnd;
-      panel.innerHTML = `
-        <div class="crop-side">
-          <div class="crop-label">Trim<br>Start</div>
-          <div class="crop-stepper">
-            <button class="step-btn" data-id="${block.id}" data-side="start" data-d="-1" ${block.trimStart <= 0 ? 'disabled' : ''}>−</button>
-            <div class="crop-val-display" id="cv-s-${block.id}">${formatBeats(block.trimStart)}</div>
-            <button class="step-btn" data-id="${block.id}" data-side="start" data-d="1"  ${keptBeats <= 1 ? 'disabled' : ''}>+</button>
-          </div>
-        </div>
-        <div class="crop-timeline-wrap">
-          <div class="crop-timeline" id="ctl-${block.id}">${buildTimeline(block, maxBeats)}</div>
-          <div class="crop-info" id="ci-${block.id}">
-            ${isTrimmed
-              ? `<span class="kept">${formatBeats(keptBeats)}</span> kept · ${fmtTime(dur)}`
-              : `Full loop · ${loopBarsLabel(block.section, block.loop)} · ${fmtTime(getSectionDuration(block.section, block.loop))}`
-            }
-          </div>
-        </div>
-        <div class="crop-side">
-          <div class="crop-stepper">
-            <button class="step-btn" data-id="${block.id}" data-side="end" data-d="-1" ${block.trimEnd <= 0 ? 'disabled' : ''}>−</button>
-            <div class="crop-val-display" id="cv-e-${block.id}">${formatBeats(block.trimEnd)}</div>
-            <button class="step-btn" data-id="${block.id}" data-side="end" data-d="1"  ${keptBeats <= 1 ? 'disabled' : ''}>+</button>
-          </div>
-          <div class="crop-label">Trim<br>End</div>
-        </div>
-      `;
-
-      // Events
-      el.querySelector('.block-loop-select').addEventListener('change', e => changeLoop(block.id, e.target.value));
-      el.querySelector('.block-play').addEventListener('click', () => {
-        if (state.isPlaying && state.playingBlockId === block.id) stop();
-        else playBlock(block.id);
-      });
-      el.querySelector('.block-remove').addEventListener('click', () => removeFromArrangement(block.id));
-      el.querySelector('.block-crop').addEventListener('click', () => {
-        block.cropOpen = !block.cropOpen;
-        panel.classList.toggle('open', block.cropOpen);
-        el.querySelector('.block-crop').classList.toggle('active', block.cropOpen);
-      });
-
-      panel.querySelectorAll('.step-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-          const step = e.shiftKey ? state.beatsPerBar : 1;
-          updateTrim(e.currentTarget.dataset.id, e.currentTarget.dataset.side, parseInt(e.currentTarget.dataset.d, 10) * step);
-        });
-      });
-
-      // Drag & drop
-      el.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', block.id);
-        e.dataTransfer.effectAllowed = 'move';
-        el.classList.add('dragging');
-      });
-      el.addEventListener('dragend', () => {
-        el.classList.remove('dragging');
-        $$('.arrangement-block').forEach(b => b.classList.remove('drag-over'));
-      });
-      el.addEventListener('dragover', e => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        el.classList.add('drag-over');
-      });
-      el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
-      el.addEventListener('drop', e => {
-        e.preventDefault();
-        el.classList.remove('drag-over');
-        const draggedId  = e.dataTransfer.getData('text/plain');
-        if (draggedId === block.id) return;
-        const draggedIdx = state.arrangement.findIndex(b => b.id === draggedId);
-        const targetIdx  = state.arrangement.findIndex(b => b.id === block.id);
-        if (draggedIdx === -1 || targetIdx === -1) return;
-        const [dragged] = state.arrangement.splice(draggedIdx, 1);
-        state.arrangement.splice(targetIdx, 0, dragged);
-        if (state.isPlaying) stop();
-        renderArrangement();
-      });
-
-      wrapper.appendChild(el);
-      wrapper.appendChild(panel);
-      tl.appendChild(wrapper);
-    });
+// ============================================================
+// TIMELINE RENDER (ruler + song lane + reference lane)
+// ============================================================
+// Seconds into the song at which a block starts.
+function blockStartTime(id) {
+  let t = 0;
+  for (const b of state.arrangement) {
+    if (b.id === id) return t;
+    t += getBlockDuration(b);
   }
+  return t;
+}
 
+// Where the reference ends on the timeline (offset > 0 starts it later).
+function referenceEnd() {
+  const r = state.reference;
+  return r ? r.offset + r.duration : 0;
+}
+
+// The transport runs to the end of the song, or of the reference when it's
+// audible — the song length meta itself never counts the reference.
+function transportTotal() {
+  const refEnd = state.reference && state.monitor !== 'mix' ? referenceEnd() : 0;
+  return Math.max(state.totalDuration, refEnd);
+}
+
+function canPlay() {
+  return state.arrangement.length > 0 || (!!state.reference && state.monitor !== 'mix');
+}
+
+function renderArrangement() {
   state.totalDuration = state.arrangement.reduce((sum, b) => sum + getBlockDuration(b), 0);
+  const pps = state.pps;
+
+  // Lane width covers the song, the reference and at least a minute, plus room
+  // for the trailing drop zone.
+  const span   = Math.max(state.totalDuration, referenceEnd(), 60);
+  const innerW = Math.ceil(span * pps) + 200;
+  $('#sa-lanes-inner').style.width = `${innerW}px`;
+
+  renderRuler(innerW);
+  renderSongLane();
+  renderReferenceLane();
+  renderReferenceControls();
+
   $('#meta-blocks').textContent      = state.arrangement.length;
   $('#meta-duration').textContent    = fmtTime(state.totalDuration);
   $('#meta-instruments').textContent = state.instruments.size;
-  $('#transport-time').textContent   = `0:00 / ${fmtTime(state.totalDuration)}`;
+  $('#meta-reference').textContent   = state.reference ? fmtTime(state.reference.duration) : '—';
+  $('#zoom-val').textContent         = `${pps} px/s`;
+  $('#zoom-out-btn').disabled        = pps <= PPS_MIN;
+  $('#zoom-in-btn').disabled         = pps >= PPS_MAX;
 
   const hasContent = state.arrangement.length > 0;
-  $('#play-btn').disabled              = !hasContent;
   $('#export-btn').disabled            = !hasContent;
   $('#export-multitrack-btn').disabled = !hasContent;
   $('#save-project-btn').disabled      = !hasContent;
   $('#save-bundle-btn').disabled       = !hasContent;
+
+  updateTransportUI();
+}
+
+// One tick per bar; every 4th bar is taller and numbered.
+function renderRuler(innerW) {
+  const barPx = secondsPerBeat() * state.beatsPerBar * state.pps;
+  let html = '';
+  if (barPx > 0) {
+    for (let i = 0; i * barPx < innerW; i++) {
+      const x = (i * barPx).toFixed(1);
+      if (i % 4 === 0) {
+        html += `<div class="sa-tick major" style="left:${x}px"></div><div class="sa-tick-label" style="left:${(i * barPx + 4).toFixed(1)}px">${i + 1}</div>`;
+      } else {
+        html += `<div class="sa-tick" style="left:${x}px"></div>`;
+      }
+    }
+  }
+  $('#sa-ruler').innerHTML = html;
+}
+
+function renderSongLane() {
+  const blocks = state.arrangement.map((block, idx) => {
+    const dur       = getBlockDuration(block);
+    const isTrimmed = block.trimStart > 0 || block.trimEnd > 0;
+    const isMixed   = isBlockMixed(block);
+    const isSolo    = state.isPlaying && state.playingBlockId === block.id;
+    return `
+      <div class="sa-block" data-id="${block.id}" draggable="true" style="--h:${hueForSection(block.section)};width:${Math.max(28, dur * state.pps)}px">
+        <div class="sa-block-inner">
+          <div class="sa-block-top">
+            <span class="sa-block-num">${String(idx + 1).padStart(2, '0')}</span>
+            ${isTrimmed ? '<span class="sa-tag" title="Trimmed">✂</span>' : ''}
+            ${isMixed ? '<span class="sa-tag sa-tag-mix" title="Stem mix changed">MIX</span>' : ''}
+          </div>
+          <div class="sa-block-mid">
+            <div class="sa-block-section">${escHtml(block.section)}</div>
+            <div class="sa-block-loop">${escHtml(block.loop)} · ${fmtTime(dur)}</div>
+          </div>
+          <div class="sa-block-strip">${buildMiniStrip(block)}</div>
+          <div class="sa-block-actions">
+            <button data-action="play" title="Play this part on its own">${isSolo ? '⏸' : '▶'}</button>
+            <button data-action="edit" title="Trim &amp; stem mix">✂</button>
+            <button data-action="remove" title="Remove">✕</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const zoneText = state.arrangement.length
+    ? 'Drop a loop here to append'
+    : 'Click a loop below, or drag it here, to start the song';
+  $('#sa-song-lane').innerHTML = blocks + `<div class="sa-endzone" id="sa-endzone">${zoneText}</div>`;
+}
+
+function renderReferenceLane() {
+  const lane = $('#sa-ref-lane');
+  const ref  = state.reference;
+  if (!ref) {
+    lane.innerHTML = `
+      <div class="sa-ref-empty" data-action="import-ref">
+        <span class="plus">+</span>Import a reference track — drop a file or click to browse
+      </div>`;
+    return;
+  }
+  const left  = ref.offset * state.pps;
+  const width = Math.max(4, ref.duration * state.pps);
+  const dim   = ref.muted || state.monitor === 'mix';
+  lane.innerHTML = `<div class="sa-ref-box${dim ? ' dim' : ''}" style="left:${left}px;width:${width}px"><canvas></canvas></div>`;
+  drawReferenceWave(lane.querySelector('canvas'), ref);
+}
+
+// Waveform as 2px bars with 1px gaps, centred, height = peak (min 4%).
+function drawReferenceWave(canvas, ref) {
+  const box = canvas.parentElement;
+  const w = box.clientWidth;
+  const h = box.clientHeight;
+  if (!w || !h) return;
+  // Browsers cap canvas width (~32k px); drop resolution on very long files.
+  const dpr = Math.min(window.devicePixelRatio || 1, 32000 / w);
+  canvas.width  = Math.max(1, Math.floor(w * dpr));
+  canvas.height = Math.max(1, Math.floor(h * dpr));
+  const g = canvas.getContext('2d');
+  g.scale(dpr, dpr);
+  g.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1a1815';
+
+  const bars = Math.floor((w - 4) / 3);
+  const per  = ref.peaks.length / Math.max(1, bars);
+  for (let j = 0; j < bars; j++) {
+    let m = 0;
+    const end = Math.max(Math.floor(j * per) + 1, Math.floor((j + 1) * per));
+    for (let k = Math.floor(j * per); k < end && k < ref.peaks.length; k++) m = Math.max(m, ref.peaks[k]);
+    const bh = Math.max(0.04, m) * h;
+    g.fillRect(2 + j * 3, (h - bh) / 2, 2, bh);
+  }
+}
+
+// Label-column controls for the reference (mute, volume, offset).
+function renderReferenceControls() {
+  const ref = state.reference;
+  $('#ref-panel').classList.toggle('is-empty', !ref);
+  $('#ref-import-btn').textContent = ref ? 'Replace' : 'Import';
+  const pending = state.pendingReference;
+  const nameEl = $('#ref-name');
+  nameEl.textContent = ref ? ref.name : pending ? `Re-import ${pending.name}` : 'No reference loaded';
+  nameEl.title = nameEl.textContent;
+  $('#ref-mute-btn').disabled = !ref;
+  $('#ref-mute-btn').classList.toggle('on', !!ref?.muted);
+  $('#ref-vol').disabled = !ref;
+  $('#ref-vol').value = ref ? ref.gain : 80;
+  $('#ref-off-dec').disabled = !ref;
+  $('#ref-off-inc').disabled = !ref;
+  const off = ref ? ref.offset : 0;
+  $('#ref-off-val').textContent = `${off < 0 ? '−' : '+'}${Math.abs(off).toFixed(1)}s`;
+}
+
+// ---------- Zoom ----------
+const PPS_MIN = 4;
+const PPS_MAX = 40;
+
+function setZoom(pps) {
+  pps = Math.max(PPS_MIN, Math.min(PPS_MAX, pps));
+  if (pps === state.pps) return;
+  // Keep the time at the left edge of the view where it was.
+  const lanes = $('#sa-lanes');
+  const leftSec = lanes.scrollLeft / state.pps;
+  state.pps = pps;
+  renderArrangement();
+  lanes.scrollLeft = leftSec * pps;
+}
+
+// ============================================================
+// REFERENCE TRACK
+// ============================================================
+// An audio file to listen to beside the song while placing loops. It plays in
+// the same transport as the stems but is never exported.
+function computePeaks(buffer) {
+  const ch  = buffer.getChannelData(0);
+  const per = Math.max(1, Math.floor(buffer.sampleRate / 20)); // 20 peaks per second
+  const peaks = new Float32Array(Math.ceil(ch.length / per));
+  let max = 0;
+  for (let p = 0; p < peaks.length; p++) {
+    let m = 0;
+    const end = Math.min((p + 1) * per, ch.length);
+    for (let i = p * per; i < end; i += 4) {
+      const v = Math.abs(ch[i]);
+      if (v > m) m = v;
+    }
+    peaks[p] = m;
+    if (m > max) max = m;
+  }
+  if (max > 0) for (let p = 0; p < peaks.length; p++) peaks[p] /= max;
+  return peaks;
+}
+
+async function loadReference(file) {
+  if (!file) return;
+  if (!/^audio\//.test(file.type) && !/\.(wav|mp3|m4a|aif|aiff|ogg|flac)$/i.test(file.name)) {
+    toast('That is not an audio file', 'error');
+    return;
+  }
+  if (state.isPlaying) pause();
+  let buffer;
+  try {
+    buffer = await ensureAudioCtx().decodeAudioData(await file.arrayBuffer());
+  } catch (err) {
+    console.warn('Failed to decode reference', err);
+    toast('Could not decode that reference file', 'error');
+    return;
+  }
+  setReference(file.name, buffer);
+  toast(`Reference loaded · ${fmtTime(buffer.duration)}`, 'success');
+}
+
+// settings: { offset, gain, muted } from a song file. Without them, settings
+// saved for this same file name (pendingReference) are restored, else the
+// previous reference's volume carries over.
+function setReference(name, buffer, settings) {
+  const pending = state.pendingReference?.name === name ? state.pendingReference : null;
+  const s = settings || pending || {};
+  state.reference = {
+    name,
+    buffer,
+    peaks: computePeaks(buffer),
+    duration: buffer.duration,
+    gain: s.gain ?? state.reference?.gain ?? 80,
+    muted: s.muted ?? false,
+    offset: s.offset ?? 0
+  };
+  state.pendingReference = null;
+  renderArrangement();
+}
+
+function nudgeReferenceOffset(delta) {
+  const ref = state.reference;
+  if (!ref) return;
+  ref.offset = Math.round((ref.offset + delta) * 10) / 10;
+  renderArrangement();
+  restartPlayback();
+}
+
+function setMonitor(mode) {
+  if (mode === state.monitor) return;
+  const before = transportTotal();
+  state.monitor = mode;
+  $$('#sa-monitor button').forEach(b => b.classList.toggle('on', b.dataset.monitor === mode));
+  applyMonitorGains();
+  renderReferenceLane();
+  // The transport's end moves when the reference starts/stops counting.
+  if (state.isPlaying && !state.playingBlockId && transportTotal() !== before) restartPlayback();
+  if (state.isPlaying && !canPlay()) stop();
+  updateTransportUI();
+}
+
+// Push monitor / reference mute / volume into the live graph.
+function applyMonitorGains() {
+  if (state.songBus) state.songBus.gain.value = state.monitor === 'ref' ? 0 : 1;
+  if (state.refGainNode) {
+    const r = state.reference;
+    state.refGainNode.gain.value = (!r || r.muted || state.monitor === 'mix') ? 0 : r.gain / 100;
+  }
+}
+
+// ============================================================
+// BLOCK EDITOR POP-UP (trim + per-block stem mix)
+// ============================================================
+function openBlockEditor(id) {
+  if (!state.arrangement.some(b => b.id === id)) return;
+  state.editBlockId = id;
+  renderBlockEditor();
+  $('#block-editor').classList.add('active');
+}
+
+function closeBlockEditor() {
+  state.editBlockId = null;
+  $('#block-editor').classList.remove('active');
+}
+
+function renderBlockEditor() {
+  const block = state.arrangement.find(b => b.id === state.editBlockId);
+  if (!block) { closeBlockEditor(); return; }
+
+  const idx       = state.arrangement.indexOf(block);
+  const loops     = Object.keys(state.stems[block.section] || {}).sort();
+  const stems     = Object.keys(state.stems[block.section]?.[block.loop] || {}).sort();
+  const maxBeats  = loopTotalBeats(block.section, block.loop);
+  const keptBeats = maxBeats - block.trimStart - block.trimEnd;
+  const dur       = getBlockDuration(block);
+  const isTrimmed = block.trimStart > 0 || block.trimEnd > 0;
+  const allMuted  = stems.length > 0 && stems.every(st => stemMix(block, st).mute);
+  const isSolo    = state.isPlaying && state.playingBlockId === block.id;
+
+  const stemRows = stems.map(st => {
+    const m = stemMix(block, st);
+    const name = escHtml(st);
+    return `
+      <div class="sa-stem-row${m.mute ? ' muted' : ''}" data-stem="${name}">
+        <div class="sa-stem-name" title="${name}">${name}</div>
+        <button class="sa-m-btn${m.mute ? ' on' : ''}" data-action="mute-stem" data-stem="${name}" title="Mute ${name} in this block">M</button>
+        <input type="range" min="0" max="100" value="${m.vol}" data-stem="${name}" title="${name} volume in this block">
+        <div class="sa-stem-db">${fmtMixDb(m)}</div>
+      </div>`;
+  }).join('');
+
+  const dialog = $('#block-editor-dialog');
+  dialog.style.setProperty('--h', hueForSection(block.section));
+  dialog.innerHTML = `
+    <div class="sa-ed-head">
+      <div class="sa-ed-num">${String(idx + 1).padStart(2, '0')}</div>
+      <div class="sa-ed-section">${escHtml(block.section)}</div>
+      <select class="sa-ed-loop" title="Change loop variation">
+        ${loops.map(l => `<option value="${escHtml(l)}" ${l === block.loop ? 'selected' : ''}>${escHtml(l)}</option>`).join('')}
+      </select>
+      <div class="sa-ed-dur">${fmtTime(dur)}</div>
+      <button class="sa-ed-close" data-action="close" title="Close (Esc)">✕</button>
+    </div>
+
+    <div class="sa-ed-section-body">
+      <div class="sa-ed-row-head">
+        <div class="panel-title">Trim</div>
+        <div class="panel-meta">Shift+click = 1 bar</div>
+      </div>
+      <div class="sa-ed-trim">
+        <div class="crop-side">
+          <div class="crop-label">Trim<br>Start</div>
+          <div class="crop-stepper">
+            <button class="step-btn" data-action="trim" data-side="start" data-d="-1" ${block.trimStart <= 0 ? 'disabled' : ''}>−</button>
+            <div class="crop-val-display">${formatBeats(block.trimStart)}</div>
+            <button class="step-btn" data-action="trim" data-side="start" data-d="1" ${keptBeats <= 1 ? 'disabled' : ''}>+</button>
+          </div>
+        </div>
+        <div class="crop-timeline">${buildTimeline(block, maxBeats)}</div>
+        <div class="crop-side">
+          <div class="crop-stepper">
+            <button class="step-btn" data-action="trim" data-side="end" data-d="-1" ${block.trimEnd <= 0 ? 'disabled' : ''}>−</button>
+            <div class="crop-val-display">${formatBeats(block.trimEnd)}</div>
+            <button class="step-btn" data-action="trim" data-side="end" data-d="1" ${keptBeats <= 1 ? 'disabled' : ''}>+</button>
+          </div>
+          <div class="crop-label">Trim<br>End</div>
+        </div>
+      </div>
+      <div class="crop-info">
+        ${isTrimmed
+          ? `<span class="kept">${formatBeats(keptBeats)}</span> kept · ${fmtTime(dur)}`
+          : `Full loop · ${loopBarsLabel(block.section, block.loop)} · ${fmtTime(getSectionDuration(block.section, block.loop))}`}
+      </div>
+    </div>
+
+    <div class="sa-ed-section-body stems">
+      <div class="sa-ed-row-head">
+        <div class="panel-title">Stems</div>
+        <div class="panel-meta">${stems.length} in this loop</div>
+        <button class="btn btn-ghost sa-ghost-sm" data-action="mute-all" ${stems.length ? '' : 'disabled'}>${allMuted ? 'Unmute all' : 'Mute all'}</button>
+        <button class="btn btn-ghost sa-ghost-sm" data-action="reset-mix">Reset</button>
+      </div>
+      <div>${stemRows || '<div class="sa-ed-empty">Load the stems folder to mix this block</div>'}</div>
+    </div>
+
+    <div class="sa-ed-foot">
+      <button class="btn btn-ghost" data-action="play-part" ${stems.length ? '' : 'disabled'}>${isSolo ? '⏸ Pause part' : '▶ Play part'}</button>
+      <div class="panel-meta">Changes apply to this block only</div>
+      <button class="btn btn-primary" data-action="close">Done</button>
+    </div>
+  `;
+}
+
+// Change one stem's mix in one block. Updates the live gain while playing so
+// the change is heard immediately.
+function setStemMix(block, stem, patch) {
+  block.mix = { ...block.mix, [stem]: { ...stemMix(block, stem), ...patch } };
+  const g = state.liveGains.get(block.id)?.get(stem);
+  if (g) g.gain.value = stemGain(block, stem);
 }
 
 // ============================================================
 // PLAYBACK
 // ============================================================
-// offsetSec: seek into the arrangement and start playback from there.
-function play(offsetSec = 0) {
-  if (state.arrangement.length === 0) return;
-  stop();
+// One transport drives the stems and the reference. Graph while playing:
+//   stem source → per-block stem GainNode (block.mix) → songBus → out
+//   reference source → refGainNode → out
+// The monitor switch only flips the two bus gains, so it never interrupts.
+
+// Current playhead position in seconds.
+function currentPlayTime() {
+  if (!state.isPlaying || !state.audioCtx) return state.cursor;
+  return Math.max(0, state.audioCtx.currentTime - state.playStartTime + state.seekOffset);
+}
+
+// offsetSec: timeline position to start from. stopAt/soloId: play one part.
+function play(offsetSec = state.cursor, { stopAt = null, soloId = null } = {}) {
+  if (!canPlay()) return;
+  haltPlayback();
   const ctx = ensureAudioCtx();
 
-  offsetSec = Math.max(0, Math.min(offsetSec, state.totalDuration));
+  const total = transportTotal();
+  if (stopAt === null && offsetSec >= total - 0.05) offsetSec = 0; // at the end → from the top
+  offsetSec = Math.max(0, Math.min(offsetSec, total));
+  const endAt   = stopAt ?? total;
   const startAt = ctx.currentTime + 0.08;
-  let cursor = 0;   // cumulative position along the arrangement timeline
-  let schedAt = startAt; // ctx time to schedule the next block at
 
+  state.songBus = ctx.createGain();
+  state.songBus.connect(ctx.destination);
+  state.liveGains = new Map();
+
+  let cursor = 0; // cumulative position along the arrangement timeline
   for (const block of state.arrangement) {
-    const stems = state.stems[block.section]?.[block.loop];
-    if (!stems) continue;
-    const trimStartSecs = trimBeatsToSecs(block.trimStart);
-    const blockDur      = getBlockDuration(block);
-    if (blockDur <= 0) continue;
-
+    const blockDur   = getBlockDuration(block);
     const blockStart = cursor;
     cursor += blockDur;
-    if (cursor <= offsetSec) continue; // this block is entirely before the seek point
+    const stems = state.stems[block.section]?.[block.loop];
+    if (!stems || blockDur <= 0) continue;
+    const from = Math.max(blockStart, offsetSec);
+    const to   = Math.min(cursor, endAt);
+    if (to - from <= 0) continue; // entirely before the seek point or after the stop point
 
-    const innerOffset = Math.max(0, offsetSec - blockStart);
-    const playDur = blockDur - innerOffset;
-    if (playDur <= 0) continue;
-
-    for (const buffer of Object.values(stems)) {
+    const gains = new Map();
+    for (const [stem, buffer] of Object.entries(stems)) {
+      const g = ctx.createGain();
+      g.gain.value = stemGain(block, stem);
+      g.connect(state.songBus);
       const src = ctx.createBufferSource();
       src.buffer = buffer;
-      src.connect(ctx.destination);
-      src.start(schedAt, trimStartSecs + innerOffset, playDur);
+      src.connect(g);
+      src.start(startAt + (from - offsetSec), trimBeatsToSecs(block.trimStart) + (from - blockStart), to - from);
       state.scheduledSources.push(src);
+      gains.set(stem, g);
     }
-    schedAt += playDur;
+    state.liveGains.set(block.id, gains);
   }
 
-  state.playStartTime = startAt;
-  state.seekOffset = offsetSec;
-  state.isPlaying = true;
+  // Reference: starts at `offset` on the timeline; skipped outside [0, dur).
+  const ref = state.reference;
+  if (ref) {
+    state.refGainNode = ctx.createGain();
+    state.refGainNode.connect(ctx.destination);
+    const from = Math.max(offsetSec, ref.offset);
+    const to   = Math.min(endAt, ref.offset + ref.duration);
+    if (to - from > 0) {
+      const src = ctx.createBufferSource();
+      src.buffer = ref.buffer;
+      src.connect(state.refGainNode);
+      src.start(startAt + (from - offsetSec), from - ref.offset, to - from);
+      state.scheduledSources.push(src);
+    }
+  }
+  applyMonitorGains();
 
-  $('#play-btn').classList.add('playing');
-  $('#play-btn').textContent = '⏸';
+  state.playStartTime  = startAt;
+  state.seekOffset     = offsetSec;
+  state.stopAt         = endAt;
+  state.isPlaying      = true;
+  state.playingBlockId = soloId;
+  updateTransportUI();
 
   function tick() {
     if (!state.isPlaying) return;
-    const elapsed = (ctx.currentTime - state.playStartTime) + state.seekOffset;
-    if (elapsed >= state.totalDuration) {
-      stop();
-      return;
-    }
-    const safe = Math.max(0, elapsed);
-    $('#transport-time').textContent = `${fmtTime(safe)} / ${fmtTime(state.totalDuration)}`;
-    $('#transport-progress-bar').style.width = `${(safe / state.totalDuration) * 100}%`;
-
-    // Highlight current block
-    let cumTime = 0;
-    let activeIdx = -1;
-    for (let i = 0; i < state.arrangement.length; i++) {
-      const dur = getBlockDuration(state.arrangement[i]);
-      if (safe >= cumTime && safe < cumTime + dur) { activeIdx = i; break; }
-      cumTime += dur;
-    }
-    $$('.arrangement-block').forEach((el, i) => {
-      el.classList.toggle('playing', i === activeIdx);
-    });
-
+    const t = currentPlayTime();
+    if (t >= state.stopAt) { finishPlayback(); return; }
+    renderPlayhead(t, true);
     state.rafId = requestAnimationFrame(tick);
   }
   tick();
 }
 
-// Play a single block on its own, ignoring the rest of the arrangement.
+// Play a single block on its own: run the transport from its start to its end.
 function playBlock(id) {
   const block = state.arrangement.find(b => b.id === id);
   if (!block) return;
-  const stems = state.stems[block.section]?.[block.loop];
-  if (!stems) return;
   const blockDur = getBlockDuration(block);
   if (blockDur <= 0) return;
-
-  stop();                       // tear down any current playback (global or another block)
-  const ctx = ensureAudioCtx();
-
-  const startAt       = ctx.currentTime + 0.08;
-  const trimStartSecs = trimBeatsToSecs(block.trimStart);
-
-  for (const buffer of Object.values(stems)) {
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    src.connect(ctx.destination);
-    src.start(startAt, trimStartSecs, blockDur);
-    state.scheduledSources.push(src);
+  if (state.isPlaying && state.playingBlockId === id) {
+    haltPlayback();
+    state.cursor = blockStartTime(id);
+    updateTransportUI();
+    return;
   }
-
-  state.playStartTime  = startAt;
-  state.isPlaying      = true;
-  state.playingBlockId = id;
-
-  const blockEl = document.querySelector(`.arrangement-block[data-id="${id}"]`);
-  if (blockEl) {
-    blockEl.classList.add('playing');
-    const pb = blockEl.querySelector('.block-play');
-    if (pb) pb.textContent = '⏸';
-  }
-
-  function tick() {
-    if (!state.isPlaying) return;
-    if (ctx.currentTime - state.playStartTime >= blockDur) { stop(); return; }
-    state.rafId = requestAnimationFrame(tick);
-  }
-  tick();
+  const start = blockStartTime(id);
+  play(start, { stopAt: start + blockDur, soloId: id });
 }
 
-function stop() {
+// Restart from the current position, e.g. after the reference moved.
+function restartPlayback() {
+  if (!state.isPlaying) return;
+  const t = currentPlayTime();
+  if (state.playingBlockId) play(t, { stopAt: state.stopAt, soloId: state.playingBlockId });
+  else play(t);
+}
+
+// Stop every source and tear down the graph without touching the cursor.
+function haltPlayback() {
   state.scheduledSources.forEach(src => {
     try { src.stop(); } catch (e) {}
   });
   state.scheduledSources = [];
+  [state.songBus, state.refGainNode].forEach(n => { if (n) n.disconnect(); });
+  state.songBus = null;
+  state.refGainNode = null;
+  state.liveGains = new Map();
   state.isPlaying = false;
   state.playingBlockId = null;
   state.seekOffset = 0;
   if (state.rafId) cancelAnimationFrame(state.rafId);
+  state.rafId = null;
+}
 
-  $('#play-btn').classList.remove('playing');
-  $('#play-btn').textContent = '▶';
-  $('#transport-time').textContent = `0:00 / ${fmtTime(state.totalDuration)}`;
-  $('#transport-progress-bar').style.width = '0%';
-  $$('.arrangement-block').forEach(el => el.classList.remove('playing'));
-  $$('.block-play').forEach(el => el.textContent = '▶');
+// Reached the end: a solo part returns to its start, the song to the top.
+function finishPlayback() {
+  const solo = state.playingBlockId;
+  haltPlayback();
+  state.cursor = solo ? blockStartTime(solo) : 0;
+  updateTransportUI();
+}
+
+function pause() {
+  const t = currentPlayTime();
+  haltPlayback();
+  state.cursor = Math.min(t, transportTotal());
+  updateTransportUI();
+}
+
+function stop() {
+  haltPlayback();
+  state.cursor = 0;
+  updateTransportUI();
+}
+
+// Jump the playhead to `t` seconds; keeps playing if playing.
+function seek(t) {
+  t = Math.max(0, Math.min(t, transportTotal()));
+  if (state.isPlaying) play(t);
+  else { state.cursor = t; renderPlayhead(t); }
+}
+
+// Play/pause glyphs, enabled states and the playhead for the current state.
+function updateTransportUI() {
+  const playBtn = $('#play-btn');
+  if (!playBtn) return;
+  playBtn.classList.toggle('playing', state.isPlaying);
+  playBtn.textContent = state.isPlaying ? '⏸' : '▶';
+  playBtn.disabled = !canPlay();
+  $$('#sa-song-lane .sa-block').forEach(el => {
+    const btn = el.querySelector('[data-action="play"]');
+    if (btn) btn.textContent = state.isPlaying && state.playingBlockId === el.dataset.id ? '⏸' : '▶';
+  });
+  const partBtn = $('#block-editor-dialog [data-action="play-part"]');
+  if (partBtn) {
+    partBtn.textContent = state.isPlaying && state.playingBlockId === state.editBlockId ? '⏸ Pause part' : '▶ Play part';
+  }
+  renderPlayhead(currentPlayTime());
+}
+
+// Move the playhead, time readout and progress bar; invert the block under
+// the playhead while playing. `follow` scrolls the lanes to keep it in view.
+function renderPlayhead(t, follow = false) {
+  const total = transportTotal();
+  const x = t * state.pps;
+  $('#sa-playhead').style.left = `${x}px`;
+  $('#transport-time').textContent = `${fmtTime(t)} / ${fmtTime(total)}`;
+  $('#transport-progress-bar').style.width = `${total > 0 ? Math.min(100, (t / total) * 100) : 0}%`;
+
+  let activeIdx = -1;
+  if (state.isPlaying) {
+    let cum = 0;
+    for (let i = 0; i < state.arrangement.length; i++) {
+      const dur = getBlockDuration(state.arrangement[i]);
+      if (t >= cum && t < cum + dur) { activeIdx = i; break; }
+      cum += dur;
+    }
+  }
+  $$('#sa-song-lane .sa-block').forEach((el, i) => el.classList.toggle('playing', i === activeIdx));
+
+  if (follow) {
+    const lanes = $('#sa-lanes');
+    if (x < lanes.scrollLeft || x > lanes.scrollLeft + lanes.clientWidth - 40) {
+      lanes.scrollLeft = Math.max(0, x - 40);
+    }
+  }
 }
 
 // ============================================================
@@ -4057,9 +4703,10 @@ function findReferenceBuffer() {
 }
 
 // Render one instrument's full arrangement to an AudioBuffer, laying each
-// block's stem end-to-end and honouring its trim — the same schedule used for
-// live playback and the per-stem export. Returns the rendered buffer, or null
-// if the offline context couldn't be created.
+// block's stem end-to-end and honouring its trim and per-block stem mix — the
+// same schedule and gains used for live playback. The reference track is
+// never rendered. Returns the rendered buffer, or null if the offline context
+// couldn't be created.
 async function renderInstrumentArrangement(instrument, numChannels, totalSamples, sampleRate) {
   let offlineCtx;
   try {
@@ -4074,10 +4721,19 @@ async function renderInstrumentArrangement(instrument, numChannels, totalSamples
     const trimStartSecs = trimBeatsToSecs(block.trimStart);
     const blockDur      = getBlockDuration(block);
 
-    if (stems && stems[instrument] && blockDur > 0) {
+    const gain          = stemGain(block, instrument);
+
+    if (stems && stems[instrument] && blockDur > 0 && gain > 0) {
       const src = offlineCtx.createBufferSource();
       src.buffer = stems[instrument];
-      src.connect(offlineCtx.destination);
+      if (gain === 1) {
+        src.connect(offlineCtx.destination);
+      } else {
+        const g = offlineCtx.createGain();
+        g.gain.value = gain;
+        src.connect(g);
+        g.connect(offlineCtx.destination);
+      }
       src.start(cursor, trimStartSecs, blockDur);
     }
     cursor += blockDur;
@@ -6485,9 +7141,9 @@ $('#file-input').addEventListener('change', e => {
   e.target.value = '';
 });
 
-// Drag the Stems folder straight onto the empty state or the loaded library
+// Drag the Stems folder straight onto the empty state or the loop strip
 // to (re)import it — same folder structure the file-picker button expects.
-[$('#empty-state'), $('.library')].forEach(el => {
+[$('#empty-state'), $('#sa-loops')].forEach(el => {
   enableFileDropZone(el, async dataTransfer => {
     const files = await filesFromDataTransfer(dataTransfer);
     if (files.length) loadFolder(files);
@@ -6680,7 +7336,7 @@ ddInit();
 ddAnimate();
 
 $('#play-btn').addEventListener('click', () => {
-  if (state.isPlaying) stop();
+  if (state.isPlaying) pause();
   else play();
 });
 $('#stop-btn').addEventListener('click', stop);
@@ -6696,19 +7352,15 @@ $('#song-input').addEventListener('change', e => {
   e.target.value = '';
 });
 
-// When BPM changes: recalculate all trim amounts and re-render crop UIs
+// When BPM changes: recalculate all trim amounts and re-render the timeline
 function onBPMChanged() {
   if (state.isPlaying) stop();
-  // Re-render the library so every loop's badge follows the new project tempo
-  // (and outlier flags recompute against it), plus the arrangement so beat
-  // counts in crop panels refresh.
+  // Re-render the loop strip so every card's badge follows the new project
+  // tempo (and outlier flags recompute against it), plus the timeline so block
+  // widths, the bar ruler and the editor's beat counts refresh.
   renderLibrary();
   renderArrangement();
-  // Reopen any previously open crop panels
-  for (const block of state.arrangement) {
-    if (block.cropOpen) refreshCropUI(block.id);
-  }
-  updateArrangementMeta();
+  if (state.editBlockId) renderBlockEditor();
 }
 
 $('#bpm-input').addEventListener('change', e => {
@@ -6735,14 +7387,182 @@ $('#beats-per-bar').addEventListener('change', e => {
 
 // Click on progress to seek
 $('#transport-progress').addEventListener('click', e => {
-  if (state.arrangement.length === 0 || state.totalDuration <= 0) return;
+  const total = transportTotal();
+  if (!canPlay() || total <= 0) return;
   const rect = e.currentTarget.getBoundingClientRect();
   const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  play(ratio * state.totalDuration);
+  seek(ratio * total);
+});
+
+// ---------- Stem Arranger MK2: timeline, loop strip, reference, editor ----------
+$('#zoom-out-btn').addEventListener('click', () => setZoom(state.pps - 2));
+$('#zoom-in-btn').addEventListener('click', () => setZoom(state.pps + 2));
+
+$$('#sa-monitor button').forEach(btn => {
+  btn.addEventListener('click', () => setMonitor(btn.dataset.monitor));
+});
+
+// Click anywhere on the ruler or lanes that isn't a control to seek there.
+$('#sa-lanes-inner').addEventListener('click', e => {
+  if (e.target.closest('button, select, input, .sa-ref-empty')) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  seek((e.clientX - rect.left) / state.pps);
+});
+
+// Song lane: block buttons, double-click to edit, drag to reorder, and drops
+// of loop cards from the strip. Delegated, since the lane is re-rendered.
+const songLane = $('#sa-song-lane');
+songLane.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-action]');
+  const blockEl = e.target.closest('.sa-block');
+  if (!btn || !blockEl) return;
+  const id = blockEl.dataset.id;
+  if (btn.dataset.action === 'play') playBlock(id);
+  else if (btn.dataset.action === 'edit') openBlockEditor(id);
+  else if (btn.dataset.action === 'remove') removeFromArrangement(id);
+});
+songLane.addEventListener('dblclick', e => {
+  const blockEl = e.target.closest('.sa-block');
+  if (blockEl && !e.target.closest('button')) openBlockEditor(blockEl.dataset.id);
+});
+songLane.addEventListener('dragstart', e => {
+  const blockEl = e.target.closest('.sa-block');
+  if (!blockEl) return;
+  state.drag = { type: 'block', id: blockEl.dataset.id };
+  e.dataTransfer.setData('text/plain', blockEl.dataset.id);
+  e.dataTransfer.effectAllowed = 'move';
+  blockEl.classList.add('dragging');
+});
+songLane.addEventListener('dragover', e => {
+  if (!state.drag) return; // OS files and foreign drags aren't ours
+  e.preventDefault();
+  e.dataTransfer.dropEffect = state.drag.type === 'block' ? 'move' : 'copy';
+  // Over a block: before it or after it, by which half the cursor is in.
+  // Anywhere else in the lane (gaps, the drop zone): the end.
+  const blockEl = e.target.closest('.sa-block');
+  let idx = state.arrangement.length;
+  if (blockEl) {
+    const i = state.arrangement.findIndex(b => b.id === blockEl.dataset.id);
+    const rect = blockEl.getBoundingClientRect();
+    idx = i + (e.clientX > rect.left + rect.width / 2 ? 1 : 0);
+  }
+  if (idx !== state.dropIdx) setDropIdx(idx);
+});
+songLane.addEventListener('dragleave', e => {
+  if (state.drag && !songLane.contains(e.relatedTarget)) setDropIdx(null);
+});
+songLane.addEventListener('drop', e => {
+  if (!state.drag) return;
+  e.preventDefault();
+  moveOrInsert(state.dropIdx ?? state.arrangement.length);
+});
+
+// Loop strip: click a card to append, drag it onto the song lane to place.
+const loopStrip = $('#sections-list');
+loopStrip.addEventListener('click', e => {
+  const card = e.target.closest('.sa-loop-card');
+  if (card) addToArrangement(card.dataset.section, card.dataset.loop);
+});
+loopStrip.addEventListener('dragstart', e => {
+  const card = e.target.closest('.sa-loop-card');
+  if (!card) return;
+  state.drag = { type: 'loop', section: card.dataset.section, loop: card.dataset.loop };
+  e.dataTransfer.setData('text/plain', `${card.dataset.section}/${card.dataset.loop}`);
+  e.dataTransfer.effectAllowed = 'copy';
+});
+// Whatever happened to the drag, clear its state and indicators.
+[songLane, loopStrip].forEach(el => el.addEventListener('dragend', () => {
+  state.drag = null;
+  setDropIdx(null);
+  $$('#sa-song-lane .sa-block.dragging').forEach(b => b.classList.remove('dragging'));
+}));
+
+// Reference: import via the label button, the empty lane, or a file drop.
+$('#ref-import-btn').addEventListener('click', () => $('#ref-input').click());
+$('#sa-ref-lane').addEventListener('click', e => {
+  if (e.target.closest('.sa-ref-empty')) $('#ref-input').click();
+});
+$('#ref-input').addEventListener('change', e => {
+  if (e.target.files.length > 0) loadReference(e.target.files[0]);
+  e.target.value = '';
+});
+enableFileDropZone($('#sa-ref-lane'), dataTransfer => {
+  if (dataTransfer.files.length > 0) loadReference(dataTransfer.files[0]);
+});
+$('#ref-mute-btn').addEventListener('click', () => {
+  if (!state.reference) return;
+  state.reference.muted = !state.reference.muted;
+  applyMonitorGains();
+  renderReferenceControls();
+  renderReferenceLane();
+});
+$('#ref-vol').addEventListener('input', e => {
+  if (!state.reference) return;
+  state.reference.gain = parseInt(e.target.value, 10);
+  applyMonitorGains();
+});
+$('#ref-off-dec').addEventListener('click', e => nudgeReferenceOffset(e.shiftKey ? -1 : -0.1));
+$('#ref-off-inc').addEventListener('click', e => nudgeReferenceOffset(e.shiftKey ? 1 : 0.1));
+
+// Block editor pop-up. Backdrop click or Esc closes it.
+$('#block-editor').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeBlockEditor();
+});
+const editorDialog = $('#block-editor-dialog');
+editorDialog.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-action]');
+  const block = state.arrangement.find(b => b.id === state.editBlockId);
+  if (!btn || !block) return;
+  const stems = Object.keys(state.stems[block.section]?.[block.loop] || {});
+  switch (btn.dataset.action) {
+    case 'close':
+      closeBlockEditor();
+      return;
+    case 'trim': {
+      const step = e.shiftKey ? state.beatsPerBar : 1;
+      updateTrim(block.id, btn.dataset.side, parseInt(btn.dataset.d, 10) * step);
+      return;
+    }
+    case 'mute-stem':
+      setStemMix(block, btn.dataset.stem, { mute: !stemMix(block, btn.dataset.stem).mute });
+      break;
+    case 'mute-all': {
+      const mute = !stems.every(st => stemMix(block, st).mute);
+      stems.forEach(st => setStemMix(block, st, { mute }));
+      break;
+    }
+    case 'reset-mix':
+      block.mix = {};
+      state.liveGains.get(block.id)?.forEach(g => { g.gain.value = 1; });
+      break;
+    case 'play-part':
+      playBlock(block.id);
+      return;
+  }
+  renderBlockEditor();
+  renderSongLane();
+  updateTransportUI();
+});
+editorDialog.addEventListener('change', e => {
+  if (e.target.classList.contains('sa-ed-loop') && state.editBlockId) changeLoop(state.editBlockId, e.target.value);
+  // Volume settled: refresh the block's MIX tag.
+  if (e.target.matches('input[type=range][data-stem]')) { renderSongLane(); updateTransportUI(); }
+});
+// Volume drags update the readout and the live gain without re-rendering,
+// so the slider keeps the pointer.
+editorDialog.addEventListener('input', e => {
+  if (!e.target.matches('input[type=range][data-stem]')) return;
+  const block = state.arrangement.find(b => b.id === state.editBlockId);
+  if (!block) return;
+  const stem = e.target.dataset.stem;
+  setStemMix(block, stem, { vol: parseInt(e.target.value, 10) });
+  const row = e.target.closest('.sa-stem-row');
+  if (row) row.querySelector('.sa-stem-db').textContent = fmtMixDb(stemMix(block, stem));
 });
 
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && state.editBlockId) { closeBlockEditor(); return; }
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.code === 'Space') {
     // On the landing page (currentTool === null) space does nothing;
