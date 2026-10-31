@@ -5,7 +5,7 @@ browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
 
-The current version is shown next to the logo in the header (**Rev 5.1**).
+The current version is shown next to the logo in the header (**Rev 5.2**).
 
 ## Choosing a module
 
@@ -41,6 +41,16 @@ The header shows the current revision. **Big changes bump the first digit,
 small changes bump the second.** Update the `Rev X.Y` label in the header (and
 this list) with every change.
 
+- **Rev 5.2** — Three Stem Arranger changes:
+  - **Multi-channel reference** — the reference file can be an interleaved WAV
+    with up to **6 stereo pairs** (12 channels, the Multi-Channel tool's
+    layout). A **Mix** pop-up gives each pair its own volume and mute.
+  - **Monochrome by default** — section colours are off; the **Colour** button
+    in the Loops header turns them back on (remembered per browser).
+  - **Trim mode per block** — in the block editor, choose whether the trimmed
+    part is **Cut** (the block shortens) or filled with **Silence** (the block
+    keeps its full length and the trimmed beats are silent). Preview and both
+    exports follow the choice.
 - **Rev 5.1** — The Stem Arranger's reference can now be a **TP-7**: plug it in
   over USB and the app's **Play** starts the TP-7's own playback (MIDI Start +
   clock), so it plays the reference track while you hear the stems through it.
@@ -128,8 +138,9 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
 ## Features
 
 - **Load a folder of stems** directly from disk (uses the directory file picker).
-- **Loop strip** — every loop as a card, grouped by section family and
-  colour-coded, with its bar count, length, stems and tempo.
+- **Loop strip** — every loop as a card, grouped by section family, with its
+  bar count, length, stems and tempo. The arranger is monochrome by default;
+  the **Colour** button colour-codes sections.
 - **Build an arrangement** on a horizontal timeline: click a loop card to
   append it or drag it onto the song lane to place it; drag blocks to reorder;
   swap loop variations per block. Block widths follow their durations on a bar
@@ -138,12 +149,16 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
   (median across loops) and can be overridden; beats-per-bar is configurable.
 - **Block editor** — ✂ (or double-click a block) opens a pop-up for that block:
   - **Trimming** — crop start/end by beats (Shift = whole bars) with a visual
-    beat timeline.
+    beat timeline. **Cut** removes the trimmed beats so the block gets shorter;
+    **Silence** keeps the block's full length and plays the trimmed beats as
+    silence (shown hatched, and tagged `✂ SIL` on the block).
   - **Stem mix** — a volume slider and mute per stem, for this block only
     (`MUTE ALL` and `RESET` included). Blocks with a changed mix show a `MIX`
     tag; trimmed blocks show `✂`.
 - **Reference track** — import or drop an audio file onto the reference lane to
-  hear it alongside the song. Mute it, set its volume, and nudge its **offset**
+  hear it alongside the song. It can be a multi-channel WAV with up to 6 stereo
+  pairs (12 channels; an odd last channel plays as a mono pair); **Mix** opens
+  a pop-up with volume and mute for each pair. Mute it, set its volume, and nudge its **offset**
   (0.1 s per click, 1 s with Shift). The **Monitor** switch picks what you hear:
   **Song**, **Both**, or **Ref** only. Exports never include the reference.
 - **TP-7 as the reference** — instead of a file, start the reference on a
@@ -166,8 +181,9 @@ Supported audio formats: `wav`, `mp3`, `m4a`, `aif`, `aiff`, `ogg`, `flac`.
   rebuild it from scratch next time, then **Load Song** to bring it back. Two
   save formats:
   - **Save Project** — a small, human-readable text file holding the
-    arrangement, trims, per-block stem mixes, section order, tempo, and the
-    reference track's name and placement (re-import the same reference file to
+    arrangement, trims (and each block's trim mode), per-block stem mixes,
+    section order, tempo, and the reference track's name, placement and pair
+    mix (re-import the same reference file to
     restore it). Re-load the same stems folder,
     then load this file, and everything snaps back into place.
   - **Save Bundle** — a larger, self-contained file with the decoded audio

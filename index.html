@@ -679,6 +679,8 @@ header {
 
 .seg-active { background: var(--ink); }
 .seg-muted  { background: var(--panel-fill); }
+/* trimmed beats that play as silence (trim mode "Silence") — hatched */
+.seg-silence { background: repeating-linear-gradient(135deg, var(--panel-fill) 0 2px, transparent 2px 5px); }
 /* bar-boundary segments take the section accent so you can count bars */
 .seg-bar.seg-active { background: hsl(var(--h, 0), 65%, 40%); }
 
@@ -790,7 +792,8 @@ header {
   text-transform: uppercase;
   cursor: pointer;
 }
-.sa-mini-btn:hover { background: var(--ink); color: var(--ink-invert); }
+.sa-mini-btn:hover,
+.sa-mini-btn.on { background: var(--ink); color: var(--ink-invert); }
 
 .sa-ref-name {
   font-size: 9.5px;
@@ -974,6 +977,7 @@ header {
 .sa-block-strip { display: flex; gap: 1px; height: 5px; }
 .sa-block-strip > div { flex: 1; background: var(--ink); }
 .sa-block-strip > div.off { background: hsl(var(--h), 40%, 84%); }
+.sa-block-strip > div.off.sil { background: repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 3px); opacity: 0.45; }
 .sa-block.playing .sa-block-strip > div { background: var(--ink-invert); }
 .sa-block.playing .sa-block-strip > div.off { background: #5a5650; }
 
@@ -1276,6 +1280,32 @@ header {
 
 .sa-ed-row-head { display: flex; align-items: center; gap: 10px; }
 .sa-ed-row-head .panel-meta:last-child { margin-left: auto; }
+.sa-ed-row-head .sa-trim-mode-label { margin-left: auto; }
+.sa-trim-mode button { flex: 0 0 auto; padding: 4px 10px; }
+
+/* ========== MONOCHROME (default; the Colour toggle turns hues back on) ==========
+   The handoff's mono spec: paper blocks with ink bands, grey family labels,
+   ink accents. On <body> because the pop-ups live outside #app. */
+.sa-mono .sa-block-inner { background: var(--paper); border-top-color: var(--ink); }
+.sa-mono .sa-block.playing .sa-block-inner { background: var(--ink); }
+.sa-mono .sa-block-strip > div.off { background: var(--panel-fill); }
+.sa-mono .sa-block.playing .sa-block-strip > div.off { background: #5a5650; }
+.sa-mono .sa-block-strip > div.off.sil,
+.sa-mono .sa-block.playing .sa-block-strip > div.off.sil { background: repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 3px); }
+.sa-mono .sa-family-label { background: var(--panel-fill); }
+.sa-mono .sa-loop-card { border-top-color: var(--panel-fill); }
+.sa-mono .sa-editor { box-shadow: 8px 8px 0 var(--ink); }
+.sa-mono .sa-ed-head { background: var(--hairline); }
+.sa-mono .seg-bar.seg-active { background: var(--muted); }
+.sa-mono .sa-stem-row input[type=range] { accent-color: var(--ink); }
+
+/* Reference mixer: the reference has no section, so it's always ink */
+.sa-ref-mixer { box-shadow: 8px 8px 0 var(--ink); }
+.sa-ref-mixer .sa-ed-head { background: var(--hairline); }
+.sa-ref-mixer .sa-stem-row { grid-template-columns: 150px 30px minmax(0, 1fr) 64px; }
+.sa-ref-mixer .sa-stem-row input[type=range] { accent-color: var(--ink); }
+#ref-mix-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+#ref-mix-btn:disabled:hover { background: transparent; color: var(--ink); }
 .sa-ed-trim { display: flex; align-items: center; gap: 14px; }
 .sa-ed-trim .crop-timeline { flex: 1; min-width: 60px; }
 
@@ -2695,7 +2725,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 5.1</span>
+    <span class="logo-tag">Rev 5.2</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -2808,6 +2838,7 @@ header {
         <div class="sa-ref-row only-file">
           <button class="sa-m-btn" id="ref-mute-btn" title="Mute reference" disabled>M</button>
           <input type="range" id="ref-vol" min="0" max="100" value="80" title="Reference volume" disabled>
+          <button class="sa-mini-btn" id="ref-mix-btn" title="Volume and mute for each stereo pair of the reference" disabled>Mix</button>
         </div>
         <!-- TP-7 reference (Web MIDI start/stop + clock) -->
         <select class="sa-tp7-port only-tp7" id="tp7-port" title="MIDI output the TP-7 is on" disabled>
@@ -2848,6 +2879,7 @@ header {
       <div class="panel-title">Loops</div>
       <div class="panel-meta" id="sections-meta">—</div>
       <div class="panel-meta sa-loops-hint">Click to append · drag onto the song to place</div>
+      <button class="sa-mini-btn" id="colour-btn" title="Show section colours (off = monochrome)">Colour</button>
     </div>
     <div class="sa-loop-strip" id="sections-list"></div>
   </section>
@@ -2871,6 +2903,11 @@ header {
     <button id="export-btn" class="btn btn-primary" disabled title="Download one WAV per instrument">Export Stems</button>
     <button id="export-multitrack-btn" class="btn btn-primary" disabled title="Download one interleaved multi-channel WAV with every instrument on its own channel">Export Multi-Track</button>
   </div>
+</div>
+
+<!-- Reference mixer pop-up (volume + mute per stereo pair) -->
+<div class="overlay sa-editor-overlay" id="ref-mixer">
+  <div class="sa-editor sa-ref-mixer" id="ref-mixer-dialog" role="dialog" aria-modal="true"></div>
 </div>
 
 <!-- Block editor pop-up (trim + per-block stem mix) -->
@@ -3087,6 +3124,7 @@ const TOOLS = [
     leave() {
       stop();
       closeBlockEditor();
+      closeRefMixer();
       $('#empty-state').style.display = 'none';
       $('#app').classList.remove('active');
     },
@@ -3165,6 +3203,8 @@ const state = {
     clockMs: 0                // ms between clock ticks (24 per quarter note)
   },
   outputDeviceId: '',         // audio output device id ('' = system default)
+  colorful: false,            // section colours on; off = monochrome (default)
+  refPairGains: [],           // GainNode per reference pair while playing, so the ref mixer is live
   songBus: null,              // GainNode every stem feeds while playing (silenced by monitor 'ref')
   refGainNode: null,          // GainNode the reference feeds while playing
   liveGains: new Map(),       // block id → Map(stem → GainNode) while playing, so mix edits are live
@@ -3343,14 +3383,29 @@ function trimBeatsToSecs(beats) {
   return beats * secondsPerBeat();
 }
 
-// Duration of a block with its current trim applied
+// Duration of a block with its current trim applied. A block whose trimMode
+// is 'silence' keeps its full length — the trimmed beats play as silence.
 function getBlockDuration(block) {
   const stems = state.stems[block.section]?.[block.loop];
   if (!stems) return 0;
   const full  = Math.max(...Object.values(stems).map(b => b.duration));
+  if (block.trimMode === 'silence') return full;
   const trimS = trimBeatsToSecs(block.trimStart);
   const trimE = trimBeatsToSecs(block.trimEnd);
   return Math.max(0, full - trimS - trimE);
+}
+
+// Where a block's audio sits inside the block: `lead` seconds of silence
+// first (silence mode only), then `len` seconds read from the stems starting
+// at `srcStart`. Shared by playback and export so they always agree.
+function blockAudioWindow(block) {
+  const stems = state.stems[block.section]?.[block.loop];
+  if (!stems) return { lead: 0, srcStart: 0, len: 0 };
+  const full  = Math.max(...Object.values(stems).map(b => b.duration));
+  const trimS = trimBeatsToSecs(block.trimStart);
+  const trimE = trimBeatsToSecs(block.trimEnd);
+  const len   = Math.max(0, full - trimS - trimE);
+  return { lead: block.trimMode === 'silence' ? trimS : 0, srcStart: trimS, len };
 }
 
 // Total beats in a loop based on its duration and global BPM
@@ -3694,7 +3749,7 @@ function renderLibrary() {
 // ARRANGEMENT MANAGEMENT
 // ============================================================
 function makeBlock(section, loop) {
-  return { id: uid(), section, loop, trimStart: 0, trimEnd: 0, mix: {} };
+  return { id: uid(), section, loop, trimStart: 0, trimEnd: 0, trimMode: 'cut', mix: {} };
 }
 
 function addToArrangement(section, loop) {
@@ -3823,7 +3878,7 @@ async function serializeSong({ includeAudio }) {
     loopMeta: state.loopMeta,
     arrangement: state.arrangement.map(b => ({
       id: b.id, section: b.section, loop: b.loop,
-      trimStart: b.trimStart, trimEnd: b.trimEnd,
+      trimStart: b.trimStart, trimEnd: b.trimEnd, trimMode: b.trimMode || 'cut',
       mix: b.mix || {}
     })),
     reference: null,
@@ -3837,7 +3892,11 @@ async function serializeSong({ includeAudio }) {
   // same file to restore them); a bundle embeds the audio too.
   const ref = state.reference || state.pendingReference;
   if (ref) {
-    song.reference = { name: ref.name, offset: ref.offset, gain: ref.gain, muted: ref.muted, audio: null };
+    song.reference = {
+      name: ref.name, offset: ref.offset, gain: ref.gain, muted: ref.muted,
+      pairs: (ref.pairs || []).map(p => ({ vol: p.vol, mute: p.mute })),
+      audio: null
+    };
     if (includeAudio && state.reference) {
       updateOverlay(0, `Encoding reference ${ref.name}`);
       song.reference.audio = arrayBufferToBase64(await audioBufferToWav(state.reference.buffer).arrayBuffer());
@@ -3975,6 +4034,7 @@ async function importSong(file) {
       loop: b.loop,
       trimStart: b.trimStart || 0,
       trimEnd: b.trimEnd || 0,
+      trimMode: b.trimMode === 'silence' ? 'silence' : 'cut',
       mix: sanitizeMix(b.mix)
     }));
 
@@ -3993,7 +4053,8 @@ async function importSong(file) {
       const settings = {
         offset: Number(songRef.offset) || 0,
         gain: isFinite(songRef.gain) ? Math.max(0, Math.min(100, Number(songRef.gain))) : 80,
-        muted: !!songRef.muted
+        muted: !!songRef.muted,
+        pairs: Array.isArray(songRef.pairs) ? songRef.pairs : []
       };
       if (songRef.audio) {
         const ctx = ensureAudioCtx();
@@ -4001,7 +4062,15 @@ async function importSong(file) {
         const buffer = await ctx.decodeAudioData(base64ToArrayBuffer(songRef.audio));
         setReference(songRef.name, buffer, settings);
       } else if (state.reference && state.reference.name === songRef.name) {
-        Object.assign(state.reference, settings);
+        const { pairs: savedPairs, ...rest } = settings;
+        Object.assign(state.reference, rest);
+        savedPairs.forEach((saved, i) => {
+          const pair = state.reference.pairs[i];
+          if (!pair || !saved || typeof saved !== 'object') return;
+          const vol = Number(saved.vol);
+          pair.vol  = isFinite(vol) ? Math.max(0, Math.min(100, vol)) : MIX_UNITY;
+          pair.mute = !!saved.mute;
+        });
       } else {
         state.reference = null;
         state.pendingReference = { name: songRef.name, ...settings };
@@ -4052,6 +4121,17 @@ function updateTrim(id, side, delta) {
   if (state.editBlockId === id) renderBlockEditor();
 }
 
+// Cut: trimmed beats are removed and the block shortens. Silence: the block
+// keeps its full length and the trimmed beats play as silence.
+function setTrimMode(id, mode) {
+  const block = state.arrangement.find(b => b.id === id);
+  if (!block || block.trimMode === mode) return;
+  block.trimMode = mode === 'silence' ? 'silence' : 'cut';
+  if (state.isPlaying) pause();
+  renderArrangement();
+  if (state.editBlockId === id) renderBlockEditor();
+}
+
 function buildTimeline(block, totalBeats) {
   const bpb      = state.beatsPerBar;
   const segCount = Math.min(totalBeats, 64);
@@ -4061,12 +4141,14 @@ function buildTimeline(block, totalBeats) {
     const beatPos    = i * ratio;
     const isMuted    = (beatPos < block.trimStart) || (beatPos >= totalBeats - block.trimEnd);
     const isBarStart = (Math.round(beatPos) % bpb === 0) && ((beatPos % ratio) < ratio * 0.5);
-    html += `<div class="crop-seg ${isMuted ? 'seg-muted' : 'seg-active'}${isBarStart ? ' seg-bar' : ''}"></div>`;
+    const offClass   = block.trimMode === 'silence' ? 'seg-muted seg-silence' : 'seg-muted';
+    html += `<div class="crop-seg ${isMuted ? offClass : 'seg-active'}${isBarStart ? ' seg-bar' : ''}"></div>`;
   }
   return html;
 }
 
-// The 5px strip on a song-lane block: up to 32 segments, trimmed ones tinted.
+// The 5px strip on a song-lane block: up to 32 segments, trimmed ones tinted
+// (cut) or hatched (filled with silence).
 function buildMiniStrip(block) {
   const totalBeats = loopTotalBeats(block.section, block.loop);
   const segCount   = Math.max(1, Math.min(Math.round(totalBeats), 32));
@@ -4075,7 +4157,7 @@ function buildMiniStrip(block) {
   for (let i = 0; i < segCount; i++) {
     const beatPos = i * ratio;
     const off = beatPos < block.trimStart || beatPos >= totalBeats - block.trimEnd;
-    html += off ? '<div class="off"></div>' : '<div></div>';
+    html += !off ? '<div></div>' : block.trimMode === 'silence' ? '<div class="off sil"></div>' : '<div class="off"></div>';
   }
   return html;
 }
@@ -4192,7 +4274,9 @@ function renderSongLane() {
         <div class="sa-block-inner">
           <div class="sa-block-top">
             <span class="sa-block-num">${String(idx + 1).padStart(2, '0')}</span>
-            ${isTrimmed ? '<span class="sa-tag" title="Trimmed">✂</span>' : ''}
+            ${!isTrimmed ? '' : block.trimMode === 'silence'
+              ? '<span class="sa-tag" title="Trimmed — filled with silence">✂ SIL</span>'
+              : '<span class="sa-tag" title="Trimmed">✂</span>'}
             ${isMixed ? '<span class="sa-tag sa-tag-mix" title="Stem mix changed">MIX</span>' : ''}
           </div>
           <div class="sa-block-mid">
@@ -4277,8 +4361,12 @@ function renderReferenceControls() {
   $('#ref-import-btn').textContent = ref ? 'Replace' : 'Import';
   const pending = state.pendingReference;
   const nameEl = $('#ref-name');
-  nameEl.textContent = ref ? ref.name : pending ? `Re-import ${pending.name}` : 'No reference loaded';
+  const pairCount = ref?.pairs.length || 0;
+  nameEl.textContent = ref ? `${ref.name}${pairCount > 1 ? ` · ${pairCount} pairs` : ''}`
+    : pending ? `Re-import ${pending.name}` : 'No reference loaded';
   nameEl.title = nameEl.textContent;
+  $('#ref-mix-btn').disabled = !ref;
+  $('#ref-mix-btn').classList.toggle('on', isReferenceMixed(ref));
   $('#ref-mute-btn').disabled = !ref;
   $('#ref-mute-btn').classList.toggle('on', !!ref?.muted);
   $('#ref-vol').disabled = !ref;
@@ -4309,17 +4397,22 @@ function setZoom(pps) {
 // ============================================================
 // An audio file to listen to beside the song while placing loops. It plays in
 // the same transport as the stems but is never exported.
+// Peaks across every channel, so a multi-pair file's single waveform shows
+// the whole mix.
 function computePeaks(buffer) {
-  const ch  = buffer.getChannelData(0);
+  const chans = [];
+  for (let c = 0; c < buffer.numberOfChannels; c++) chans.push(buffer.getChannelData(c));
   const per = Math.max(1, Math.floor(buffer.sampleRate / 20)); // 20 peaks per second
-  const peaks = new Float32Array(Math.ceil(ch.length / per));
+  const peaks = new Float32Array(Math.ceil(buffer.length / per));
   let max = 0;
   for (let p = 0; p < peaks.length; p++) {
     let m = 0;
-    const end = Math.min((p + 1) * per, ch.length);
-    for (let i = p * per; i < end; i += 4) {
-      const v = Math.abs(ch[i]);
-      if (v > m) m = v;
+    const end = Math.min((p + 1) * per, buffer.length);
+    for (const ch of chans) {
+      for (let i = p * per; i < end; i += 4) {
+        const v = Math.abs(ch[i]);
+        if (v > m) m = v;
+      }
     }
     peaks[p] = m;
     if (m > max) max = m;
@@ -4343,8 +4436,50 @@ async function loadReference(file) {
     toast('Could not decode that reference file', 'error');
     return;
   }
+  if (buffer.numberOfChannels > REF_MAX_CHANNELS) {
+    toast(`A reference can have up to ${REF_MAX_CHANNELS} channels (6 stereo pairs) — this file has ${buffer.numberOfChannels}`, 'error');
+    return;
+  }
   setReference(file.name, buffer);
-  toast(`Reference loaded · ${fmtTime(buffer.duration)}`, 'success');
+  const pairs = state.reference.pairs.length;
+  toast(`Reference loaded · ${fmtTime(buffer.duration)}${pairs > 1 ? ` · ${pairs} pairs` : ''}`, 'success');
+}
+
+// ---------- Reference pairs ----------
+// A reference can be an interleaved multi-channel WAV of up to 6 stereo pairs
+// (the Multi-Channel tool's layout): channels 1-2 are pair 1, 3-4 pair 2, …
+// An odd last channel is a mono pair played on both sides. Each pair has its
+// own volume (0..100, 80 = 0 dB like the block mix) and mute.
+const REF_MAX_CHANNELS = 12;
+
+function referencePairs(numChannels) {
+  const pairs = [];
+  for (let c = 0; c < numChannels; c += 2) {
+    const mono = c + 1 >= numChannels;
+    pairs.push({
+      label: mono ? `ch ${c + 1} (mono)` : `Pair ${pairs.length + 1} · ch ${c + 1}–${c + 2}`,
+      channels: mono ? [c, c] : [c, c + 1],
+      vol: MIX_UNITY,
+      mute: false
+    });
+  }
+  return pairs;
+}
+
+function refPairGain(pair) {
+  return pair.mute ? 0 : pair.vol / MIX_UNITY;
+}
+
+function isReferenceMixed(ref) {
+  return !!ref && ref.pairs.some(p => p.mute || p.vol !== MIX_UNITY);
+}
+
+// Push pair volumes/mutes into the live graph.
+function applyRefPairGains() {
+  const ref = fileReference();
+  state.refPairGains.forEach((g, i) => {
+    if (g && ref?.pairs[i]) g.gain.value = refPairGain(ref.pairs[i]);
+  });
 }
 
 // settings: { offset, gain, muted } from a song file. Without them, settings
@@ -4353,11 +4488,20 @@ async function loadReference(file) {
 function setReference(name, buffer, settings) {
   const pending = state.pendingReference?.name === name ? state.pendingReference : null;
   const s = settings || pending || {};
+  const pairs = referencePairs(buffer.numberOfChannels);
+  // Saved pair settings are matched by position.
+  (Array.isArray(s.pairs) ? s.pairs : []).forEach((saved, i) => {
+    if (!pairs[i] || !saved || typeof saved !== 'object') return;
+    const vol = Number(saved.vol);
+    pairs[i].vol  = isFinite(vol) ? Math.max(0, Math.min(100, vol)) : MIX_UNITY;
+    pairs[i].mute = !!saved.mute;
+  });
   state.reference = {
     name,
     buffer,
     peaks: computePeaks(buffer),
     duration: buffer.duration,
+    pairs,
     gain: s.gain ?? state.reference?.gain ?? 80,
     muted: s.muted ?? false,
     offset: s.offset ?? 0
@@ -4516,6 +4660,7 @@ function setRefSource(src) {
     return;
   }
   if (state.isPlaying) stop();
+  closeRefMixer();
   state.refSource = src;
   renderArrangement();
 }
@@ -4634,6 +4779,57 @@ function initOutputPicker() {
 }
 
 // ============================================================
+// REFERENCE MIXER POP-UP (volume + mute per stereo pair)
+// ============================================================
+function openRefMixer() {
+  if (!fileReference()) return;
+  renderRefMixer();
+  $('#ref-mixer').classList.add('active');
+}
+
+function closeRefMixer() {
+  $('#ref-mixer').classList.remove('active');
+}
+
+function isRefMixerOpen() {
+  return $('#ref-mixer').classList.contains('active');
+}
+
+function renderRefMixer() {
+  const ref = fileReference();
+  if (!ref) { closeRefMixer(); return; }
+  const allMuted = ref.pairs.every(p => p.mute);
+  const rows = ref.pairs.map((pair, i) => `
+    <div class="sa-stem-row${pair.mute ? ' muted' : ''}">
+      <div class="sa-stem-name" title="${escHtml(pair.label)}">${escHtml(pair.label)}</div>
+      <button class="sa-m-btn${pair.mute ? ' on' : ''}" data-action="mute-pair" data-pair="${i}" title="Mute ${escHtml(pair.label)}">M</button>
+      <input type="range" min="0" max="100" value="${pair.vol}" data-pair="${i}" title="${escHtml(pair.label)} volume">
+      <div class="sa-stem-db">${fmtMixDb(pair)}</div>
+    </div>`).join('');
+  const n = ref.buffer.numberOfChannels;
+  $('#ref-mixer-dialog').innerHTML = `
+    <div class="sa-ed-head">
+      <div class="sa-ed-section">Reference</div>
+      <div class="sa-ed-num">${escHtml(ref.name)}</div>
+      <div class="sa-ed-dur">${n} ch · ${ref.pairs.length} pair${ref.pairs.length === 1 ? '' : 's'}</div>
+      <button class="sa-ed-close" data-action="close" title="Close (Esc)">✕</button>
+    </div>
+    <div class="sa-ed-section-body stems">
+      <div class="sa-ed-row-head">
+        <div class="panel-title">Pairs</div>
+        <div class="panel-meta">Up to 6 stereo pairs</div>
+        <button class="btn btn-ghost sa-ghost-sm" data-action="mute-all">${allMuted ? 'Unmute all' : 'Mute all'}</button>
+        <button class="btn btn-ghost sa-ghost-sm" data-action="reset">Reset</button>
+      </div>
+      <div>${rows}</div>
+    </div>
+    <div class="sa-ed-foot">
+      <div class="panel-meta">For listening only — never exported</div>
+      <button class="btn btn-primary" data-action="close">Done</button>
+    </div>`;
+}
+
+// ============================================================
 // BLOCK EDITOR POP-UP (trim + per-block stem mix)
 // ============================================================
 function openBlockEditor(id) {
@@ -4690,7 +4886,11 @@ function renderBlockEditor() {
     <div class="sa-ed-section-body">
       <div class="sa-ed-row-head">
         <div class="panel-title">Trim</div>
-        <div class="panel-meta">Shift+click = 1 bar</div>
+        <div class="panel-meta sa-trim-mode-label">Trimmed part</div>
+        <div class="sa-seg sa-trim-mode" title="Cut shortens the block; Silence keeps its length and plays the trimmed beats as silence">
+          <button data-action="trim-mode" data-mode="cut" class="${block.trimMode !== 'silence' ? 'on' : ''}">Cut</button>
+          <button data-action="trim-mode" data-mode="silence" class="${block.trimMode === 'silence' ? 'on' : ''}">Silence</button>
+        </div>
       </div>
       <div class="sa-ed-trim">
         <div class="crop-side">
@@ -4712,9 +4912,12 @@ function renderBlockEditor() {
         </div>
       </div>
       <div class="crop-info">
-        ${isTrimmed
-          ? `<span class="kept">${formatBeats(keptBeats)}</span> kept · ${fmtTime(dur)}`
-          : `Full loop · ${loopBarsLabel(block.section, block.loop)} · ${fmtTime(getSectionDuration(block.section, block.loop))}`}
+        ${!isTrimmed
+          ? `Full loop · ${loopBarsLabel(block.section, block.loop)} · ${fmtTime(getSectionDuration(block.section, block.loop))}`
+          : block.trimMode === 'silence'
+            ? `<span class="kept">${formatBeats(keptBeats)}</span> kept · ${formatBeats(block.trimStart + block.trimEnd)} silent · ${fmtTime(dur)}`
+            : `<span class="kept">${formatBeats(keptBeats)}</span> kept · ${fmtTime(dur)}`}
+        · Shift+click = 1 bar
       </div>
     </div>
 
@@ -4787,8 +4990,10 @@ function play(offsetSec = state.cursor, { stopAt = null, soloId = null } = {}) {
     cursor += blockDur;
     const stems = state.stems[block.section]?.[block.loop];
     if (!stems || blockDur <= 0) continue;
-    const from = Math.max(blockStart, offsetSec);
-    const to   = Math.min(cursor, endAt);
+    const win      = blockAudioWindow(block);
+    const winStart = blockStart + win.lead;
+    const from = Math.max(winStart, offsetSec);
+    const to   = Math.min(winStart + win.len, endAt);
     if (to - from <= 0) continue; // entirely before the seek point or after the stop point
 
     const gains = new Map();
@@ -4799,7 +5004,7 @@ function play(offsetSec = state.cursor, { stopAt = null, soloId = null } = {}) {
       const src = ctx.createBufferSource();
       src.buffer = buffer;
       src.connect(g);
-      src.start(startAt + (from - offsetSec), trimBeatsToSecs(block.trimStart) + (from - blockStart), to - from);
+      src.start(startAt + (from - offsetSec), win.srcStart + (from - winStart), to - from);
       state.scheduledSources.push(src);
       gains.set(stem, g);
     }
@@ -4816,7 +5021,20 @@ function play(offsetSec = state.cursor, { stopAt = null, soloId = null } = {}) {
     if (to - from > 0) {
       const src = ctx.createBufferSource();
       src.buffer = ref.buffer;
-      src.connect(state.refGainNode);
+      // source → splitter → per pair: merger(L, R) → pair gain → reference bus
+      const n = ref.buffer.numberOfChannels;
+      const splitter = ctx.createChannelSplitter(n);
+      src.connect(splitter);
+      state.refPairGains = ref.pairs.map(pair => {
+        const merger = ctx.createChannelMerger(2);
+        splitter.connect(merger, pair.channels[0], 0);
+        splitter.connect(merger, pair.channels[1], 1);
+        const g = ctx.createGain();
+        g.gain.value = refPairGain(pair);
+        merger.connect(g);
+        g.connect(state.refGainNode);
+        return g;
+      });
       src.start(startAt + (from - offsetSec), from - ref.offset, to - from);
       state.scheduledSources.push(src);
     }
@@ -4874,6 +5092,8 @@ function haltPlayback() {
   });
   state.scheduledSources = [];
   [state.songBus, state.refGainNode].forEach(n => { if (n) n.disconnect(); });
+  state.refPairGains.forEach(g => g.disconnect());
+  state.refPairGains = [];
   state.songBus = null;
   state.refGainNode = null;
   state.liveGains = new Map();
@@ -5094,12 +5314,11 @@ async function renderInstrumentArrangement(instrument, numChannels, totalSamples
   let cursor = 0;
   for (const block of state.arrangement) {
     const stems         = state.stems[block.section]?.[block.loop];
-    const trimStartSecs = trimBeatsToSecs(block.trimStart);
     const blockDur      = getBlockDuration(block);
-
+    const win           = blockAudioWindow(block);
     const gain          = stemGain(block, instrument);
 
-    if (stems && stems[instrument] && blockDur > 0 && gain > 0) {
+    if (stems && stems[instrument] && win.len > 0 && gain > 0) {
       const src = offlineCtx.createBufferSource();
       src.buffer = stems[instrument];
       if (gain === 1) {
@@ -5110,7 +5329,7 @@ async function renderInstrumentArrangement(instrument, numChannels, totalSamples
         src.connect(g);
         g.connect(offlineCtx.destination);
       }
-      src.start(cursor, trimStartSecs, blockDur);
+      src.start(cursor + win.lead, win.srcStart, win.len);
     }
     cursor += blockDur;
   }
@@ -7896,7 +8115,65 @@ $('#tp7-sync-inc').addEventListener('click', e => nudgeTp7Sync(e.shiftKey ? 50 :
 // Audio output device (e.g. the TP-7 as a USB audio interface).
 $('#output-select').addEventListener('change', e => setOutputDevice(e.target.value));
 initOutputPicker();
+
+// Monochrome by default; the Colour toggle brings the section hues back.
+const COLOUR_STORE_KEY = 'audioTools.stemArrangerColour';
+function setColourful(on) {
+  state.colorful = !!on;
+  document.body.classList.toggle('sa-mono', !state.colorful);
+  $('#colour-btn').classList.toggle('on', state.colorful);
+  try { localStorage.setItem(COLOUR_STORE_KEY, state.colorful ? '1' : '0'); } catch (e) {}
+}
+$('#colour-btn').addEventListener('click', () => setColourful(!state.colorful));
+let savedColour = null;
+try { savedColour = localStorage.getItem(COLOUR_STORE_KEY); } catch (e) {}
+setColourful(savedColour === '1');
 renderTp7Controls();
+
+// Reference mixer pop-up. Backdrop click or Esc closes it.
+$('#ref-mix-btn').addEventListener('click', openRefMixer);
+$('#ref-mixer').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeRefMixer();
+});
+const refMixerDialog = $('#ref-mixer-dialog');
+refMixerDialog.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-action]');
+  const ref = fileReference();
+  if (!btn || !ref) return;
+  switch (btn.dataset.action) {
+    case 'close':
+      closeRefMixer();
+      return;
+    case 'mute-pair': {
+      const pair = ref.pairs[parseInt(btn.dataset.pair, 10)];
+      if (pair) pair.mute = !pair.mute;
+      break;
+    }
+    case 'mute-all': {
+      const mute = !ref.pairs.every(p => p.mute);
+      ref.pairs.forEach(p => { p.mute = mute; });
+      break;
+    }
+    case 'reset':
+      ref.pairs.forEach(p => { p.vol = MIX_UNITY; p.mute = false; });
+      break;
+  }
+  applyRefPairGains();
+  renderRefMixer();
+  renderReferenceControls();
+});
+// Volume drags update the readout and live gain without re-rendering.
+refMixerDialog.addEventListener('input', e => {
+  if (!e.target.matches('input[type=range][data-pair]')) return;
+  const pair = fileReference()?.pairs[parseInt(e.target.dataset.pair, 10)];
+  if (!pair) return;
+  pair.vol = parseInt(e.target.value, 10);
+  applyRefPairGains();
+  e.target.closest('.sa-stem-row').querySelector('.sa-stem-db').textContent = fmtMixDb(pair);
+});
+refMixerDialog.addEventListener('change', e => {
+  if (e.target.matches('input[type=range][data-pair]')) renderReferenceControls();
+});
 
 // Block editor pop-up. Backdrop click or Esc closes it.
 $('#block-editor').addEventListener('click', e => {
@@ -7917,6 +8194,9 @@ editorDialog.addEventListener('click', e => {
       updateTrim(block.id, btn.dataset.side, parseInt(btn.dataset.d, 10) * step);
       return;
     }
+    case 'trim-mode':
+      setTrimMode(block.id, btn.dataset.mode);
+      return;
     case 'mute-stem':
       setStemMix(block, btn.dataset.stem, { mute: !stemMix(block, btn.dataset.stem).mute });
       break;
@@ -7956,6 +8236,7 @@ editorDialog.addEventListener('input', e => {
 
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && isRefMixerOpen()) { closeRefMixer(); return; }
   if (e.key === 'Escape' && state.editBlockId) { closeBlockEditor(); return; }
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.code === 'Space') {
