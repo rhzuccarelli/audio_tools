@@ -2717,6 +2717,231 @@ header {
   .arrangement-meta { gap: 16px; }
   .header-actions .btn { padding: 7px 11px; }
 }
+
+/* ========== CHANNEL ALIGN ==========
+   Measure and correct the time offset between the stereo pairs of a
+   multi-channel WAV. Overview lanes on top (one per pair, drag to slip),
+   a sample-level loupe at the bottom to compare two transients. Own .al-*
+   namespace; generic pieces (.btn, .panel-header, .meta-*) are shared. */
+.al-app {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+.al-app.active { display: flex; }
+
+.al-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--paper);
+}
+.al-panel.drag-over-import { background: #e9e7e2; }
+
+.al-controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+/* ---- Toolbar (transport, zoom, export) ---- */
+.al-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 26px;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.al-toolbar .btn { padding: 6px 10px; }
+.al-tb-group { display: flex; align-items: center; gap: 6px; }
+.al-tb-sep { width: 1px; align-self: stretch; background: var(--hairline); margin: 0 4px; }
+.al-lbl {
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.al-pos {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  min-width: 150px;
+}
+.al-pos small { color: var(--muted); font-size: 9.5px; }
+.al-spacer { flex: 1; }
+.al-select, .al-num, .al-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: 4px 6px;
+  height: 24px;
+}
+.al-select:hover, .al-num:hover, .al-text:hover { border-color: var(--ink); }
+.al-select:focus, .al-num:focus, .al-text:focus { outline: none; border-color: var(--ink); }
+.al-num { width: 86px; text-align: right; font-variant-numeric: tabular-nums; }
+.al-num::-webkit-inner-spin-button, .al-num::-webkit-outer-spin-button { -webkit-appearance: none; }
+.al-text { width: 190px; }
+
+.al-sq {
+  height: 24px;
+  min-width: 24px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.al-sq:hover:not(:disabled) { border-color: var(--ink); }
+.al-sq.is-on { background: var(--ink); color: var(--ink-invert); border-color: var(--ink); }
+.al-sq:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ---- Overview: ruler + one lane per pair ---- */
+.al-overview {
+  flex: 1 1 auto;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+}
+.al-ruler-row { display: flex; height: 22px; flex-shrink: 0; border-bottom: 1px solid var(--hairline); }
+.al-ruler-pad {
+  width: 360px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+.al-ruler { flex: 1; min-width: 0; height: 22px; display: block; cursor: pointer; }
+
+.al-lanes { flex: 1; min-height: 0; overflow-y: auto; position: relative; }
+.al-lane {
+  display: flex;
+  min-height: 72px;
+  height: calc((100% - 1px) / var(--al-lanes, 2));
+  border-bottom: 1px solid var(--hairline);
+}
+.al-lane.drag-over-file { background: #e9e7e2; }
+.al-lane.is-dim .al-wave { opacity: 0.35; }
+.al-lane-ctl {
+  width: 360px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--rule);
+  padding: 4px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  overflow: hidden;
+}
+.al-lane-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.al-lane-num { font-size: 10px; font-weight: 700; width: 20px; flex-shrink: 0; }
+.al-lane-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink);
+  padding: 2px 4px;
+}
+.al-lane-name:hover, .al-lane-name:focus { border-color: var(--rule); outline: none; }
+.al-lane .al-sq { height: 22px; min-width: 22px; font-size: 9.5px; padding: 0 5px; }
+.al-lane .al-num { height: 22px; width: 92px; }
+.al-lane-unit { font-size: 8.5px; color: var(--muted); width: 22px; text-transform: uppercase; letter-spacing: 0.06em; }
+.al-lane-alt { font-size: 8.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 24px; }
+.al-lane-gap { flex: 1; }
+.al-ab-a.is-on, .al-ab-b.is-on { font-weight: 700; }
+
+.al-wave-wrap { flex: 1; min-width: 0; position: relative; }
+.al-wave { width: 100%; height: 100%; display: block; cursor: grab; }
+.al-wave.is-slipping { cursor: grabbing; }
+
+.al-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ink);
+  pointer-events: none;
+  display: none;
+  z-index: 1;
+}
+
+/* ---- Loupe ---- */
+.al-loupe {
+  flex: 0 0 auto;
+  height: 44%;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.al-loupe-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 26px;
+  border-bottom: 1px solid var(--hairline);
+  flex-wrap: wrap;
+}
+.al-loupe-title {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 6px;
+}
+.al-loupe-title svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+.al-span { font-size: 10px; font-variant-numeric: tabular-nums; min-width: 140px; text-align: center; }
+.al-loupe-body { flex: 1; min-height: 0; display: flex; }
+.al-loupe-canvas-wrap { flex: 1; min-width: 0; position: relative; }
+.al-loupe-canvas { width: 100%; height: 100%; display: block; cursor: crosshair; outline: none; }
+.al-loupe-canvas:focus-visible { box-shadow: inset 0 0 0 1px var(--ink); }
+.al-loupe-canvas.is-panning { cursor: grabbing; }
+.al-loupe-canvas.is-over-marker { cursor: ew-resize; }
+
+.al-meas {
+  width: 330px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--rule);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+.al-meas-block { display: flex; flex-direction: column; gap: 5px; }
+.al-meas-block + .al-meas-block { border-top: 1px solid var(--hairline); padding-top: 8px; }
+.al-meas-h { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+.al-meas-line { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; font-variant-numeric: tabular-nums; }
+.al-meas-line span:first-child { color: var(--muted); }
+.al-meas-big {
+  font-family: var(--font-grot);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.al-meas-sub { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.al-meas-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.al-meas-btns .btn { padding: 6px 8px; font-size: 9px; letter-spacing: 0.1em; flex: 1; }
+.al-hint { font-size: 9px; line-height: 1.5; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -2725,7 +2950,7 @@ header {
   <div class="logo" id="home-link" role="button" tabindex="0" title="Back to modules">
     <span class="square"></span>
     <span class="brand-name">Audio Tools</span>
-    <span class="logo-tag">Rev 5.2</span>
+    <span class="logo-tag">Rev 5.3</span>
   </div>
   <div class="header-actions">
     <!-- No cross-app switcher: inside a tool, use the logo to return to the
@@ -3070,6 +3295,167 @@ header {
   </section>
 </div>
 
+<!-- Channel Align -->
+<div class="al-app" id="al-app">
+  <section class="al-panel" id="al-panel">
+    <div class="panel-header">
+      <div class="panel-title">Channel Align</div>
+      <div class="al-controls">
+        <div class="bpb-control">
+          <span class="bpb-label">Stereo Pairs</span>
+          <select id="al-pair-count" class="bpb-select">
+            <option value="1">1 · 2ch</option>
+            <option value="2" selected>2 · 4ch</option>
+            <option value="3">3 · 6ch</option>
+            <option value="4">4 · 8ch</option>
+            <option value="5">5 · 10ch</option>
+            <option value="6">6 · 12ch</option>
+          </select>
+        </div>
+        <div class="bpb-control">
+          <span class="bpb-label">Units</span>
+          <div class="mc-seg" id="al-unit" role="group" aria-label="Offset units">
+            <button type="button" class="mc-seg-btn is-on" data-unit="samples">Samples</button>
+            <button type="button" class="mc-seg-btn" data-unit="ms">ms</button>
+          </div>
+        </div>
+        <button id="al-import-btn" class="btn btn-ghost">Import Multi-Channel WAV</button>
+      </div>
+      <div class="arrangement-meta">
+        <div class="meta-item">
+          <div class="meta-label">Channels</div>
+          <div class="meta-value" id="al-meta-channels">4</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Sample Rate</div>
+          <div class="meta-value" id="al-meta-rate">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Length</div>
+          <div class="meta-value accent" id="al-meta-length">0:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="al-toolbar">
+      <div class="al-tb-group">
+        <button id="al-play-btn" class="al-sq" disabled title="Play / stop from the cursor (Space)">▶ Play</button>
+        <button id="al-stop-btn" class="al-sq" title="Stop and return to the cursor">■</button>
+        <span class="al-pos" id="al-pos">0:00.000 <small>· 0 smp</small></span>
+      </div>
+      <div class="al-tb-sep"></div>
+      <div class="al-tb-group">
+        <span class="al-lbl">Zoom</span>
+        <button id="al-zoom-out" class="al-sq" title="Zoom out (Ctrl/Alt + wheel on the lanes)">−</button>
+        <button id="al-zoom-in" class="al-sq" title="Zoom in (Ctrl/Alt + wheel on the lanes)">+</button>
+        <button id="al-zoom-fit" class="al-sq" title="Fit the whole file">Fit</button>
+      </div>
+      <div class="al-tb-sep"></div>
+      <div class="al-tb-group">
+        <span class="al-lbl">Nudge step</span>
+        <select id="al-step" class="al-select" title="How far the ‹ › buttons move a pair (‹‹ ›› move 10×)">
+          <option value="s1" selected>1 sample</option>
+          <option value="s10">10 samples</option>
+          <option value="m0.1">0.1 ms</option>
+          <option value="m1">1 ms</option>
+          <option value="m10">10 ms</option>
+        </select>
+      </div>
+      <div class="al-spacer"></div>
+      <div class="al-tb-group">
+        <button id="al-copy-btn" class="al-sq" disabled title="Copy every pair's offset to the clipboard">Copy offsets</button>
+        <input id="al-export-name" class="al-text" type="text" value="aligned_mix.wav" spellcheck="false" title="Export filename">
+        <button id="al-export-btn" class="btn btn-primary" disabled title="Write the multi-channel WAV with every offset applied">Export Aligned WAV</button>
+      </div>
+    </div>
+
+    <div class="al-overview">
+      <div class="al-ruler-row">
+        <div class="al-ruler-pad"><span class="al-lbl">Drag wave: slip · click: aim loupe</span></div>
+        <canvas class="al-ruler" id="al-ruler" title="Click to move the cursor and loupe here"></canvas>
+      </div>
+      <div class="al-lanes" id="al-lanes"></div>
+    </div>
+
+    <div class="al-loupe">
+      <div class="al-loupe-head">
+        <div class="al-loupe-title">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="6.5"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Loupe
+        </div>
+        <span class="al-lbl">A</span>
+        <select id="al-sel-a" class="al-select" title="Signal A (the reference)"></select>
+        <span class="al-lbl">B</span>
+        <select id="al-sel-b" class="al-select" title="Signal B (the one that gets moved)"></select>
+        <div class="al-tb-sep"></div>
+        <button id="al-lz-out" class="al-sq" title="Widen the loupe (wheel)">−</button>
+        <span class="al-span" id="al-span">—</span>
+        <button id="al-lz-in" class="al-sq" title="Magnify (wheel)">+</button>
+        <div class="al-tb-sep"></div>
+        <div class="mc-seg" id="al-view-mode" role="group" aria-label="Loupe layout">
+          <button type="button" class="mc-seg-btn is-on" data-view="stack" title="A above, B below">Stack</button>
+          <button type="button" class="mc-seg-btn" data-view="overlay" title="A and B drawn on top of each other">Overlay</button>
+        </div>
+        <button id="al-norm" class="al-sq is-on" title="Scale each signal to its own peak inside the loupe">Norm</button>
+        <button id="al-invert" class="al-sq" title="Flip the polarity of B (display and correlation)">Ø B</button>
+        <button id="al-snap" class="al-sq is-on" title="Clicking near a transient snaps the marker to its onset">Snap</button>
+        <span class="al-lbl">Thr</span>
+        <select id="al-thr" class="al-select" title="Onset threshold, relative to each signal's peak in the loupe">
+          <option value="0.02">2%</option>
+          <option value="0.05">5%</option>
+          <option value="0.1" selected>10%</option>
+          <option value="0.2">20%</option>
+          <option value="0.3">30%</option>
+          <option value="0.5">50%</option>
+        </select>
+      </div>
+      <div class="al-loupe-body">
+        <div class="al-loupe-canvas-wrap">
+          <canvas class="al-loupe-canvas" id="al-loupe-canvas" tabindex="0"></canvas>
+        </div>
+        <div class="al-meas">
+          <div class="al-meas-block">
+            <div class="al-meas-h">
+              <span>Markers · B − A</span>
+              <span class="mc-seg" id="al-mark-pick" role="group" aria-label="Marker placed by a click">
+                <button type="button" class="mc-seg-btn is-on" data-mark="A">Set A</button>
+                <button type="button" class="mc-seg-btn" data-mark="B">Set B</button>
+              </span>
+            </div>
+            <div class="al-meas-big" id="al-mk-delta">—</div>
+            <div class="al-meas-sub" id="al-mk-delta-alt">Click the A transient, then the B transient</div>
+            <div class="al-meas-line"><span>A</span><span id="al-mk-a">—</span></div>
+            <div class="al-meas-line"><span>B</span><span id="al-mk-b">—</span></div>
+            <div class="al-meas-btns">
+              <button id="al-onsets-btn" class="btn btn-ghost" title="Place both markers on the first threshold crossing inside the loupe">Detect onsets</button>
+              <button id="al-mk-clear" class="btn btn-ghost">Clear</button>
+            </div>
+            <div class="al-meas-btns">
+              <button id="al-mk-align" class="btn btn-primary" disabled title="Move B's pair so its marker lands on A's">Align B → A</button>
+            </div>
+          </div>
+          <div class="al-meas-block">
+            <div class="al-meas-h"><span>Cross-correlation</span></div>
+            <div class="al-meas-big" id="al-xc-delta">—</div>
+            <div class="al-meas-sub" id="al-xc-sub">Compares the whole loupe window, to a fraction of a sample</div>
+            <div class="al-meas-btns">
+              <button id="al-xc-btn" class="btn btn-ghost" title="Find the lag between A and B over the loupe window">Correlate</button>
+              <button id="al-xc-align" class="btn btn-primary" disabled title="Move B's pair by the correlated lag (rounded to whole samples)">Align B → A</button>
+            </div>
+          </div>
+          <div class="al-hint">
+            Wheel: magnify · Shift+wheel or drag: pan · drag a marker to move it ·
+            ← / → slip pair B by one step (Shift ×10) · A / B pick the marker.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<input type="file" id="al-import-input" accept="audio/wav,audio/x-wav,.wav" style="display:none" />
+<input type="file" id="al-track-input" accept="audio/*" style="display:none" />
+
 <!-- Hidden file input -->
 <input type="file" id="file-input" webkitdirectory directory multiple style="display:none" />
 <input type="file" id="song-input" accept=".json,application/json" style="display:none" />
@@ -3161,6 +3547,17 @@ const TOOLS = [
       if (ddState.playingDeckId === deck.id) ddStop();
       else ddPlayDeck(deck, deck.cursor);
     },
+  },
+  {
+    id: 'channel-align',
+    name: 'Channel Align',
+    tagline: 'Measure and fix the time offset between the stereo pairs of a multi-channel WAV, down to the sample, with a loupe for transients.',
+    cta: 'Align channels',
+    icon: '<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="8" y1="4" x2="8" y2="11"/><line x1="12" y1="13" x2="12" y2="20"/><path d="M8.5 19 11 16.5"/><path d="M8.5 14 11 16.5"/></svg>',
+    showLoadBtn: false,
+    enter() { $('#al-app').classList.add('active'); requestAnimationFrame(alDrawAll); },
+    leave() { alStop(); $('#al-app').classList.remove('active'); },
+    onSpace() { if (alState.isPlaying) alStop(); else alPlay(); },
   },
 ];
 const TOOLS_BY_ID = Object.fromEntries(TOOLS.map(t => [t.id, t]));
@@ -7724,6 +8121,1447 @@ function ddAnimate() {
     });
   });
 }
+
+// ============================================================
+// CHANNEL ALIGN
+// ============================================================
+// Measures and corrects the time offset between the stereo pairs of a
+// multi-channel WAV (up to 6 pairs, same layout as the Multi-Channel mixer).
+//
+// Sample accuracy matters here, so WAVs are parsed directly (PCM 8/16/24/32,
+// float 32/64, WAVE_FORMAT_EXTENSIBLE, RF64) at their own sample rate rather
+// than through the app's 48 kHz AudioContext, which would resample them. That
+// also lifts the browser's channel cap, so 12-channel files open here.
+//
+// Every pair carries an integer offset in samples: positive = the pair plays
+// later. A timeline sample t of pair p reads that pair's sample t − offset.
+const AL_MAX_PAIRS = 6;
+const AL_PEAK_BLOCK = 256;        // fine peak level (samples per min/max bucket)
+const AL_PEAK_BLOCK2 = 8192;      // coarse peak level
+const AL_SPANS = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576];
+const AL_XCORR_MAX = 131072;      // longest window the correlator analyses
+
+const alState = {
+  tracks: [],            // [{ label, customLabel, fileName, data: [Float32Array L, Float32Array R] | null, length, offset, muted, soloed, peaks, audioBuf }]
+  sampleRate: null,
+  tempo: null,           // ACID tempo of the imported file, re-embedded on export
+  unit: 'samples',       // offset fields: 'samples' | 'ms'
+  view: { start: 0, spp: 0 },   // overview: first visible timeline sample, samples per px (0 = fit on next draw)
+  loupe: {
+    center: 0,           // timeline sample at the loupe centre (fractional)
+    span: 2048,          // samples across the loupe
+    a: '0:L', b: '1:L',  // "pair:channel" — channel L | R | M (L+R)
+    view: 'stack',       // 'stack' | 'overlay'
+    norm: true,
+    invertB: false,
+    snap: true,
+    threshold: 0.1,
+    markA: null, markB: null,   // timeline samples (integers)
+    active: 'A',
+    corr: null,          // { lag, r, key } from the last correlation
+  },
+  isPlaying: false,
+  sources: [],
+  playStartTime: 0,
+  playFrom: 0,           // timeline seconds playback started from
+  cursor: 0,             // timeline seconds (playback start)
+  rafId: null,
+  uploadTarget: null,    // pair index awaiting #al-track-input
+};
+
+// ---------- Formatting ----------
+function alRate() { return alState.sampleRate || 48000; }
+function alSmpToMs(s) { return s * 1000 / alRate(); }
+function alSigned(v, digits = 0) {
+  const s = Math.abs(v) < 0.5 * Math.pow(10, -digits) ? 0 : v;
+  return (s > 0 ? '+' : s < 0 ? '−' : '±') + Math.abs(s).toFixed(digits);
+}
+function alFmtSmp(s, digits = 0) { return `${alSigned(s, digits)} smp`; }
+function alFmtMs(s) { return `${alSigned(alSmpToMs(s), 3)} ms`; }
+function alFmtClock(sec) {
+  const neg = sec < 0;
+  sec = Math.abs(sec);
+  const m = Math.floor(sec / 60);
+  const s = sec - m * 60;
+  return `${neg ? '−' : ''}${m}:${s.toFixed(3).padStart(6, '0')}`;
+}
+
+// ---------- WAV parsing (sample-exact, native rate) ----------
+function alParseWav(ab) {
+  const v = new DataView(ab);
+  const tag = o => String.fromCharCode(v.getUint8(o), v.getUint8(o + 1), v.getUint8(o + 2), v.getUint8(o + 3));
+  if (v.byteLength < 12) return null;
+  const riff = tag(0);
+  if ((riff !== 'RIFF' && riff !== 'RF64') || tag(8) !== 'WAVE') return null;
+
+  let off = 12, fmt = null, data = null, ds64Data = null;
+  while (off + 8 <= v.byteLength) {
+    const id = tag(off);
+    let size = v.getUint32(off + 4, true);
+    if (id === 'ds64' && size >= 24) {
+      ds64Data = v.getUint32(off + 8 + 8, true) + v.getUint32(off + 8 + 12, true) * 4294967296;
+    } else if (id === 'fmt ' && size >= 16) {
+      fmt = {
+        format: v.getUint16(off + 8, true),
+        channels: v.getUint16(off + 10, true),
+        rate: v.getUint32(off + 12, true),
+        bits: v.getUint16(off + 22, true),
+      };
+      if (fmt.format === 0xFFFE && size >= 40) fmt.format = v.getUint16(off + 8 + 24, true);
+    } else if (id === 'data') {
+      if (size === 0xFFFFFFFF) size = ds64Data != null ? ds64Data : v.byteLength - off - 8;
+      data = { offset: off + 8, size: Math.min(size, v.byteLength - off - 8) };
+      break;
+    }
+    off += 8 + size + (size % 2);
+  }
+  if (!fmt || !data || !fmt.channels || !fmt.rate) return null;
+  const { format, channels: nch, bits } = fmt;
+  const pcm = format === 1 && [8, 16, 24, 32].includes(bits);
+  const flt = format === 3 && (bits === 32 || bits === 64);
+  if (!pcm && !flt) return null;
+
+  const bps = bits / 8;
+  const n = Math.floor(data.size / (bps * nch));
+  const chans = Array.from({ length: nch }, () => new Float32Array(n));
+  const bytes = new Uint8Array(ab);
+  let p = data.offset;
+  for (let i = 0; i < n; i++) {
+    for (let c = 0; c < nch; c++) {
+      let s;
+      if (flt) s = bits === 32 ? v.getFloat32(p, true) : v.getFloat64(p, true);
+      else if (bits === 16) s = v.getInt16(p, true) / 32768;
+      else if (bits === 24) {
+        let x = bytes[p] | (bytes[p + 1] << 8) | (bytes[p + 2] << 16);
+        if (x & 0x800000) x -= 0x1000000;
+        s = x / 8388608;
+      } else if (bits === 32) s = v.getInt32(p, true) / 2147483648;
+      else s = (bytes[p] - 128) / 128;
+      chans[c][i] = s;
+      p += bps;
+    }
+  }
+  return { rate: fmt.rate, channels: chans };
+}
+
+// Decode a file to Float32 channels. WAVs at the wanted rate are read exactly;
+// anything else goes through the browser's decoder at the wanted rate.
+async function alDecodeFile(file, wantRate) {
+  const ab = await file.arrayBuffer();
+  const tempo = readAcidTempo(ab);
+  const parsed = alParseWav(ab);
+  if (parsed && (!wantRate || parsed.rate === wantRate)) {
+    return { rate: parsed.rate, channels: parsed.channels, tempo, resampledFrom: null };
+  }
+  const rate = wantRate || 48000;
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const buf = await new OAC(1, 1, rate).decodeAudioData(ab);
+  const channels = [];
+  for (let c = 0; c < buf.numberOfChannels; c++) channels.push(new Float32Array(buf.getChannelData(c)));
+  return { rate, channels, tempo, resampledFrom: parsed ? parsed.rate : (wantRate ? 'source' : null) };
+}
+
+// ---------- Tracks ----------
+function alMakeTrack(i) {
+  return { label: `Track ${i + 1}`, customLabel: false, fileName: null, data: null, length: 0, offset: 0, muted: false, soloed: false, peaks: null, audioBuf: null };
+}
+
+function alInit() {
+  alState.tracks = [alMakeTrack(0), alMakeTrack(1)];
+  alRenderLanes();
+  alRenderLoupeSelects();
+  alUpdateMeta();
+}
+
+function alLoaded() { return alState.tracks.filter(t => t.data); }
+
+function alSetTrackData(track, L, R, fileName) {
+  track.data = [L, R];
+  track.length = L.length;
+  track.fileName = fileName;
+  track.peaks = null;
+  track.audioBuf = null;
+}
+
+function alSetPairCount(n, { silent } = {}) {
+  n = Math.max(1, Math.min(AL_MAX_PAIRS, n));
+  const cur = alState.tracks.length;
+  if (n < cur) {
+    const lose = alState.tracks.slice(n).some(t => t.data);
+    if (lose && !silent && !confirm(`Remove ${cur - n} pair(s) that still have audio loaded?`)) {
+      $('#al-pair-count').value = cur;
+      return;
+    }
+    alState.tracks = alState.tracks.slice(0, n);
+  } else {
+    for (let i = cur; i < n; i++) alState.tracks.push(alMakeTrack(i));
+  }
+  $('#al-pair-count').value = n;
+  alStop();
+  alRenderLanes();
+  alRenderLoupeSelects();
+  alUpdateMeta();
+}
+
+async function alImportFile(file) {
+  if (alLoaded().length && !confirm('Importing will replace every pair currently loaded. Continue?')) return;
+  showOverlay('Reading <em>WAV</em>', file.name);
+  try {
+    const dec = await alDecodeFile(file, null);
+    let chans = dec.channels;
+    if (chans.length > AL_MAX_PAIRS * 2) {
+      toast(`File has ${chans.length} channels — only the first ${AL_MAX_PAIRS * 2} are loaded`, 'error');
+      chans = chans.slice(0, AL_MAX_PAIRS * 2);
+    }
+    alStop();
+    alState.sampleRate = dec.rate;
+    alState.tempo = dec.tempo;
+    const pairs = Math.ceil(chans.length / 2);
+    alState.tracks = [];
+    for (let p = 0; p < pairs; p++) {
+      const t = alMakeTrack(p);
+      const L = chans[p * 2];
+      const R = chans[p * 2 + 1] || L; // odd last channel → mono pair
+      alSetTrackData(t, L, R, `${file.name} · ch ${p * 2 + 1}${chans[p * 2 + 1] ? `–${p * 2 + 2}` : ''}`);
+      alState.tracks.push(t);
+    }
+    if (alState.tracks.length < 2) alState.tracks.push(alMakeTrack(1));
+    $('#al-pair-count').value = alState.tracks.length;
+    let base = file.name.replace(/\.[^.]+$/, '');
+    $('#al-export-name').value = `${base}_aligned.wav`;
+    alState.loupe.a = '0:L';
+    alState.loupe.b = `${Math.min(1, alState.tracks.length - 1)}:L`;
+    alState.loupe.markA = alState.loupe.markB = null;
+    alState.loupe.corr = null;
+    alState.view.spp = 0;
+    alState.cursor = 0;
+    hideOverlay();
+    alRenderLanes();
+    alRenderLoupeSelects();
+    alUpdateMeta();
+    alAimLoupeAtFirstHit();
+    toast(`Loaded ${chans.length} channels · ${dec.rate} Hz${dec.resampledFrom ? ' (decoded by the browser — not sample-exact)' : ' · sample-exact'}`, 'success');
+  } catch (err) {
+    console.warn('Channel Align import failed', err);
+    hideOverlay();
+    toast('Could not read that file', 'error');
+  }
+}
+
+async function alLoadPairFile(index, file) {
+  const track = alState.tracks[index];
+  if (!track) return;
+  try {
+    const dec = await alDecodeFile(file, alState.sampleRate);
+    const ch = dec.channels;
+    if (!ch.length) throw new Error('no channels');
+    if (ch.length > 2) toast(`${file.name} has ${ch.length} channels — using the first two`, 'info');
+    alStop();
+    if (!alState.sampleRate) alState.sampleRate = dec.rate;
+    alSetTrackData(track, ch[0], ch[1] || ch[0], file.name);
+    if (!track.customLabel) track.label = file.name.replace(/\.[^.]+$/, '').slice(0, 40);
+    if (alState.view.spp && alLoaded().length === 1) alState.view.spp = 0;
+    alRenderLanes();
+    alRenderLoupeSelects();
+    alUpdateMeta();
+    if (dec.resampledFrom) toast(`${file.name} was resampled to ${alState.sampleRate} Hz to match the project`, 'info');
+  } catch (err) {
+    console.warn('Channel Align pair load failed', err);
+    toast('Could not decode that file', 'error');
+  }
+}
+
+function alClearTrack(index) {
+  const t = alState.tracks[index];
+  if (!t) return;
+  alStop();
+  alState.tracks[index] = Object.assign(alMakeTrack(index), { label: t.customLabel ? t.label : `Track ${index + 1}`, customLabel: t.customLabel });
+  if (!alLoaded().length) { alState.sampleRate = null; alState.tempo = null; }
+  alRenderLanes();
+  alRenderLoupeSelects();
+  alUpdateMeta();
+}
+
+function alSetOffset(index, samples) {
+  const t = alState.tracks[index];
+  if (!t) return;
+  samples = Math.round(samples);
+  if (!isFinite(samples)) return;
+  const max = Math.max(alRate() * 60, ...alState.tracks.map(x => x.length));
+  t.offset = Math.max(-max, Math.min(max, samples));
+  alState.loupe.corr = null;
+  if (alState.isPlaying) alPlay(alCurrentTime());
+  alSyncLaneOffsets();
+  alDrawAll();
+}
+
+function alStepSamples() {
+  const v = $('#al-step').value;
+  const n = parseFloat(v.slice(1));
+  return v[0] === 's' ? n : n * alRate() / 1000;
+}
+
+// Timeline extent (samples): from the earliest pair start to the latest end.
+function alExtent() {
+  const loaded = alLoaded();
+  if (!loaded.length) return { start: 0, end: alRate() };
+  return {
+    start: Math.min(0, ...loaded.map(t => t.offset)),
+    end: Math.max(...loaded.map(t => t.offset + t.length)),
+  };
+}
+
+function alUpdateMeta() {
+  const loaded = alLoaded();
+  $('#al-meta-channels').textContent = alState.tracks.length * 2;
+  $('#al-meta-rate').textContent = alState.sampleRate ? `${(alState.sampleRate / 1000).toFixed(alState.sampleRate % 1000 ? 1 : 0)}k` : '—';
+  const len = loaded.length ? Math.max(...loaded.map(t => t.length)) : 0;
+  $('#al-meta-length').textContent = loaded.length ? fmtTime(len / alRate()) : '0:00';
+  $('#al-play-btn').disabled = !loaded.length;
+  $('#al-export-btn').disabled = !loaded.length;
+  $('#al-copy-btn').disabled = !loaded.length;
+}
+
+// ---------- Peaks (min/max pyramids for the overview) ----------
+function alPeaks(track) {
+  if (track.peaks || !track.data) return track.peaks;
+  track.peaks = track.data.map(d => {
+    const n1 = Math.ceil(d.length / AL_PEAK_BLOCK);
+    const mn1 = new Float32Array(n1), mx1 = new Float32Array(n1);
+    for (let b = 0; b < n1; b++) {
+      let lo = Infinity, hi = -Infinity;
+      const e = Math.min(d.length, (b + 1) * AL_PEAK_BLOCK);
+      for (let i = b * AL_PEAK_BLOCK; i < e; i++) { const s = d[i]; if (s < lo) lo = s; if (s > hi) hi = s; }
+      mn1[b] = lo; mx1[b] = hi;
+    }
+    const f = AL_PEAK_BLOCK2 / AL_PEAK_BLOCK;
+    const n2 = Math.ceil(n1 / f);
+    const mn2 = new Float32Array(n2), mx2 = new Float32Array(n2);
+    for (let b = 0; b < n2; b++) {
+      let lo = Infinity, hi = -Infinity;
+      const e = Math.min(n1, (b + 1) * f);
+      for (let i = b * f; i < e; i++) { if (mn1[i] < lo) lo = mn1[i]; if (mx1[i] > hi) hi = mx1[i]; }
+      mn2[b] = lo; mx2[b] = hi;
+    }
+    return { mn1, mx1, mn2, mx2 };
+  });
+  return track.peaks;
+}
+
+// [min, max] of channel ch over the pair's own samples [i0, i1), or null.
+function alMinMax(track, ch, i0, i1, spp) {
+  const d = track.data[ch];
+  i0 = Math.max(0, Math.floor(i0));
+  i1 = Math.min(d.length, Math.ceil(i1));
+  if (i1 <= i0) return null;
+  let lo = Infinity, hi = -Infinity;
+  if (spp < AL_PEAK_BLOCK * 2) {
+    for (let i = i0; i < i1; i++) { const s = d[i]; if (s < lo) lo = s; if (s > hi) hi = s; }
+  } else {
+    const pk = alPeaks(track)[ch];
+    const coarse = spp >= AL_PEAK_BLOCK2 * 2;
+    const blk = coarse ? AL_PEAK_BLOCK2 : AL_PEAK_BLOCK;
+    const mn = coarse ? pk.mn2 : pk.mn1, mx = coarse ? pk.mx2 : pk.mx1;
+    const b1 = Math.min(mn.length, Math.ceil(i1 / blk));
+    for (let b = Math.floor(i0 / blk); b < b1; b++) { if (mn[b] < lo) lo = mn[b]; if (mx[b] > hi) hi = mx[b]; }
+  }
+  return [lo, hi];
+}
+
+// ---------- Canvas helpers ----------
+function alFitCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, canvas.clientWidth), h = Math.max(1, canvas.clientHeight);
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+  }
+  const g = canvas.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  return { g, w, h };
+}
+
+function alCss(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function alWaveWidth() {
+  const c = document.querySelector('#al-lanes .al-wave') || $('#al-ruler');
+  return Math.max(1, c.clientWidth);
+}
+
+function alEnsureView() {
+  const v = alState.view;
+  const w = alWaveWidth();
+  const ext = alExtent();
+  if (!v.spp) {
+    const len = ext.end - ext.start;
+    v.spp = Math.max(1 / 64, len / w);
+    v.start = ext.start;
+  }
+  alClampView();
+}
+
+function alClampView() {
+  const v = alState.view;
+  const w = alWaveWidth();
+  const ext = alExtent();
+  const maxSpp = Math.max(1, (ext.end - ext.start) / w) * 1.05;
+  v.spp = Math.max(1 / 64, Math.min(maxSpp, v.spp));
+  const visible = v.spp * w;
+  const lo = ext.start - visible * 0.5, hi = ext.end - visible * 0.5;
+  v.start = Math.max(lo, Math.min(Math.max(lo, hi), v.start));
+}
+
+function alZoomView(factor, anchorPx) {
+  const v = alState.view;
+  alEnsureView();
+  const w = alWaveWidth();
+  if (anchorPx == null) anchorPx = w / 2;
+  const t = v.start + anchorPx * v.spp;
+  v.spp *= factor;
+  alClampView();
+  v.start = t - anchorPx * v.spp;
+  alClampView();
+  alDrawOverview();
+}
+
+// ---------- Overview drawing ----------
+function alDrawRuler() {
+  const canvas = $('#al-ruler');
+  const { g, w, h } = alFitCanvas(canvas);
+  const v = alState.view;
+  const rate = alRate();
+  const ink = alCss('--ink'), muted = alCss('--muted');
+  const secPerPx = v.spp / rate;
+  const nice = [1e-5, 2e-5, 5e-5, 1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 5e-3, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300];
+  const step = nice.find(s => s / secPerPx >= 90) || 600;
+  const t0 = v.start / rate, t1 = t0 + w * secPerPx;
+  g.font = `9px ${alCss('--font-mono')}`;
+  g.textBaseline = 'top';
+  const digits = step >= 1 ? 0 : Math.min(5, Math.ceil(-Math.log10(step)));
+  for (let t = Math.ceil(t0 / step) * step; t <= t1; t += step) {
+    const x = Math.round((t - t0) / secPerPx) + 0.5;
+    g.fillStyle = ink;
+    g.fillRect(x - 0.5, h - 7, 1, 7);
+    g.fillStyle = muted;
+    const lbl = step >= 1 ? fmtTime(t) : `${t.toFixed(digits)}s`;
+    g.fillText(lbl, x + 3, 4);
+  }
+  // Cursor
+  const cx = (alState.cursor * rate - v.start) / v.spp;
+  if (cx >= 0 && cx <= w) {
+    g.fillStyle = ink;
+    g.beginPath(); g.moveTo(cx - 4, 0); g.lineTo(cx + 4, 0); g.lineTo(cx, 6); g.closePath(); g.fill();
+  }
+}
+
+function alDrawLane(i) {
+  const canvas = document.querySelector(`#al-lanes .al-lane[data-index="${i}"] .al-wave`);
+  if (!canvas) return;
+  const { g, w, h } = alFitCanvas(canvas);
+  const track = alState.tracks[i];
+  const v = alState.view;
+  const ink = alCss('--ink'), muted = alCss('--muted'), hair = alCss('--hairline');
+  const rate = alRate();
+
+  // Loupe window band
+  const lp = alState.loupe;
+  const lx0 = (lp.center - lp.span / 2 - v.start) / v.spp;
+  const lx1 = (lp.center + lp.span / 2 - v.start) / v.spp;
+  if (lx1 >= -2 && lx0 <= w + 2) {
+    const bw = Math.max(3, lx1 - lx0);
+    const bx = (lx0 + lx1) / 2 - bw / 2;
+    g.fillStyle = 'rgba(26,24,21,0.07)';
+    g.fillRect(bx, 0, bw, h);
+    g.fillStyle = muted;
+    g.fillRect(bx, 0, 1, h);
+    g.fillRect(bx + bw - 1, 0, 1, h);
+  }
+
+  if (!track.data) {
+    g.fillStyle = muted;
+    g.font = `10px ${alCss('--font-mono')}`;
+    g.textBaseline = 'middle';
+    g.fillText('EMPTY — LOAD A FILE OR DROP ONE HERE', 14, h / 2);
+    return;
+  }
+
+  // Pair extent shading (where the pair has audio on the timeline)
+  const sx0 = (track.offset - v.start) / v.spp, sx1 = (track.offset + track.length - v.start) / v.spp;
+  g.fillStyle = 'rgba(26,24,21,0.03)';
+  g.fillRect(Math.max(0, sx0), 0, Math.min(w, sx1) - Math.max(0, sx0), h);
+
+  const half = h / 2;
+  for (let ch = 0; ch < 2; ch++) {
+    const mid = half * ch + half / 2;
+    const amp = half / 2 - 3;
+    g.fillStyle = hair;
+    g.fillRect(0, Math.round(mid), w, 1);
+    g.fillStyle = ink;
+    if (v.spp >= 1) {
+      for (let x = Math.max(0, Math.floor(sx0)); x < Math.min(w, Math.ceil(sx1)); x++) {
+        const t0 = v.start + x * v.spp - track.offset;
+        const mm = alMinMax(track, ch, t0, t0 + v.spp, v.spp);
+        if (!mm) continue;
+        const y0 = mid - mm[1] * amp, y1 = mid - mm[0] * amp;
+        g.fillRect(x, y0, 1, Math.max(1, y1 - y0));
+      }
+    } else {
+      const d = track.data[ch];
+      g.strokeStyle = ink;
+      g.lineWidth = 1;
+      g.beginPath();
+      const i0 = Math.max(0, Math.floor(v.start - track.offset) - 1);
+      const i1 = Math.min(d.length, Math.ceil(v.start + w * v.spp - track.offset) + 1);
+      for (let k = i0; k < i1; k++) {
+        const x = (k + track.offset - v.start) / v.spp, y = mid - d[k] * amp;
+        if (k === i0) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      g.stroke();
+    }
+  }
+
+  // Offset tag + A/B marks
+  g.font = `9px ${alCss('--font-mono')}`;
+  g.textBaseline = 'top';
+  const tags = [];
+  if (alPairOf(lp.a) === i) tags.push('A');
+  if (alPairOf(lp.b) === i) tags.push('B');
+  if (track.offset) tags.push(`${alFmtSmp(track.offset)} · ${alFmtMs(track.offset)}`);
+  if (tags.length) {
+    const txt = tags.join('  ');
+    const tw = g.measureText(txt).width + 10;
+    g.fillStyle = alCss('--paper');
+    g.fillRect(w - tw - 4, 3, tw, 14);
+    g.fillStyle = ink;
+    g.fillText(txt, w - tw + 1, 5);
+  }
+  // Markers in the overview (thin)
+  [['A', lp.markA], ['B', lp.markB]].forEach(([, m]) => {
+    if (m == null) return;
+    const x = (m - v.start) / v.spp;
+    if (x < 0 || x > w) return;
+    g.fillStyle = muted;
+    g.fillRect(Math.round(x), 0, 1, h);
+  });
+  void rate;
+}
+
+function alDrawOverview() {
+  if (!$('#al-app').classList.contains('active')) return;
+  alEnsureView();
+  alDrawRuler();
+  alState.tracks.forEach((_, i) => alDrawLane(i));
+  alPositionPlayheads();
+}
+
+function alDrawAll() {
+  alDrawOverview();
+  alDrawLoupe();
+  alRenderMeasurements();
+}
+
+// ---------- Lanes (DOM) ----------
+function alRenderLanes() {
+  const wrap = $('#al-lanes');
+  wrap.innerHTML = '';
+  wrap.style.setProperty('--al-lanes', alState.tracks.length);
+  const anySolo = alState.tracks.some(t => t.soloed);
+  alState.tracks.forEach((t, i) => {
+    const lane = document.createElement('div');
+    const dim = t.muted || (anySolo && !t.soloed);
+    lane.className = 'al-lane' + (dim ? ' is-dim' : '');
+    lane.dataset.index = i;
+    lane.innerHTML = `
+      <div class="al-lane-ctl">
+        <div class="al-lane-row">
+          <span class="al-lane-num">${String(i + 1).padStart(2, '0')}</span>
+          <input class="al-lane-name" value="${escHtml(t.label)}" spellcheck="false" title="Pair name · CH ${i * 2 + 1}–${i * 2 + 2}">
+          <button class="al-sq al-ab-a${alPairOf(alState.loupe.a) === i ? ' is-on' : ''}" title="Use this pair as loupe signal A (reference)">A</button>
+          <button class="al-sq al-ab-b${alPairOf(alState.loupe.b) === i ? ' is-on' : ''}" title="Use this pair as loupe signal B (moved)">B</button>
+          <button class="al-sq al-mute${t.muted ? ' is-on' : ''}" title="Mute">M</button>
+          <button class="al-sq al-solo${t.soloed ? ' is-on' : ''}" title="Solo">S</button>
+        </div>
+        <div class="al-lane-row">
+          <button class="al-sq al-nudge" data-mul="-10" title="Earlier by 10 steps">‹‹</button>
+          <button class="al-sq al-nudge" data-mul="-1" title="Earlier by one step">‹</button>
+          <input class="al-num al-offset" type="number" step="any" title="Offset — positive plays later">
+          <span class="al-lane-unit">${alState.unit === 'ms' ? 'ms' : 'smp'}</span>
+          <button class="al-sq al-nudge" data-mul="1" title="Later by one step">›</button>
+          <button class="al-sq al-nudge" data-mul="10" title="Later by 10 steps">››</button>
+          <button class="al-sq al-zero" title="Reset offset to zero">0</button>
+          <span class="al-lane-gap"></span>
+          <button class="al-sq al-load" title="${t.data ? `${escHtml(t.fileName || '')} · ${fmtTime(t.length / alRate())} — click to replace` : 'Load a mono or stereo file into this pair'}">${t.data ? 'Replace' : '＋ Load'}</button>
+          <button class="al-sq al-clear" ${t.data ? '' : 'disabled'} title="Clear this pair">✕</button>
+        </div>
+        <div class="al-lane-alt"></div>
+      </div>
+      <div class="al-wave-wrap">
+        <canvas class="al-wave"></canvas>
+        <div class="al-playhead"></div>
+      </div>`;
+
+    const q = s => lane.querySelector(s);
+    q('.al-lane-name').addEventListener('change', e => {
+      t.label = e.target.value.trim() || `Track ${i + 1}`;
+      t.customLabel = true;
+      alRenderLoupeSelects();
+    });
+    q('.al-ab-a').addEventListener('click', () => alAssignLoupe('a', i));
+    q('.al-ab-b').addEventListener('click', () => alAssignLoupe('b', i));
+    q('.al-mute').addEventListener('click', () => { t.muted = !t.muted; alApplyGains(); alRenderLanes(); });
+    q('.al-solo').addEventListener('click', () => { t.soloed = !t.soloed; alApplyGains(); alRenderLanes(); });
+    lane.querySelectorAll('.al-nudge').forEach(b => b.addEventListener('click', () => {
+      alSetOffset(i, t.offset + alStepSamples() * parseInt(b.dataset.mul, 10));
+    }));
+    q('.al-zero').addEventListener('click', () => alSetOffset(i, 0));
+    q('.al-offset').addEventListener('change', e => {
+      const val = parseFloat(e.target.value);
+      if (isNaN(val)) { alSyncLaneOffsets(); return; }
+      alSetOffset(i, alState.unit === 'ms' ? val * alRate() / 1000 : val);
+    });
+    q('.al-load').addEventListener('click', () => { alState.uploadTarget = i; $('#al-track-input').click(); });
+    q('.al-clear').addEventListener('click', () => alClearTrack(i));
+
+    // Drop a file on a lane → that pair only (doesn't reach the panel import).
+    lane.addEventListener('dragover', e => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.preventDefault(); e.stopPropagation();
+      lane.classList.add('drag-over-file');
+    });
+    lane.addEventListener('dragleave', e => { if (!lane.contains(e.relatedTarget)) lane.classList.remove('drag-over-file'); });
+    lane.addEventListener('drop', e => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.preventDefault(); e.stopPropagation();
+      lane.classList.remove('drag-over-file');
+      $('#al-panel').classList.remove('drag-over-import');
+      if (e.dataTransfer.files.length) alLoadPairFile(i, e.dataTransfer.files[0]);
+    });
+
+    alAttachLaneMouse(q('.al-wave'), i);
+    wrap.appendChild(lane);
+  });
+  alSyncLaneOffsets();
+  requestAnimationFrame(alDrawAll);
+}
+
+function alSyncLaneOffsets() {
+  document.querySelectorAll('#al-lanes .al-lane').forEach(lane => {
+    const t = alState.tracks[+lane.dataset.index];
+    if (!t) return;
+    const inp = lane.querySelector('.al-offset');
+    if (document.activeElement !== inp) {
+      inp.value = alState.unit === 'ms' ? +alSmpToMs(t.offset).toFixed(4) : t.offset;
+    }
+    const other = alState.unit === 'ms' ? alFmtSmp(t.offset) : alFmtMs(t.offset);
+    const i = +lane.dataset.index;
+    lane.querySelector('.al-lane-alt').textContent = `= ${other} · CH ${i * 2 + 1}–${i * 2 + 2}${t.data ? ` · ${t.fileName || ''}` : ' · empty'}`;
+  });
+}
+
+// Drag a lane's waveform to slip the pair; a click without movement aims the
+// loupe (and the play cursor) at that spot.
+function alAttachLaneMouse(canvas, i) {
+  canvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const track = alState.tracks[i];
+    const x0 = e.clientX;
+    const startOffset = track.offset;
+    let moved = false;
+    const onMove = ev => {
+      const dx = ev.clientX - x0;
+      if (!moved && Math.abs(dx) < 4) return;
+      if (!track.data) return;
+      moved = true;
+      canvas.classList.add('is-slipping');
+      const fine = ev.shiftKey ? 0.1 : 1;
+      track.offset = Math.round(startOffset + dx * alState.view.spp * fine);
+      alSyncLaneOffsets();
+      alDrawOverview();
+    };
+    const onUp = ev => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      canvas.classList.remove('is-slipping');
+      if (moved) {
+        alSetOffset(i, track.offset);
+      } else {
+        const rect = canvas.getBoundingClientRect();
+        const t = alState.view.start + (ev.clientX - rect.left) * alState.view.spp;
+        alAimLoupe(t);
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      alZoomView(Math.pow(1.0018, e.deltaY), e.clientX - rect.left);
+    } else {
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      alState.view.start += d * alState.view.spp;
+      alClampView();
+      alDrawOverview();
+    }
+  }, { passive: false });
+}
+
+function alAimLoupe(t) {
+  alState.loupe.center = t;
+  alState.cursor = Math.max(alExtent().start, t) / alRate();
+  if (!alState.isPlaying) alUpdatePos(alState.cursor);
+  alDrawAll();
+}
+
+// After an import: centre the loupe on the first loud moment of pair A.
+function alAimLoupeAtFirstHit() {
+  const pa = alPairOf(alState.loupe.a);
+  const t = alState.tracks[pa];
+  if (!t || !t.data) { alDrawAll(); return; }
+  const d = t.data[0];
+  let peak = 0;
+  for (let k = 0; k < d.length; k += 4) peak = Math.max(peak, Math.abs(d[k]));
+  const thr = peak * 0.3;
+  let hit = 0;
+  for (let k = 0; k < d.length; k++) if (Math.abs(d[k]) >= thr) { hit = k; break; }
+  alState.loupe.center = hit + t.offset + alState.loupe.span / 4;
+  alState.cursor = Math.max(0, (hit + t.offset) / alRate() - 0.25);
+  alUpdatePos(alState.cursor);
+  alDrawAll();
+}
+
+// ---------- Loupe ----------
+function alPairOf(key) { return parseInt(key.split(':')[0], 10); }
+function alChanOf(key) { return key.split(':')[1]; }
+
+function alRenderLoupeSelects() {
+  const opts = [];
+  alState.tracks.forEach((t, i) => {
+    const n = escHtml(t.label);
+    opts.push(`<option value="${i}:L">${i + 1} · ${n} · L</option>`);
+    opts.push(`<option value="${i}:R">${i + 1} · ${n} · R</option>`);
+    opts.push(`<option value="${i}:M">${i + 1} · ${n} · L+R</option>`);
+  });
+  const lp = alState.loupe;
+  const valid = k => alPairOf(k) < alState.tracks.length;
+  if (!valid(lp.a)) lp.a = '0:L';
+  if (!valid(lp.b)) lp.b = `${Math.min(1, alState.tracks.length - 1)}:L`;
+  ['a', 'b'].forEach(side => {
+    const sel = $(`#al-sel-${side}`);
+    sel.innerHTML = opts.join('');
+    sel.value = lp[side];
+  });
+}
+
+function alAssignLoupe(side, pair) {
+  const lp = alState.loupe;
+  lp[side] = `${pair}:${alChanOf(lp[side])}`;
+  lp.corr = null;
+  $(`#al-sel-${side}`).value = lp[side];
+  document.querySelectorAll('#al-lanes .al-lane').forEach(lane => {
+    const i = +lane.dataset.index;
+    lane.querySelector('.al-ab-a').classList.toggle('is-on', alPairOf(lp.a) === i);
+    lane.querySelector('.al-ab-b').classList.toggle('is-on', alPairOf(lp.b) === i);
+  });
+  alDrawAll();
+}
+
+// Sample of a loupe signal at integer timeline sample t (0 outside the audio).
+function alSignalReader(key, invert) {
+  const t = alState.tracks[alPairOf(key)];
+  if (!t || !t.data) return null;
+  const ch = alChanOf(key);
+  const L = t.data[0], R = t.data[1], off = t.offset, n = t.length;
+  const k = invert ? -1 : 1;
+  if (ch === 'L') return s => { const i = s - off; return i >= 0 && i < n ? k * L[i] : 0; };
+  if (ch === 'R') return s => { const i = s - off; return i >= 0 && i < n ? k * R[i] : 0; };
+  return s => { const i = s - off; return i >= 0 && i < n ? k * 0.5 * (L[i] + R[i]) : 0; };
+}
+
+function alLoupeRange() {
+  const lp = alState.loupe;
+  const s0 = lp.center - lp.span / 2;
+  return { s0, s1: s0 + lp.span };
+}
+
+function alWindowPeak(read, s0, s1) {
+  let pk = 0;
+  for (let s = Math.floor(s0); s <= Math.ceil(s1); s++) { const a = Math.abs(read(s)); if (a > pk) pk = a; }
+  return pk;
+}
+
+function alDrawLoupe() {
+  const canvas = $('#al-loupe-canvas');
+  if (!$('#al-app').classList.contains('active')) return;
+  const { g, w, h } = alFitCanvas(canvas);
+  const lp = alState.loupe;
+  const ink = alCss('--ink'), muted = alCss('--muted'), hair = alCss('--hairline'), paper = alCss('--paper');
+  const mono = alCss('--font-mono');
+  const { s0, s1 } = alLoupeRange();
+  const spp = lp.span / w;           // samples per px
+  const ppsmp = 1 / spp;             // px per sample
+  const xOf = s => (s - s0) * ppsmp;
+
+  $('#al-span').textContent = `${lp.span.toLocaleString()} smp · ${alSmpToMs(lp.span).toFixed(lp.span < 480 ? 3 : 1)} ms`;
+
+  const readA = alSignalReader(lp.a, false);
+  const readB = alSignalReader(lp.b, lp.invertB);
+  const stack = lp.view === 'stack';
+  // Overlay draws B first so A (solid ink) stays visible where they coincide.
+  const lanes = stack ? [{ read: readA, y: 0, hgt: h / 2, key: 'A', idx: 0 }, { read: readB, y: h / 2, hgt: h / 2, key: 'B', idx: 1 }]
+                      : [{ read: readB, y: 0, hgt: h, key: 'B', idx: 1 }, { read: readA, y: 0, hgt: h, key: 'A', idx: 0 }];
+
+  // Sample grid when individual samples are visible
+  if (ppsmp >= 5) {
+    g.fillStyle = hair;
+    for (let s = Math.ceil(s0); s <= s1; s++) g.fillRect(Math.round(xOf(s)), 0, 1, h);
+  } else {
+    // time ticks
+    const msPerPx = spp * 1000 / alRate();
+    const nice = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+    const step = nice.find(s => s / msPerPx >= 70) || 10000;
+    const t0 = s0 * 1000 / alRate();
+    g.fillStyle = hair;
+    for (let t = Math.ceil(t0 / step) * step; (t - t0) / msPerPx <= w; t += step) g.fillRect(Math.round((t - t0) / msPerPx), 0, 1, h);
+  }
+  if (stack) { g.fillStyle = alCss('--rule'); g.fillRect(0, Math.round(h / 2), w, 1); }
+
+  const thr = lp.threshold;
+  lanes.forEach(ln => {
+    const idx = ln.idx;
+    const mid = ln.y + ln.hgt / 2;
+    const amp = ln.hgt / 2 - 10;
+    g.fillStyle = hair;
+    g.fillRect(0, Math.round(mid), w, 1);
+    if (!ln.read) {
+      g.fillStyle = muted; g.font = `10px ${mono}`; g.textBaseline = 'middle';
+      g.fillText(`${ln.key}: NO AUDIO ON THIS PAIR`, 14, mid + (stack ? 0 : (idx ? 14 : -14)));
+      return;
+    }
+    const peak = lp.norm ? (alWindowPeak(ln.read, s0, s1) || 1) : 1;
+    const scale = amp / peak;
+    const color = (!stack && idx === 1) ? muted : ink;
+
+    // Onset threshold guides
+    if (lp.snap) {
+      g.fillStyle = 'rgba(143,139,130,0.35)';
+      const ty = thr * (lp.norm ? peak : 1) * scale;
+      for (let x = 0; x < w; x += 6) { g.fillRect(x, mid - ty, 3, 1); g.fillRect(x, mid + ty, 3, 1); }
+    }
+
+    g.strokeStyle = color;
+    g.fillStyle = color;
+    g.lineWidth = (!stack && idx === 1) ? 1.5 : 1.25;
+    if (spp > 1) {
+      for (let x = 0; x < w; x++) {
+        const a = Math.floor(s0 + x * spp), b = Math.floor(s0 + (x + 1) * spp);
+        let lo = Infinity, hi = -Infinity;
+        for (let s = a; s <= b; s++) { const v = ln.read(s); if (v < lo) lo = v; if (v > hi) hi = v; }
+        const y0 = mid - hi * scale, y1 = mid - lo * scale;
+        g.fillRect(x, y0, 1, Math.max(1, y1 - y0));
+      }
+    } else {
+      g.beginPath();
+      const a = Math.floor(s0) - 1, b = Math.ceil(s1) + 1;
+      for (let s = a; s <= b; s++) {
+        const x = xOf(s), y = mid - ln.read(s) * scale;
+        if (s === a) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      g.stroke();
+      if (ppsmp >= 5) {
+        const r = Math.min(3, ppsmp / 5);
+        for (let s = Math.ceil(s0); s <= s1; s++) {
+          const x = xOf(s), y = mid - ln.read(s) * scale;
+          g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2);
+          if (!stack && idx === 1) { g.fillStyle = paper; g.fill(); g.stroke(); } else g.fill();
+        }
+      }
+    }
+
+    // Lane label
+    g.font = `9px ${mono}`;
+    g.textBaseline = 'top';
+    const t = alState.tracks[alPairOf(idx === 0 ? lp.a : lp.b)];
+    const chName = { L: 'L', R: 'R', M: 'L+R' }[alChanOf(idx === 0 ? lp.a : lp.b)];
+    const label = `${ln.key} · ${t ? t.label : ''} · ${chName}${idx === 1 && lp.invertB ? ' · Ø' : ''}${lp.norm ? ` · ×${(1 / peak).toFixed(1)}` : ''}`;
+    const ly = stack ? ln.y + 6 : 6 + idx * 14;
+    const tw = g.measureText(label).width + 8;
+    g.fillStyle = paper; g.fillRect(8, ly - 2, tw, 13);
+    g.fillStyle = color; g.fillText(label, 12, ly);
+  });
+
+  // Markers + dimension line
+  const mk = [['A', lp.markA], ['B', lp.markB]];
+  mk.forEach(([name, m]) => {
+    if (m == null) return;
+    const x = Math.round(xOf(m)) + 0.5;
+    if (x < -20 || x > w + 20) return;
+    g.strokeStyle = ink;
+    g.lineWidth = 1;
+    g.setLineDash(lp.active === name ? [] : [4, 3]);
+    const top = stack && name === 'B' ? h / 2 : 0;
+    const bot = stack && name === 'A' ? h / 2 : h;
+    g.beginPath(); g.moveTo(x, stack ? 0 : top); g.lineTo(x, stack ? h : bot); g.stroke();
+    g.setLineDash([]);
+    // flag
+    g.fillStyle = ink;
+    const fy = stack ? (name === 'A' ? 4 : h / 2 + 4) : (name === 'A' ? 4 : 20);
+    g.fillRect(x, fy, 14, 13);
+    g.fillStyle = alCss('--ink-invert');
+    g.font = `700 9px ${mono}`; g.textBaseline = 'top';
+    g.fillText(name, x + 4, fy + 2);
+  });
+  if (lp.markA != null && lp.markB != null) {
+    const xa = xOf(lp.markA), xb = xOf(lp.markB);
+    const y = stack ? h / 2 : h - 18;
+    g.strokeStyle = ink; g.fillStyle = ink; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(xa, y); g.lineTo(xb, y); g.stroke();
+    const dir = xb >= xa ? 1 : -1;
+    if (Math.abs(xb - xa) > 10) {
+      g.beginPath(); g.moveTo(xb, y); g.lineTo(xb - dir * 6, y - 3); g.lineTo(xb - dir * 6, y + 3); g.closePath(); g.fill();
+    }
+    const d = lp.markB - lp.markA;
+    const txt = `${alFmtSmp(d)} · ${alFmtMs(d)}`;
+    g.font = `700 10px ${mono}`; g.textBaseline = 'middle';
+    const tw = g.measureText(txt).width + 10;
+    let tx = (xa + xb) / 2 - tw / 2;
+    tx = Math.max(4, Math.min(w - tw - 4, tx));
+    g.fillStyle = ink; g.fillRect(tx, y - 9, tw, 18);
+    g.fillStyle = alCss('--ink-invert'); g.fillText(txt, tx + 5, y);
+  }
+
+  // Playhead / cursor
+  const cur = (alState.isPlaying ? alCurrentTime() : alState.cursor) * alRate();
+  const cx = xOf(cur);
+  if (cx >= 0 && cx <= w) { g.fillStyle = muted; g.fillRect(Math.round(cx), 0, 1, h); }
+
+  // Position readout bottom-right
+  g.font = `9px ${mono}`; g.textBaseline = 'bottom'; g.fillStyle = muted;
+  const pos = `${alFmtClock(lp.center / alRate())} · ${Math.round(lp.center).toLocaleString()} smp`;
+  g.fillText(pos, w - g.measureText(pos).width - 8, h - 4);
+}
+
+function alSetLoupeSpan(span, anchorFrac = 0.5) {
+  const lp = alState.loupe;
+  const sNew = Math.max(AL_SPANS[0], Math.min(AL_SPANS[AL_SPANS.length - 1], span));
+  const anchor = lp.center - lp.span / 2 + anchorFrac * lp.span;
+  lp.center = anchor - anchorFrac * sNew + sNew / 2;
+  lp.span = sNew;
+  alDrawAll();
+}
+
+function alLoupeZoomStep(dir, anchorFrac) {
+  const lp = alState.loupe;
+  let idx = AL_SPANS.findIndex(s => s >= lp.span);
+  if (idx < 0) idx = AL_SPANS.length - 1;
+  if (AL_SPANS[idx] !== lp.span && dir > 0) idx--; // non-grid span: snap toward the direction
+  alSetLoupeSpan(AL_SPANS[Math.max(0, Math.min(AL_SPANS.length - 1, idx + (dir > 0 ? -1 : 1)))], anchorFrac);
+}
+
+// Onset: first sample in [from, to] whose |x| reaches thr × the window peak.
+function alFindOnset(read, from, to, peak) {
+  const lim = alState.loupe.threshold * peak;
+  if (!(lim > 0)) return null;
+  for (let s = Math.floor(from); s <= Math.ceil(to); s++) if (Math.abs(read(s)) >= lim) return s;
+  return null;
+}
+
+function alPlaceMarker(name, s, { snap } = {}) {
+  const lp = alState.loupe;
+  s = Math.round(s);
+  if (snap && lp.snap) {
+    const read = alSignalReader(name === 'A' ? lp.a : lp.b, name === 'B' && lp.invertB);
+    if (read) {
+      const { s0, s1 } = alLoupeRange();
+      const r = Math.max(8, Math.round(lp.span / $('#al-loupe-canvas').clientWidth * 30));
+      const peak = alWindowPeak(read, s0, s1);
+      const hit = alFindOnset(read, s - r, s + r, peak);
+      if (hit != null) s = hit;
+    }
+  }
+  if (name === 'A') lp.markA = s; else lp.markB = s;
+  alDrawLoupe();
+  alDrawOverview();
+  alRenderMeasurements();
+}
+
+function alSetActiveMarker(name) {
+  alState.loupe.active = name;
+  document.querySelectorAll('#al-mark-pick .mc-seg-btn').forEach(b => b.classList.toggle('is-on', b.dataset.mark === name));
+  alDrawLoupe();
+}
+
+function alDetectOnsets() {
+  const lp = alState.loupe;
+  const { s0, s1 } = alLoupeRange();
+  const readA = alSignalReader(lp.a, false), readB = alSignalReader(lp.b, lp.invertB);
+  if (!readA || !readB) { toast('Load audio on both the A and B pairs first', 'error'); return; }
+  const a = alFindOnset(readA, s0, s1, alWindowPeak(readA, s0, s1));
+  const b = alFindOnset(readB, s0, s1, alWindowPeak(readB, s0, s1));
+  if (a == null || b == null) { toast('No transient found in the loupe — move it onto a hit', 'error'); return; }
+  lp.markA = a; lp.markB = b;
+  alDrawAll();
+}
+
+// ---------- Cross-correlation (FFT) ----------
+function alFFT(re, im, inverse) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = (inverse ? 2 : -2) * Math.PI / len;
+    const wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const a = i + k, b = a + len / 2;
+        const xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - xr; im[b] = im[a] - xi;
+        re[a] += xr; im[a] += xi;
+        const ncr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = ncr;
+      }
+    }
+  }
+  if (inverse) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+}
+
+// Lag L (fractional) such that B(t) ≈ A(t − L): positive = B is late.
+function alCorrelate() {
+  const lp = alState.loupe;
+  const readA = alSignalReader(lp.a, false), readB = alSignalReader(lp.b, lp.invertB);
+  if (!readA || !readB) { toast('Load audio on both the A and B pairs first', 'error'); return; }
+  let { s0, s1 } = alLoupeRange();
+  let len = Math.round(s1 - s0);
+  if (len > AL_XCORR_MAX) { s0 = Math.round(lp.center - AL_XCORR_MAX / 2); len = AL_XCORR_MAX; }
+  s0 = Math.round(s0);
+  const maxLag = Math.floor(len / 2);
+  let n = 1;
+  while (n < len * 2) n <<= 1;
+  const ar = new Float64Array(n), ai = new Float64Array(n), br = new Float64Array(n), bi = new Float64Array(n);
+  let ea = 0, eb = 0;
+  for (let k = 0; k < len; k++) {
+    const a = readA(s0 + k), b = readB(s0 + k);
+    ar[k] = a; br[k] = b; ea += a * a; eb += b * b;
+  }
+  if (!(ea > 0) || !(eb > 0)) { toast('One of the signals is silent inside the loupe', 'error'); return; }
+  alFFT(ar, ai, false);
+  alFFT(br, bi, false);
+  // conj(A)·B → c[k] = Σ a[t]·b[t+k]
+  for (let k = 0; k < n; k++) {
+    const r = ar[k] * br[k] + ai[k] * bi[k];
+    const i = ar[k] * bi[k] - ai[k] * br[k];
+    ar[k] = r; ai[k] = i;
+  }
+  alFFT(ar, ai, true);
+  const norm = Math.sqrt(ea * eb);
+  const at = lag => ar[(lag + n) % n] / norm;
+  let best = 0, bestV = 0;
+  for (let lag = -maxLag; lag <= maxLag; lag++) {
+    const v = Math.abs(at(lag));
+    if (v > bestV) { bestV = v; best = lag; }
+  }
+  // Parabolic interpolation on |c| for a sub-sample estimate.
+  const y0 = Math.abs(at(best - 1)), y1 = Math.abs(at(best)), y2 = Math.abs(at(best + 1));
+  const den = y0 - 2 * y1 + y2;
+  const frac = den !== 0 ? Math.max(-0.5, Math.min(0.5, 0.5 * (y0 - y2) / den)) : 0;
+  lp.corr = { lag: best + frac, r: at(best), key: `${lp.a}|${lp.b}|${lp.invertB}` };
+  alRenderMeasurements();
+}
+
+function alAlign(delta, source) {
+  const lp = alState.loupe;
+  const pa = alPairOf(lp.a), pb = alPairOf(lp.b);
+  if (pa === pb) {
+    toast('A and B are on the same pair — that is a delay between its own channels, which this tool shifts as a whole', 'error');
+    return;
+  }
+  const move = Math.round(delta);
+  if (!move) { toast('Already aligned to the nearest sample', 'info'); return; }
+  const tb = alState.tracks[pb];
+  alSetOffset(pb, tb.offset - move);
+  if (lp.markB != null) lp.markB -= move;
+  lp.corr = null;
+  alDrawAll();
+  toast(`Moved ${tb.label} by ${alFmtSmp(-move)} (${alFmtMs(-move)}) · ${source}`, 'success');
+}
+
+function alRenderMeasurements() {
+  const lp = alState.loupe;
+  const fmtAt = m => m == null ? '—' : `${alFmtClock(m / alRate())} · ${m.toLocaleString()} smp`;
+  $('#al-mk-a').textContent = fmtAt(lp.markA);
+  $('#al-mk-b').textContent = fmtAt(lp.markB);
+  const both = lp.markA != null && lp.markB != null;
+  if (both) {
+    const d = lp.markB - lp.markA;
+    $('#al-mk-delta').textContent = alState.unit === 'ms' ? alFmtMs(d) : alFmtSmp(d);
+    $('#al-mk-delta-alt').textContent = `${alState.unit === 'ms' ? alFmtSmp(d) : alFmtMs(d)} · ${d > 0 ? 'B is late' : d < 0 ? 'B is early' : 'aligned'}`;
+  } else {
+    $('#al-mk-delta').textContent = '—';
+    $('#al-mk-delta-alt').textContent = lp.markA == null ? 'Click the A transient, then the B transient' : 'Now click the B transient';
+  }
+  $('#al-mk-align').disabled = !both || lp.markA === lp.markB;
+
+  const c = lp.corr;
+  const fresh = c && c.key === `${lp.a}|${lp.b}|${lp.invertB}`;
+  if (fresh) {
+    $('#al-xc-delta').textContent = alState.unit === 'ms' ? alFmtMs(c.lag) : alFmtSmp(c.lag, 2);
+    const pol = c.r < 0 ? ' · polarity inverted' : '';
+    $('#al-xc-sub').textContent = `${alState.unit === 'ms' ? alFmtSmp(c.lag, 2) : alFmtMs(c.lag)} · r = ${Math.abs(c.r).toFixed(3)}${pol}`;
+  } else {
+    $('#al-xc-delta').textContent = '—';
+    $('#al-xc-sub').textContent = 'Compares the whole loupe window, to a fraction of a sample';
+  }
+  $('#al-xc-align').disabled = !fresh || Math.round(c.lag) === 0;
+}
+
+function alAttachLoupeMouse() {
+  const canvas = $('#al-loupe-canvas');
+  const sampleAt = clientX => {
+    const rect = canvas.getBoundingClientRect();
+    const { s0 } = alLoupeRange();
+    return s0 + (clientX - rect.left) * alState.loupe.span / rect.width;
+  };
+  const markerNear = clientX => {
+    const lp = alState.loupe;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const { s0 } = alLoupeRange();
+    const px = m => (m - s0) * rect.width / lp.span;
+    const da = lp.markA != null ? Math.abs(px(lp.markA) - x) : Infinity;
+    const db = lp.markB != null ? Math.abs(px(lp.markB) - x) : Infinity;
+    if (Math.min(da, db) > 5) return null;
+    return da <= db ? 'A' : 'B';
+  };
+
+  canvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    canvas.focus();
+    const lp = alState.loupe;
+    const x0 = e.clientX;
+    const c0 = lp.center;
+    const grab = markerNear(e.clientX);
+    let moved = false;
+    if (grab) alSetActiveMarker(grab);
+    const onMove = ev => {
+      if (!moved && Math.abs(ev.clientX - x0) < 3) return;
+      moved = true;
+      if (grab) {
+        const s = Math.round(sampleAt(ev.clientX));
+        if (grab === 'A') lp.markA = s; else lp.markB = s;
+        alDrawLoupe();
+        alRenderMeasurements();
+      } else {
+        canvas.classList.add('is-panning');
+        const rect = canvas.getBoundingClientRect();
+        lp.center = c0 - (ev.clientX - x0) * lp.span / rect.width;
+        alDrawLoupe();
+        alDrawOverview();
+      }
+    };
+    const onUp = ev => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      canvas.classList.remove('is-panning');
+      if (grab && moved) { alDrawOverview(); return; }
+      if (moved) return;
+      if (grab) return;
+      const name = lp.active;
+      alPlaceMarker(name, sampleAt(ev.clientX), { snap: !ev.altKey });
+      if (name === 'A') alSetActiveMarker('B');
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    canvas.classList.toggle('is-over-marker', !!markerNear(e.clientX));
+  });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const lp = alState.loupe;
+    const rect = canvas.getBoundingClientRect();
+    if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      lp.center += d * lp.span / rect.width;
+      alDrawLoupe();
+      alDrawOverview();
+    } else {
+      const frac = (e.clientX - rect.left) / rect.width;
+      const factor = Math.pow(1.0025, e.deltaY);
+      alSetLoupeSpan(Math.round(lp.span * factor), frac);
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('keydown', e => {
+    const lp = alState.loupe;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const pb = alPairOf(lp.b);
+      const t = alState.tracks[pb];
+      if (!t || !t.data) return;
+      const mul = (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 10 : 1);
+      alSetOffset(pb, t.offset + alStepSamples() * mul);
+    } else if (e.key === 'a' || e.key === 'A') { alSetActiveMarker('A'); }
+    else if (e.key === 'b' || e.key === 'B') { alSetActiveMarker('B'); }
+    else if (e.key === '+' || e.key === '=') { alLoupeZoomStep(1); }
+    else if (e.key === '-' || e.key === '_') { alLoupeZoomStep(-1); }
+  });
+}
+
+// ---------- Playback (stereo preview, offsets applied) ----------
+function alAudioBuffer(track) {
+  if (track.audioBuf) return track.audioBuf;
+  const ctx = ensureAudioCtx();
+  const buf = ctx.createBuffer(2, Math.max(1, track.length), alRate());
+  buf.copyToChannel(track.data[0], 0);
+  buf.copyToChannel(track.data[1], 1);
+  track.audioBuf = buf;
+  return buf;
+}
+
+function alAudible(i) {
+  const t = alState.tracks[i];
+  if (t.muted) return false;
+  return alState.tracks.some(x => x.soloed) ? t.soloed : true;
+}
+
+function alApplyGains() {
+  alState.sources.forEach(({ gain, index }) => { gain.gain.value = alAudible(index) ? 1 : 0; });
+}
+
+function alCurrentTime() {
+  if (!alState.isPlaying) return alState.cursor;
+  const ctx = ensureAudioCtx();
+  return alState.playFrom + Math.max(0, ctx.currentTime - alState.playStartTime);
+}
+
+function alPlay(fromSec = alState.cursor) {
+  const loaded = alLoaded();
+  if (!loaded.length) return;
+  alHalt();
+  const ctx = ensureAudioCtx();
+  const rate = alRate();
+  const startAt = ctx.currentTime + 0.06;
+  const end = alExtent().end / rate;
+  if (fromSec >= end) fromSec = Math.max(0, alExtent().start / rate);
+  alState.tracks.forEach((t, i) => {
+    if (!t.data) return;
+    const begin = t.offset / rate;              // timeline second the pair starts
+    const into = fromSec - begin;               // seconds into the pair's own audio
+    if (into >= t.length / rate) return;
+    const src = ctx.createBufferSource();
+    src.buffer = alAudioBuffer(t);
+    const gain = ctx.createGain();
+    gain.gain.value = alAudible(i) ? 1 : 0;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    if (into >= 0) src.start(startAt, into);
+    else src.start(startAt - into, 0);
+    alState.sources.push({ src, gain, index: i });
+  });
+  alState.playStartTime = startAt;
+  alState.playFrom = fromSec;
+  alState.isPlaying = true;
+  $('#al-play-btn').textContent = '❚❚ Stop';
+  $('#al-play-btn').classList.add('is-on');
+  const tick = () => {
+    if (!alState.isPlaying) return;
+    const t = alCurrentTime();
+    if (t >= end) { alStop(); return; }
+    alUpdatePos(t);
+    alPositionPlayheads();
+    alState.rafId = requestAnimationFrame(tick);
+  };
+  alState.rafId = requestAnimationFrame(tick);
+}
+
+function alHalt() {
+  alState.sources.forEach(({ src }) => { try { src.stop(); } catch (e) {} });
+  alState.sources = [];
+  alState.isPlaying = false;
+  if (alState.rafId) cancelAnimationFrame(alState.rafId);
+  alState.rafId = null;
+}
+
+function alStop() {
+  const was = alState.isPlaying;
+  alHalt();
+  const btn = $('#al-play-btn');
+  if (btn) { btn.textContent = '▶ Play'; btn.classList.remove('is-on'); }
+  alUpdatePos(alState.cursor);
+  alPositionPlayheads();
+  if (was) alDrawLoupe();
+}
+
+function alUpdatePos(sec) {
+  const el = $('#al-pos');
+  if (el) el.innerHTML = `${alFmtClock(sec)} <small>· ${Math.round(sec * alRate()).toLocaleString()} smp</small>`;
+}
+
+function alPositionPlayheads() {
+  const v = alState.view;
+  const t = alCurrentTime() * alRate();
+  const x = (t - v.start) / v.spp;
+  const w = alWaveWidth();
+  document.querySelectorAll('#al-lanes .al-playhead').forEach(ph => {
+    ph.style.display = (x >= 0 && x <= w) ? 'block' : 'none';
+    ph.style.left = `${Math.round(x)}px`;
+  });
+}
+
+// ---------- Export ----------
+// Keeps the original file length so the result still lines up with anything
+// else cut from the same session: a positive offset pads the head with
+// silence (and drops that much tail), a negative one trims the head.
+function alExport() {
+  const loaded = alLoaded();
+  if (!loaded.length) return;
+  alStop();
+  const ctx = ensureAudioCtx();
+  const rate = alRate();
+  const nch = alState.tracks.length * 2;
+  const len = Math.max(...loaded.map(t => t.length));
+  let out;
+  try {
+    out = ctx.createBuffer(nch, len, rate);
+  } catch (err) {
+    toast('Could not create a buffer for that many channels', 'error');
+    return;
+  }
+  alState.tracks.forEach((t, i) => {
+    if (!t.data) return;
+    for (let c = 0; c < 2; c++) {
+      const src = t.data[c];
+      const dst = out.getChannelData(i * 2 + c);
+      const o = t.offset;
+      const from = Math.max(0, -o);           // first source sample used
+      const to = Math.min(src.length, len - o); // one past the last
+      if (to > from) dst.set(src.subarray(from, to), from + o);
+    }
+  });
+  const extra = alState.tempo > 0 ? [buildAcidChunk(alState.tempo)] : [];
+  let name = ($('#al-export-name').value || 'aligned_mix.wav').trim();
+  if (!/\.wav$/i.test(name)) name += '.wav';
+  ddDownloadBlob(audioBufferToWav(out, extra), name);
+  const moved = alState.tracks.filter(t => t.data && t.offset).length;
+  toast(`Exported ${nch}-channel WAV · ${rate} Hz · ${moved} pair${moved === 1 ? '' : 's'} shifted`, 'success');
+}
+
+function alOffsetReport() {
+  return alState.tracks.map((t, i) =>
+    `${i + 1}\t${t.label}\tCH ${i * 2 + 1}-${i * 2 + 2}\t${t.offset > 0 ? '+' : ''}${t.offset} smp\t${t.offset > 0 ? '+' : ''}${alSmpToMs(t.offset).toFixed(3)} ms`
+  ).join('\n') + `\n(sample rate ${alRate()} Hz · positive = later)`;
+}
+
+async function alCopyOffsets() {
+  const txt = alOffsetReport();
+  try {
+    await navigator.clipboard.writeText(txt);
+    toast('Offsets copied to the clipboard', 'success');
+  } catch (err) {
+    console.log(txt);
+    toast('Clipboard unavailable — offsets printed to the console', 'error');
+  }
+}
+
+// ---------- Wiring ----------
+function alWire() {
+  $('#al-pair-count').addEventListener('change', e => alSetPairCount(parseInt(e.target.value, 10)));
+  $('#al-import-btn').addEventListener('click', () => $('#al-import-input').click());
+  $('#al-import-input').addEventListener('change', e => {
+    if (e.target.files.length) alImportFile(e.target.files[0]);
+    e.target.value = '';
+  });
+  $('#al-track-input').addEventListener('change', e => {
+    if (e.target.files.length && alState.uploadTarget != null) alLoadPairFile(alState.uploadTarget, e.target.files[0]);
+    alState.uploadTarget = null;
+    e.target.value = '';
+  });
+  enableFileDropZone($('#al-panel'), dt => { if (dt.files.length) alImportFile(dt.files[0]); }, 'drag-over-import');
+
+  document.querySelectorAll('#al-unit .mc-seg-btn').forEach(b => b.addEventListener('click', () => {
+    alState.unit = b.dataset.unit;
+    document.querySelectorAll('#al-unit .mc-seg-btn').forEach(x => x.classList.toggle('is-on', x === b));
+    document.querySelectorAll('#al-lanes .al-lane-unit').forEach(u => { u.textContent = alState.unit === 'ms' ? 'ms' : 'smp'; });
+    alSyncLaneOffsets();
+    alRenderMeasurements();
+  }));
+
+  $('#al-play-btn').addEventListener('click', () => { if (alState.isPlaying) alStop(); else alPlay(); });
+  $('#al-stop-btn').addEventListener('click', alStop);
+  $('#al-zoom-in').addEventListener('click', () => alZoomView(0.5));
+  $('#al-zoom-out').addEventListener('click', () => alZoomView(2));
+  $('#al-zoom-fit').addEventListener('click', () => { alState.view.spp = 0; alDrawOverview(); });
+  $('#al-export-btn').addEventListener('click', alExport);
+  $('#al-copy-btn').addEventListener('click', alCopyOffsets);
+
+  $('#al-ruler').addEventListener('mousedown', e => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    alAimLoupe(alState.view.start + (e.clientX - rect.left) * alState.view.spp);
+  });
+
+  ['a', 'b'].forEach(side => $(`#al-sel-${side}`).addEventListener('change', e => {
+    alState.loupe[side] = e.target.value;
+    alAssignLoupe(side, alPairOf(e.target.value));
+  }));
+  $('#al-lz-in').addEventListener('click', () => alLoupeZoomStep(1));
+  $('#al-lz-out').addEventListener('click', () => alLoupeZoomStep(-1));
+  document.querySelectorAll('#al-view-mode .mc-seg-btn').forEach(b => b.addEventListener('click', () => {
+    alState.loupe.view = b.dataset.view;
+    document.querySelectorAll('#al-view-mode .mc-seg-btn').forEach(x => x.classList.toggle('is-on', x === b));
+    alDrawLoupe();
+  }));
+  const toggle = (id, key) => $(id).addEventListener('click', e => {
+    alState.loupe[key] = !alState.loupe[key];
+    e.currentTarget.classList.toggle('is-on', alState.loupe[key]);
+    if (key === 'invertB') alState.loupe.corr = null;
+    alDrawLoupe();
+    alRenderMeasurements();
+  });
+  toggle('#al-norm', 'norm');
+  toggle('#al-invert', 'invertB');
+  toggle('#al-snap', 'snap');
+  $('#al-thr').addEventListener('change', e => { alState.loupe.threshold = parseFloat(e.target.value); alDrawLoupe(); });
+
+  document.querySelectorAll('#al-mark-pick .mc-seg-btn').forEach(b => b.addEventListener('click', () => alSetActiveMarker(b.dataset.mark)));
+  $('#al-onsets-btn').addEventListener('click', alDetectOnsets);
+  $('#al-mk-clear').addEventListener('click', () => {
+    alState.loupe.markA = alState.loupe.markB = null;
+    alSetActiveMarker('A');
+    alDrawAll();
+  });
+  $('#al-mk-align').addEventListener('click', () => {
+    const lp = alState.loupe;
+    if (lp.markA != null && lp.markB != null) alAlign(lp.markB - lp.markA, 'markers');
+  });
+  $('#al-xc-btn').addEventListener('click', alCorrelate);
+  $('#al-xc-align').addEventListener('click', () => {
+    const c = alState.loupe.corr;
+    if (c) alAlign(c.lag, 'cross-correlation');
+  });
+
+  alAttachLoupeMouse();
+  if (window.ResizeObserver) {
+    let pending = false;
+    new ResizeObserver(() => {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => { pending = false; alDrawAll(); });
+    }).observe($('#al-panel'));
+  }
+}
+
+alWire();
+alInit();
 
 // ============================================================
 // EVENT WIRING
