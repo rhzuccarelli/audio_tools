@@ -5,7 +5,7 @@ browser — no upload, no server, no dependencies.
 
 Open [`index.html`](index.html) in any modern browser to use it.
 
-The current version is shown next to the logo in the header (**Rev 5.2**).
+The current version is shown next to the logo in the header (**Rev 5.3**).
 
 ## Choosing a module
 
@@ -19,11 +19,14 @@ to work with:
   independent stereo pairs (see [Multi-Channel WAV mixer](#multi-channel-wav-mixer)).
 - **Multitrack Decks** — open several multi-channel WAVs side by side and move
   tracks between them (see [Multitrack Decks](#multitrack-decks)).
+- **Channel Align** — measure and correct the time offset between the stereo
+  pairs of a multi-channel WAV, to the sample, with a loupe for comparing
+  transients (see [Channel Align](#channel-align)).
 
 Each tool is self-contained: once you're inside one, there is no shortcut to the
 others — return to the landing page (click the **Audio Tools** logo) to switch
 tools. The current tool lives in the URL hash (`#/stem-arranger`,
-`#/multichannel`, `#/multitrack-decks`), so tools are deep-linkable and the
+`#/multichannel`, `#/multitrack-decks`, `#/channel-align`), so tools are deep-linkable and the
 browser back/forward buttons move between them.
 
 ### Adding a tool
@@ -41,6 +44,13 @@ The header shows the current revision. **Big changes bump the first digit,
 small changes bump the second.** Update the `Rev X.Y` label in the header (and
 this list) with every change.
 
+- **Rev 5.3** — New **Channel Align** tool: load a multi-channel WAV (up to 6
+  stereo pairs) and measure the displacement between its pairs. Slip any pair
+  earlier or later by samples or milliseconds, inspect two transients
+  side by side in a sample-level **loupe**, measure the distance between them
+  with markers or cross-correlation, line them up with one click, and export the
+  aligned WAV. WAVs are read sample-exact at their own rate, so 44.1 kHz files
+  aren't resampled and 12-channel files open.
 - **Rev 5.2** — Three Stem Arranger changes:
   - **Multi-channel reference** — the reference file can be an interleaved WAV
     with up to **6 stereo pairs** (12 channels, the Multi-Channel tool's
@@ -338,6 +348,75 @@ out of pieces of the other two. Add or remove decks freely (up to 4).
 - **Everything ends up at 48 kHz.** The app decodes through a single 48 kHz
   audio context, so a 44.1 kHz file is resampled on load and exports are always
   24-bit/48 kHz — which is also why tracks can always move between decks.
+
+## Channel Align
+
+Finds and fixes timing differences between the stereo pairs of a multi-channel
+WAV — e.g. mics or outboard returns recorded on separate pairs that arrive a few
+samples apart. The layout follows the Multi-Channel mixer: 1-6 stereo pairs
+(2-12 channels).
+
+### Loading
+
+- **Import Multi-Channel WAV** (or drop one on the tool) splits the file into
+  its pairs. An odd last channel becomes a mono pair.
+- **＋ Load / Replace** on a lane (or drop a file on the lane) fills just that
+  pair from a mono or stereo file.
+- WAVs (PCM 8/16/24/32-bit, float 32/64, WAVE_FORMAT_EXTENSIBLE, RF64) are read
+  **directly at their own sample rate**, not through the browser's 48 kHz
+  decoder, so measurements are sample-exact and 12-channel files open here
+  (the other tools can't reopen 12-channel files). Files at another rate, or in
+  other formats, are decoded and resampled by the browser to the project rate,
+  and the app tells you when that happens.
+
+### Moving a pair
+
+Each pair has an **offset**. A positive offset makes it play later, a negative
+one earlier.
+
+- Type it in the offset field, in **Samples** or **ms** (the **Units** switch;
+  the other unit is shown underneath).
+- **‹ ›** nudge by the **Nudge step** (1 or 10 samples, 0.1/1/10 ms);
+  **‹‹ ››** nudge 10 steps; **0** resets.
+- **Drag a lane's waveform** to slip it (Shift = 10× finer).
+- Zoom the lanes with **− + Fit** or Ctrl/Alt + wheel; scroll with the wheel.
+
+### The loupe (magnifier)
+
+Click a lane or the ruler to aim the loupe there; the loupe's window is shaded
+on every lane. Choose signal **A** (the reference) and **B** (the pair that
+moves) with the A/B buttons on the lanes or the loupe's selectors, using either
+channel or their sum (**L**, **R**, **L+R**).
+
+- **Wheel** magnifies (from about a second down to 16 samples across the view),
+  **drag** or Shift + wheel pans. Once single samples are visible they're drawn
+  as dots on a sample grid.
+- **Stack** shows A above B; **Overlay** draws them on top of each other.
+  **Norm** scales each to its own peak so quiet and loud hits compare easily;
+  **Ø B** flips B's polarity.
+- **Markers** — click the A transient, then the B transient. With **Snap** on,
+  a click snaps to the onset nearby (the first sample above the **Thr**
+  threshold, shown as dotted lines); Alt + click places a marker exactly where
+  you click. Drag a marker to move it. The readout shows **B − A** in samples
+  and ms. **Detect onsets** places both markers automatically.
+- **Correlate** measures the lag between A and B over the whole loupe window by
+  cross-correlation, to a fraction of a sample, with the correlation strength
+  (r) and a warning if the polarity is inverted.
+- **Align B → A** (under either measurement) moves B's pair by the measured
+  amount, rounded to whole samples.
+- With the loupe focused, **← / →** slip pair B by one nudge step (Shift = 10),
+  **A / B** pick the marker a click places, **+ / −** zoom.
+
+### Listening and export
+
+- **Play** (or Space) plays from the cursor with the offsets applied; M/S mute
+  and solo pairs.
+- **Export Aligned WAV** writes the multi-channel WAV with every offset applied,
+  at the source's sample rate (24-bit), with any ACID tempo kept. The file keeps
+  its **original length**, so it still lines up with other material from the
+  same session: a positive offset pads the start with silence and drops the same
+  amount from the end, and a negative offset trims the start.
+- **Copy offsets** copies a table of every pair's offset (samples and ms).
 
 ## Notes
 
